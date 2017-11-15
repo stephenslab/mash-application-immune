@@ -1,0 +1,670 @@
+<!DOCTYPE html>
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+
+<head>
+
+<meta charset="utf-8" />
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+<meta name="generator" content="pandoc" />
+
+
+<meta name="author" content="Yuxin Zou" />
+
+<meta name="date" content="2017-11-15" />
+
+<title>Compare beta and Z</title>
+
+<script src="site_libs/jquery-1.11.3/jquery.min.js"></script>
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<link href="site_libs/bootstrap-3.3.5/css/cosmo.min.css" rel="stylesheet" />
+<script src="site_libs/bootstrap-3.3.5/js/bootstrap.min.js"></script>
+<script src="site_libs/bootstrap-3.3.5/shim/html5shiv.min.js"></script>
+<script src="site_libs/bootstrap-3.3.5/shim/respond.min.js"></script>
+<script src="site_libs/jqueryui-1.11.4/jquery-ui.min.js"></script>
+<link href="site_libs/tocify-1.9.1/jquery.tocify.css" rel="stylesheet" />
+<script src="site_libs/tocify-1.9.1/jquery.tocify.js"></script>
+<script src="site_libs/navigation-1.1/tabsets.js"></script>
+<link href="site_libs/highlightjs-9.12.0/textmate.css" rel="stylesheet" />
+<script src="site_libs/highlightjs-9.12.0/highlight.js"></script>
+<link href="site_libs/font-awesome-4.5.0/css/font-awesome.min.css" rel="stylesheet" />
+
+<style type="text/css">code{white-space: pre;}</style>
+<style type="text/css">
+  pre:not([class]) {
+    background-color: white;
+  }
+</style>
+<script type="text/javascript">
+if (window.hljs) {
+  hljs.configure({languages: []});
+  hljs.initHighlightingOnLoad();
+  if (document.readyState && document.readyState === "complete") {
+    window.setTimeout(function() { hljs.initHighlightingOnLoad(); }, 0);
+  }
+}
+</script>
+
+
+
+<style type="text/css">
+h1 {
+  font-size: 34px;
+}
+h1.title {
+  font-size: 38px;
+}
+h2 {
+  font-size: 30px;
+}
+h3 {
+  font-size: 24px;
+}
+h4 {
+  font-size: 18px;
+}
+h5 {
+  font-size: 16px;
+}
+h6 {
+  font-size: 12px;
+}
+.table th:not([align]) {
+  text-align: left;
+}
+</style>
+
+
+</head>
+
+<body>
+
+<style type = "text/css">
+.main-container {
+  max-width: 940px;
+  margin-left: auto;
+  margin-right: auto;
+}
+code {
+  color: inherit;
+  background-color: rgba(0, 0, 0, 0.04);
+}
+img {
+  max-width:100%;
+  height: auto;
+}
+.tabbed-pane {
+  padding-top: 12px;
+}
+button.code-folding-btn:focus {
+  outline: none;
+}
+</style>
+
+
+<style type="text/css">
+/* padding for bootstrap navbar */
+body {
+  padding-top: 51px;
+  padding-bottom: 40px;
+}
+/* offset scroll position for anchor links (for fixed navbar)  */
+.section h1 {
+  padding-top: 56px;
+  margin-top: -56px;
+}
+
+.section h2 {
+  padding-top: 56px;
+  margin-top: -56px;
+}
+.section h3 {
+  padding-top: 56px;
+  margin-top: -56px;
+}
+.section h4 {
+  padding-top: 56px;
+  margin-top: -56px;
+}
+.section h5 {
+  padding-top: 56px;
+  margin-top: -56px;
+}
+.section h6 {
+  padding-top: 56px;
+  margin-top: -56px;
+}
+</style>
+
+<script>
+// manage active state of menu based on current page
+$(document).ready(function () {
+  // active menu anchor
+  href = window.location.pathname
+  href = href.substr(href.lastIndexOf('/') + 1)
+  if (href === "")
+    href = "index.html";
+  var menuAnchor = $('a[href="' + href + '"]');
+
+  // mark it active
+  menuAnchor.parent().addClass('active');
+
+  // if it's got a parent navbar menu mark it active as well
+  menuAnchor.closest('li.dropdown').addClass('active');
+});
+</script>
+
+
+<div class="container-fluid main-container">
+
+<!-- tabsets -->
+<script>
+$(document).ready(function () {
+  window.buildTabsets("TOC");
+});
+</script>
+
+<!-- code folding -->
+
+
+
+
+<script>
+$(document).ready(function ()  {
+
+    // move toc-ignore selectors from section div to header
+    $('div.section.toc-ignore')
+        .removeClass('toc-ignore')
+        .children('h1,h2,h3,h4,h5').addClass('toc-ignore');
+
+    // establish options
+    var options = {
+      selectors: "h1,h2,h3",
+      theme: "bootstrap3",
+      context: '.toc-content',
+      hashGenerator: function (text) {
+        return text.replace(/[.\\/?&!#<>]/g, '').replace(/\s/g, '_').toLowerCase();
+      },
+      ignoreSelector: ".toc-ignore",
+      scrollTo: 0
+    };
+    options.showAndHide = true;
+    options.smoothScroll = true;
+
+    // tocify
+    var toc = $("#TOC").tocify(options).data("toc-tocify");
+});
+</script>
+
+<style type="text/css">
+
+#TOC {
+  margin: 25px 0px 20px 0px;
+}
+@media (max-width: 768px) {
+#TOC {
+  position: relative;
+  width: 100%;
+}
+}
+
+
+.toc-content {
+  padding-left: 30px;
+  padding-right: 40px;
+}
+
+div.main-container {
+  max-width: 1200px;
+}
+
+div.tocify {
+  width: 20%;
+  max-width: 260px;
+  max-height: 85%;
+}
+
+@media (min-width: 768px) and (max-width: 991px) {
+  div.tocify {
+    width: 25%;
+  }
+}
+
+@media (max-width: 767px) {
+  div.tocify {
+    width: 100%;
+    max-width: none;
+  }
+}
+
+.tocify ul, .tocify li {
+  line-height: 20px;
+}
+
+.tocify-subheader .tocify-item {
+  font-size: 0.90em;
+  padding-left: 25px;
+  text-indent: 0;
+}
+
+.tocify .list-group-item {
+  border-radius: 0px;
+}
+
+
+</style>
+
+<!-- setup 3col/9col grid for toc_float and main content  -->
+<div class="row-fluid">
+<div class="col-xs-12 col-sm-4 col-md-3">
+<div id="TOC" class="tocify">
+</div>
+</div>
+
+<div class="toc-content col-xs-12 col-sm-8 col-md-9">
+
+
+
+
+<div class="navbar navbar-default  navbar-fixed-top" role="navigation">
+  <div class="container">
+    <div class="navbar-header">
+      <button type="button" class="navbar-toggle collapsed" data-toggle="collapse" data-target="#navbar">
+        <span class="icon-bar"></span>
+        <span class="icon-bar"></span>
+        <span class="icon-bar"></span>
+      </button>
+      <a class="navbar-brand" href="index.html">mash-application-immune</a>
+    </div>
+    <div id="navbar" class="navbar-collapse collapse">
+      <ul class="nav navbar-nav">
+        <li>
+  <a href="index.html">Home</a>
+</li>
+<li>
+  <a href="about.html">About</a>
+</li>
+<li>
+  <a href="license.html">License</a>
+</li>
+      </ul>
+      <ul class="nav navbar-nav navbar-right">
+        <li>
+  <a href="https://github.com/jdblischak/workflowr">
+    <span class="fa fa-github"></span>
+     
+  </a>
+</li>
+      </ul>
+    </div><!--/.nav-collapse -->
+  </div><!--/.container -->
+</div><!--/.navbar -->
+<!-- Add a small amount of space between sections. -->
+<style type="text/css">
+div.section {
+  padding-top: 12px;
+}
+</style>
+
+<div class="fluid-row" id="header">
+
+
+
+<h1 class="title toc-ignore">Compare beta and Z</h1>
+<h4 class="author"><em>Yuxin Zou</em></h4>
+<h4 class="date"><em>2017-11-15</em></h4>
+
+</div>
+
+
+<!-- The file analysis/chunks.R contains chunks that define default settings
+shared across the workflowr files. -->
+<!-- Update knitr chunk options -->
+<!-- Insert the date the file was last updated -->
+<p><strong>Last updated:</strong> 2017-11-15</p>
+<!-- Insert the code version (Git commit SHA1) if Git repository exists and R
+ package git2r is installed -->
+<p><strong>Code version:</strong> e5a86d5</p>
+<!-- Add your analysis here -->
+<div id="simulate-shat-equal-data-r-5" class="section level1">
+<h1>Simulate Shat equal data R = 5</h1>
+<pre class="r"><code>library(mashr)</code></pre>
+<pre><code>Loading required package: ashr</code></pre>
+<pre class="r"><code>set.seed(1)
+simdata.equal = simple_sims(500,5,0.5)</code></pre>
+<pre class="r"><code>TestdataBeta.equal = set_mash_data(simdata.equal$Bhat, simdata.equal$Shat, alpha=0)
+
+TestdataZ.equal = set_mash_data(simdata.equal$Bhat/simdata.equal$Shat, 
+                          matrix(1, nrow(simdata.equal$Bhat), ncol(simdata.equal$Bhat)))
+# center
+TestdataZ.equal.center = set_mash_data(apply(as.matrix(TestdataZ.equal$Bhat), 2, function(x) x - mean(x)), 
+                          matrix(1, nrow(simdata.equal$Bhat), ncol(simdata.equal$Bhat)))
+
+# canonical cov
+U.c.equal = cov_canonical(TestdataBeta.equal)
+
+# data_driven
+m.1by1.Z.equal = mash_1by1(TestdataBeta.equal, alpha=1)
+strong.Z.equal = get_significant_results(m.1by1.Z.equal,0.05)
+U.pca.Z.equal = cov_pca(TestdataZ.equal.center,5,strong.Z.equal)</code></pre>
+<div id="ee-model" class="section level2">
+<h2>EE model</h2>
+<pre class="r"><code>U.ed.beta.equal = cov_ed(TestdataBeta.equal, U.pca.Z.equal, strong.Z.equal)
+U.m.beta.equal = mash(TestdataBeta.equal, c(U.c.equal,U.ed.beta.equal),
+                      outputlevel = 2)
+
+barplot(get_estimated_pi(U.m.beta.equal), las = 2, cex.names = 0.7, main=&#39;EE&#39;)</code></pre>
+</div>
+<div id="ez-model" class="section level2">
+<h2>EZ model</h2>
+<pre class="r"><code>U.ed.Z.equal = cov_ed(TestdataZ.equal, U.pca.Z.equal, strong.Z.equal)
+U.m.Z.equal = mash(TestdataBeta.equal, c(U.c.equal, U.ed.Z.equal),
+                   outputlevel = 2, alpha = 1)
+barplot(get_estimated_pi(U.m.Z.equal), las = 2, cex.names = 0.7, main=&#39;EZ&#39;)</code></pre>
+<p>The estimated weights are similar.</p>
+<p>Check significant samples under transformation A</p>
+<pre class="r"><code>A = rbind(c(1,-1,0,0,0))
+subset.data = get_significant_results(U.m.beta.equal)
+TestdataBeta.equal.subset = TestdataBeta.equal
+TestdataBeta.equal.subset$Bhat = TestdataBeta.equal$Bhat
+TestdataBeta.equal.subset$Shat = TestdataBeta.equal$Shat
+
+# EZ
+U.m.Z.equal.posterior = mash_compute_posterior_matrices(U.m.Z.equal, TestdataBeta.equal.subset, A=A, algorithm.version = &#39;R&#39;)
+U.m.Z.equal$result = U.m.Z.equal.posterior
+
+# EE
+U.m.beta.equal.posterior = mash_compute_posterior_matrices(U.m.beta.equal, TestdataBeta.equal.subset, A=A, algorithm.version = &#39;R&#39;)
+U.m.beta.equal$result = U.m.beta.equal.posterior
+
+length(get_significant_results(U.m.beta.equal))
+length(get_significant_results(U.m.Z.equal))</code></pre>
+</div>
+</div>
+<div id="simulate-shat-different-among-conditions" class="section level1">
+<h1>Simulate Shat different among conditions</h1>
+<pre class="r"><code>set.seed(1)
+simdata.col.diff = simple_sims(500, 5, c(rep(0.1,2000),rep(0.08,2000),
+                                         rep(0.15,2000),rep(0.12,2000),rep(0.06,2000)))
+vhat = 0</code></pre>
+<pre class="r"><code>simdata.col.diff$z = simdata.col.diff$Bhat/simdata.col.diff$Shat
+
+if (vhat == 1) {
+  V = cor(simdata.col.diff$z[which(apply(abs(simdata.col.diff$z),1, max) &lt; 2),])
+} else {
+  V = diag(ncol(simdata.col.diff$z))
+}
+
+TestdataBeta.col.diff = set_mash_data(Bhat=simdata.col.diff$Bhat, 
+              Shat=simdata.col.diff$Shat, 
+              V=as.matrix(V))
+
+TestdataZ.col.diff = set_mash_data(Bhat = simdata.col.diff$Bhat/simdata.col.diff$Shat,
+                                   Shat = matrix(1, nrow(simdata.col.diff$Bhat),
+                                                 ncol(simdata.col.diff$Bhat)), 
+                                   V = as.matrix(V))
+
+# center
+TestdataZ.col.diff.center = set_mash_data(Bhat = apply(as.matrix(TestdataZ.col.diff$Bhat), 2, function(x) x - mean(x)), 
+                                          Shat = matrix(1, 
+                                                        nrow(simdata.col.diff$Bhat), 
+                                                        ncol(simdata.col.diff$Bhat)), 
+                                          V = as.matrix(V))
+
+# canonical cov
+U.c.col.diff = cov_canonical(TestdataBeta.col.diff)
+
+# data_driven
+m.1by1.Z.col.diff = mash_1by1(TestdataBeta.col.diff, alpha=1)
+strong.Z.col.diff = get_significant_results(m.1by1.Z.col.diff,0.05)
+U.pca.Z.col.diff = cov_pca(TestdataZ.col.diff.center,5,strong.Z.col.diff)</code></pre>
+<div id="ee-model-1" class="section level2">
+<h2>EE model</h2>
+<pre class="r"><code>U.ed.beta.col.diff = cov_ed(TestdataBeta.col.diff, U.pca.Z.col.diff, strong.Z.col.diff)
+U.m.beta.col.diff = mash(TestdataBeta.col.diff, c(U.c.col.diff, U.ed.beta.col.diff),
+                      outputlevel = 2,alpha=0)
+
+barplot(get_estimated_pi(U.m.beta.col.diff), las = 2, cex.names = 0.7, main=&#39;EE&#39;)</code></pre>
+</div>
+<div id="ez-model-1" class="section level2">
+<h2>EZ model</h2>
+<pre class="r"><code>U.ed.Z.col.diff = cov_ed(TestdataZ.col.diff, U.pca.Z.col.diff, strong.Z.col.diff)
+U.m.Z.col.diff = mash(TestdataBeta.col.diff, c(U.c.col.diff,U.ed.Z.col.diff),
+                   outputlevel = 2,alpha = 1)
+barplot(get_estimated_pi(U.m.Z.col.diff), las = 2, cex.names = 0.7, main=&#39;EZ&#39;)</code></pre>
+<p>The estimated weights are different.</p>
+<pre class="r"><code>library(&#39;corrplot&#39;)
+x           &lt;- cov2cor(U.m.Z.col.diff$fitted_g$Ulist[[&quot;ED_tPCA&quot;]])
+x[x &gt; 1]    &lt;- 1
+x[x &lt; -1]   &lt;- -1
+corrplot.mixed(x, tl.pos=&quot;d&quot;,upper=&#39;color&#39;,cl.lim=c(0.3,1), upper.col=colorRampPalette(rev(c(&quot;#D73027&quot;,&quot;#FC8D59&quot;,&quot;#FEE090&quot;,&quot;#FFFFBF&quot;,
+                               &quot;#E0F3F8&quot;,&quot;#91BFDB&quot;,&quot;#4575B4&quot;)))(40),
+               tl.cex=1.2)</code></pre>
+<pre class="r"><code>svd.out = svd(U.m.Z.col.diff$fitted_g$Ulist[[&quot;ED_tPCA&quot;]])
+v = svd.out$v
+options(repr.plot.width=10, repr.plot.height=5)
+for (j in 1:1)
+  barplot(v[,j]/v[,j][which.max(abs(v[,j]))], cex.names = 0.7,
+          las = 2, main = paste0(&quot;EigenVector &quot;, j, &quot; for PCA-based covariance matrix&quot;))</code></pre>
+<p>Check significant samples under transformation A</p>
+<pre class="r"><code>A = rbind(c(1,-1,0,0,0))
+subset.data = get_significant_results(U.m.Z.col.diff)
+TestdataBeta.col.diff.subset = TestdataBeta.col.diff
+TestdataBeta.col.diff.subset$Bhat = TestdataBeta.col.diff$Bhat[subset.data,]
+TestdataBeta.col.diff.subset$Shat = TestdataBeta.col.diff$Shat[subset.data,]
+
+# EZ
+U.m.Z.col.diff.posterior = mash_compute_posterior_matrices(U.m.Z.col.diff, TestdataBeta.col.diff.subset, A=A, algorithm.version = &#39;R&#39;)
+U.m.Z.col.diff$result = U.m.Z.col.diff.posterior
+
+# EE
+U.m.beta.col.diff.posterior = mash_compute_posterior_matrices(U.m.beta.col.diff, TestdataBeta.col.diff.subset, A=A, algorithm.version = &#39;R&#39;)
+U.m.beta.col.diff$result = U.m.beta.col.diff.posterior
+
+length(get_significant_results(U.m.beta.col.diff))
+length(get_significant_results(U.m.Z.col.diff))</code></pre>
+<p>Comparing loglikelihood</p>
+<pre class="r"><code>get_loglik(U.m.beta.col.diff)
+get_loglik(U.m.Z.col.diff)</code></pre>
+<p>EE model has higher likelihood, since the data is simulated under EE.</p>
+</div>
+</div>
+<div id="simulate-shat-different-among-samples" class="section level1">
+<h1>Simulate Shat different among samples</h1>
+<pre class="r"><code>set.seed(1)
+simdata.samp.diff = simple_sims(500, 5, rep(c(0.5,0.4,5,1,1), 400))</code></pre>
+<pre class="r"><code>TestdataBeta.samp.diff = set_mash_data(Bhat = simdata.samp.diff$Bhat, Shat = simdata.samp.diff$Shat)
+
+TestdataZ.samp.diff = set_mash_data(Bhat = simdata.samp.diff$Bhat/simdata.samp.diff$Shat, 
+                          Shat = matrix(1, nrow(simdata.samp.diff$Bhat), ncol(simdata.samp.diff$Bhat)))
+# center
+TestdataZ.samp.diff.center = set_mash_data(Bhat = apply(as.matrix(TestdataZ.samp.diff$Bhat), 2, function(x) x - mean(x)), 
+                          Shat = matrix(1, nrow(simdata.samp.diff$Bhat), ncol(simdata.samp.diff$Bhat)))
+
+# canonical cov
+U.c.samp.diff = cov_canonical(TestdataBeta.samp.diff)
+
+# data_driven from Z
+m.1by1.Z.samp.diff = mash_1by1(TestdataBeta.samp.diff, alpha=1)
+strong.Z.samp.diff = get_significant_results(m.1by1.Z.samp.diff,0.05)
+U.pca.Z.samp.diff = cov_pca(TestdataZ.samp.diff.center,5,strong.Z.samp.diff)</code></pre>
+<div id="ee-model-2" class="section level2">
+<h2>EE model</h2>
+<pre class="r"><code>U.ed.beta.samp.diff = cov_ed(TestdataBeta.samp.diff, U.pca.Z.samp.diff, strong.Z.samp.diff)
+U.m.beta.samp.diff = mash(TestdataBeta.samp.diff, 
+                          c(U.c.samp.diff, U.ed.beta.samp.diff),
+                          outputlevel = 2, alpha=0)
+
+barplot(get_estimated_pi(U.m.beta.samp.diff), las = 2, cex.names = 0.7, main=&#39;EE&#39;)</code></pre>
+</div>
+<div id="ez-model-2" class="section level2">
+<h2>EZ model</h2>
+<pre class="r"><code>U.ed.Z.samp.diff = cov_ed(TestdataZ.samp.diff, U.pca.Z.samp.diff, strong.Z.samp.diff)
+U.m.Z.samp.diff = mash(TestdataBeta.samp.diff, c(U.c.samp.diff, U.ed.Z.samp.diff), 
+                   outputlevel = 2, alpha=1)
+barplot(get_estimated_pi(U.m.Z.samp.diff), las = 2, cex.names = 0.7, main=&#39;EZ&#39;)</code></pre>
+<p><strong>The estiamted weights are different if the Shat is not constant.</strong></p>
+<p>If the Shat are different for different condition or samples, the estimated weights are different using EE, EZ models. Using the EZ model, the covariance structures we found are about the standardized effects. Using the EE model, the covariance structure are about the raw effects. We’d better use EZ model.</p>
+<p>Check significant samples under transformation A</p>
+<pre class="r"><code>A = rbind(c(1,-1,0,0,0))
+subset.data = get_significant_results(U.m.Z.samp.diff)
+TestdataBeta.samp.diff.subset = TestdataBeta.samp.diff
+TestdataBeta.samp.diff.subset$Bhat = TestdataBeta.samp.diff$Bhat[subset.data,]
+TestdataBeta.samp.diff.subset$Shat = TestdataBeta.samp.diff$Shat[subset.data,]
+
+# EZ
+U.m.Z.samp.diff.posterior = mash_compute_posterior_matrices(U.m.Z.samp.diff, TestdataBeta.samp.diff, A=A, algorithm.version = &#39;R&#39;)
+U.m.Z.samp.diff$result = U.m.Z.samp.diff.posterior
+
+# EE
+U.m.beta.samp.diff.posterior = mash_compute_posterior_matrices(U.m.beta.samp.diff, TestdataBeta.samp.diff, A=A, algorithm.version = &#39;R&#39;)
+U.m.beta.samp.diff$result = U.m.beta.samp.diff.posterior
+length(get_significant_results(U.m.beta.samp.diff))
+length(get_significant_results(U.m.Z.samp.diff))</code></pre>
+<p>Comparing loglikelihood</p>
+<pre class="r"><code>get_loglik(U.m.beta.samp.diff)
+get_loglik(U.m.Z.samp.diff)</code></pre>
+</div>
+</div>
+<div id="simulation-alpha" class="section level1">
+<h1>Simulation alpha</h1>
+<pre class="r"><code>simple_sims_alpha = function(nsamp = 100, ncond = 5, err_sd, alpha){
+  Balpha.id = matrix(rnorm(nsamp * ncond), nrow = nsamp, ncol = ncond)
+  
+  b = rnorm(nsamp)
+  Balpha.all = matrix(rep(b, ncond), nrow = nsamp, ncol = ncond)
+  
+  Balpha.zero = matrix(0, nrow = nsamp, ncol = ncond)
+  
+  Balpha.one = Balpha.zero
+  b2 = rnorm(nsamp)
+  Balpha.one[, 1] = b2
+
+  Balpha = rbind(Balpha.zero, Balpha.id, Balpha.one, Balpha.all)
+  
+  E.alpha= matrix(rnorm(nrow(Balpha)*nrow(Balpha), sd=err_sd^(1-alpha)), nrow = nrow(Balpha), 
+             ncol = ncol(Balpha), byrow = T)
+  Balpha.hat = Balpha+E.alpha
+  
+  Shat = matrix(err_sd, nrow = nrow(Balpha), ncol = ncol(Balpha), byrow=T)
+  Bhat = Balpha.hat*Shat^(alpha)
+  B = Balpha*Shat^(alpha)
+  return(list(B=B,Bhat=Bhat,Shat=Shat))
+}</code></pre>
+<pre class="r"><code>set.seed(1)
+simdata.B.diff = simple_sims_alpha(2000, 5, c(0.02,0.03,0.04,0.02,0.03), alpha = 0.8)
+vhat=0</code></pre>
+<pre class="r"><code>if (vhat == 1) {
+  V = cor((simdata.B.diff$Bhat/simdata.B.diff$Shat)[which(apply(abs(simdata.B.diff$Bhat/simdata.B.diff$Shat),1, max) &lt; 2),])
+} else {
+  V = diag(ncol(simdata.B.diff$Bhat))
+}
+
+TestdataBeta.B.diff = set_mash_data(Bhat=simdata.B.diff$Bhat, Shat=simdata.B.diff$Shat, V = as.matrix(V))
+
+TestdataZ.B.diff = set_mash_data(Bhat=simdata.B.diff$Bhat/simdata.B.diff$Shat, 
+                          Shat=matrix(1, nrow(simdata.B.diff$Bhat), ncol(simdata.B.diff$Bhat)), V = as.matrix(V))
+# center
+TestdataZ.B.diff.center = set_mash_data(Bhat=apply(as.matrix(TestdataZ.B.diff$Bhat), 2, function(x) x - mean(x)), 
+                          Shat=matrix(1, nrow(simdata.B.diff$Bhat), ncol(simdata.B.diff$Bhat)), V=as.matrix(V))
+
+# canonical cov
+U.c.B.diff = cov_canonical(TestdataBeta.B.diff)
+
+# data_driven from Z
+m.1by1.Z.B.diff = mash_1by1(TestdataBeta.B.diff, alpha=1)
+strong.Z.B.diff = get_significant_results(m.1by1.Z.B.diff,0.05)
+U.pca.Z.B.diff = cov_pca(TestdataZ.B.diff.center,5,strong.Z.B.diff)</code></pre>
+<div id="ee-model-3" class="section level2">
+<h2>EE model</h2>
+<pre class="r"><code>U.ed.beta.B.diff = cov_ed(TestdataBeta.B.diff, U.pca.Z.B.diff, strong.Z.B.diff)
+U.m.beta.B.diff = mash(TestdataBeta.B.diff, c(U.c.B.diff, U.ed.beta.B.diff),
+                      outputlevel = 2, alpha=0)
+
+barplot(get_estimated_pi(U.m.beta.B.diff), las = 2, cex.names = 0.7, main=&#39;EE&#39;)</code></pre>
+</div>
+<div id="ez-model-3" class="section level2">
+<h2>EZ model</h2>
+<pre class="r"><code>U.ed.Z.B.diff = cov_ed(TestdataZ.B.diff, U.pca.Z.B.diff, strong.Z.B.diff)
+U.m.Z.B.diff = mash(TestdataBeta.B.diff, c(U.c.B.diff, U.ed.Z.B.diff), 
+                   outputlevel = 2, alpha = 1)
+barplot(get_estimated_pi(U.m.Z.B.diff), las = 2, cex.names = 0.7, main=&#39;EZ&#39;)</code></pre>
+<p>Compare loglikelihod</p>
+<pre class="r"><code>get_loglik(U.m.beta.B.diff)
+get_loglik(U.m.Z.B.diff)</code></pre>
+</div>
+<div id="session-information" class="section level2">
+<h2>Session information</h2>
+<!-- Insert the session information into the document -->
+<pre class="r"><code>sessionInfo()</code></pre>
+</div>
+</div>
+
+<!-- Adjust MathJax settings so that all math formulae are shown using
+TeX fonts only; see
+http://docs.mathjax.org/en/latest/configuration.html.  This will make
+the presentation more consistent at the cost of the webpage sometimes
+taking slightly longer to load. Note that this only works because the
+footer is added to webpages before the MathJax javascript. -->
+<script type="text/x-mathjax-config">
+  MathJax.Hub.Config({
+    "HTML-CSS": { availableFonts: ["TeX"] }
+  });
+</script>
+
+<hr>
+<p>
+    This <a href="http://rmarkdown.rstudio.com">R Markdown</a> site was created with <a href="https://github.com/jdblischak/workflowr">workflowr</a>
+</p>
+<hr>
+
+<!-- To enable disqus, uncomment the section below and provide your disqus_shortname -->
+
+<!-- disqus
+  <div id="disqus_thread"></div>
+    <script type="text/javascript">
+        /* * * CONFIGURATION VARIABLES: EDIT BEFORE PASTING INTO YOUR WEBPAGE * * */
+        var disqus_shortname = 'rmarkdown'; // required: replace example with your forum shortname
+
+        /* * * DON'T EDIT BELOW THIS LINE * * */
+        (function() {
+            var dsq = document.createElement('script'); dsq.type = 'text/javascript'; dsq.async = true;
+            dsq.src = '//' + disqus_shortname + '.disqus.com/embed.js';
+            (document.getElementsByTagName('head')[0] || document.getElementsByTagName('body')[0]).appendChild(dsq);
+        })();
+    </script>
+    <noscript>Please enable JavaScript to view the <a href="http://disqus.com/?ref_noscript">comments powered by Disqus.</a></noscript>
+    <a href="http://disqus.com" class="dsq-brlink">comments powered by <span class="logo-disqus">Disqus</span></a>
+-->
+
+
+</div>
+</div>
+
+</div>
+
+<script>
+
+// add bootstrap table styles to pandoc tables
+function bootstrapStylePandocTables() {
+  $('tr.header').parent('thead').parent('table').addClass('table table-condensed');
+}
+$(document).ready(function () {
+  bootstrapStylePandocTables();
+});
+
+
+</script>
+
+<!-- dynamically load mathjax for compatibility with self-contained -->
+<script>
+  (function () {
+    var script = document.createElement("script");
+    script.type = "text/javascript";
+    script.src  = "https://mathjax.rstudio.com/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML";
+    document.getElementsByTagName("head")[0].appendChild(script);
+  })();
+</script>
+
+</body>
+</html>
