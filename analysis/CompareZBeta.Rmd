@@ -1,0 +1,371 @@
+---
+title: "Compare beta and Z"
+author: "Yuxin Zou"
+date: 2017-11-15
+output: html_document
+---
+
+<!-- The file analysis/chunks.R contains chunks that define default settings
+shared across the workflowr files. -->
+```{r read-chunk, include=FALSE, cache=FALSE}
+knitr::read_chunk("chunks.R")
+```
+
+<!-- Update knitr chunk options -->
+```{r knitr-opts-chunk, include=FALSE}
+```
+
+<!-- Insert the date the file was last updated -->
+```{r last-updated, echo=FALSE, results='asis'}
+```
+
+<!-- Insert the code version (Git commit SHA1) if Git repository exists and R
+ package git2r is installed -->
+```{r code-version, echo=FALSE, results='asis'}
+```
+
+<!-- Add your analysis here -->
+
+# Simulate Shat equal data R = 5
+```{r}
+library(mashr)
+set.seed(1)
+simdata.equal = simple_sims(500,5,0.5)
+```
+
+```{r, echo=FALSE}
+# TEMPORARY.
+knitr::opts_chunk$set(eval = FALSE)
+```
+
+```{r}
+TestdataBeta.equal = set_mash_data(simdata.equal$Bhat, simdata.equal$Shat, alpha=0)
+
+TestdataZ.equal = set_mash_data(simdata.equal$Bhat/simdata.equal$Shat, 
+                          matrix(1, nrow(simdata.equal$Bhat), ncol(simdata.equal$Bhat)))
+# center
+TestdataZ.equal.center = set_mash_data(apply(as.matrix(TestdataZ.equal$Bhat), 2, function(x) x - mean(x)), 
+                          matrix(1, nrow(simdata.equal$Bhat), ncol(simdata.equal$Bhat)))
+
+# canonical cov
+U.c.equal = cov_canonical(TestdataBeta.equal)
+
+# data_driven
+m.1by1.Z.equal = mash_1by1(TestdataBeta.equal, alpha=1)
+strong.Z.equal = get_significant_results(m.1by1.Z.equal,0.05)
+U.pca.Z.equal = cov_pca(TestdataZ.equal.center,5,strong.Z.equal)
+```
+
+## EE model
+```{r}
+U.ed.beta.equal = cov_ed(TestdataBeta.equal, U.pca.Z.equal, strong.Z.equal)
+U.m.beta.equal = mash(TestdataBeta.equal, c(U.c.equal,U.ed.beta.equal),
+                      outputlevel = 2)
+
+barplot(get_estimated_pi(U.m.beta.equal), las = 2, cex.names = 0.7, main='EE')
+```
+
+## EZ model
+```{r}
+U.ed.Z.equal = cov_ed(TestdataZ.equal, U.pca.Z.equal, strong.Z.equal)
+U.m.Z.equal = mash(TestdataBeta.equal, c(U.c.equal, U.ed.Z.equal),
+                   outputlevel = 2, alpha = 1)
+barplot(get_estimated_pi(U.m.Z.equal), las = 2, cex.names = 0.7, main='EZ')
+
+```
+
+The estimated weights are similar.
+
+Check significant samples under transformation A
+```{r}
+A = rbind(c(1,-1,0,0,0))
+subset.data = get_significant_results(U.m.beta.equal)
+TestdataBeta.equal.subset = TestdataBeta.equal
+TestdataBeta.equal.subset$Bhat = TestdataBeta.equal$Bhat
+TestdataBeta.equal.subset$Shat = TestdataBeta.equal$Shat
+
+# EZ
+U.m.Z.equal.posterior = mash_compute_posterior_matrices(U.m.Z.equal, TestdataBeta.equal.subset, A=A, algorithm.version = 'R')
+U.m.Z.equal$result = U.m.Z.equal.posterior
+
+# EE
+U.m.beta.equal.posterior = mash_compute_posterior_matrices(U.m.beta.equal, TestdataBeta.equal.subset, A=A, algorithm.version = 'R')
+U.m.beta.equal$result = U.m.beta.equal.posterior
+
+length(get_significant_results(U.m.beta.equal))
+length(get_significant_results(U.m.Z.equal))
+
+```
+
+
+# Simulate Shat different among conditions
+
+```{r}
+set.seed(1)
+simdata.col.diff = simple_sims(500, 5, c(rep(0.1,2000),rep(0.08,2000),
+                                         rep(0.15,2000),rep(0.12,2000),rep(0.06,2000)))
+vhat = 0
+```
+
+```{r}
+simdata.col.diff$z = simdata.col.diff$Bhat/simdata.col.diff$Shat
+
+if (vhat == 1) {
+  V = cor(simdata.col.diff$z[which(apply(abs(simdata.col.diff$z),1, max) < 2),])
+} else {
+  V = diag(ncol(simdata.col.diff$z))
+}
+
+TestdataBeta.col.diff = set_mash_data(Bhat=simdata.col.diff$Bhat, 
+              Shat=simdata.col.diff$Shat, 
+              V=as.matrix(V))
+
+TestdataZ.col.diff = set_mash_data(Bhat = simdata.col.diff$Bhat/simdata.col.diff$Shat,
+                                   Shat = matrix(1, nrow(simdata.col.diff$Bhat),
+                                                 ncol(simdata.col.diff$Bhat)), 
+                                   V = as.matrix(V))
+
+# center
+TestdataZ.col.diff.center = set_mash_data(Bhat = apply(as.matrix(TestdataZ.col.diff$Bhat), 2, function(x) x - mean(x)), 
+                                          Shat = matrix(1, 
+                                                        nrow(simdata.col.diff$Bhat), 
+                                                        ncol(simdata.col.diff$Bhat)), 
+                                          V = as.matrix(V))
+
+# canonical cov
+U.c.col.diff = cov_canonical(TestdataBeta.col.diff)
+
+# data_driven
+m.1by1.Z.col.diff = mash_1by1(TestdataBeta.col.diff, alpha=1)
+strong.Z.col.diff = get_significant_results(m.1by1.Z.col.diff,0.05)
+U.pca.Z.col.diff = cov_pca(TestdataZ.col.diff.center,5,strong.Z.col.diff)
+```
+
+## EE model
+```{r}
+U.ed.beta.col.diff = cov_ed(TestdataBeta.col.diff, U.pca.Z.col.diff, strong.Z.col.diff)
+U.m.beta.col.diff = mash(TestdataBeta.col.diff, c(U.c.col.diff, U.ed.beta.col.diff),
+                      outputlevel = 2,alpha=0)
+
+barplot(get_estimated_pi(U.m.beta.col.diff), las = 2, cex.names = 0.7, main='EE')
+```
+
+## EZ model
+```{r}
+U.ed.Z.col.diff = cov_ed(TestdataZ.col.diff, U.pca.Z.col.diff, strong.Z.col.diff)
+U.m.Z.col.diff = mash(TestdataBeta.col.diff, c(U.c.col.diff,U.ed.Z.col.diff),
+                   outputlevel = 2,alpha = 1)
+barplot(get_estimated_pi(U.m.Z.col.diff), las = 2, cex.names = 0.7, main='EZ')
+
+```
+
+The estimated weights are different.
+
+```{r}
+library('corrplot')
+x           <- cov2cor(U.m.Z.col.diff$fitted_g$Ulist[["ED_tPCA"]])
+x[x > 1]    <- 1
+x[x < -1]   <- -1
+corrplot.mixed(x, tl.pos="d",upper='color',cl.lim=c(0.3,1), upper.col=colorRampPalette(rev(c("#D73027","#FC8D59","#FEE090","#FFFFBF",
+                               "#E0F3F8","#91BFDB","#4575B4")))(40),
+               tl.cex=1.2)
+```
+
+```{r}
+svd.out = svd(U.m.Z.col.diff$fitted_g$Ulist[["ED_tPCA"]])
+v = svd.out$v
+options(repr.plot.width=10, repr.plot.height=5)
+for (j in 1:1)
+  barplot(v[,j]/v[,j][which.max(abs(v[,j]))], cex.names = 0.7,
+          las = 2, main = paste0("EigenVector ", j, " for PCA-based covariance matrix"))
+```
+
+Check significant samples under transformation A
+```{r}
+A = rbind(c(1,-1,0,0,0))
+subset.data = get_significant_results(U.m.Z.col.diff)
+TestdataBeta.col.diff.subset = TestdataBeta.col.diff
+TestdataBeta.col.diff.subset$Bhat = TestdataBeta.col.diff$Bhat[subset.data,]
+TestdataBeta.col.diff.subset$Shat = TestdataBeta.col.diff$Shat[subset.data,]
+
+# EZ
+U.m.Z.col.diff.posterior = mash_compute_posterior_matrices(U.m.Z.col.diff, TestdataBeta.col.diff.subset, A=A, algorithm.version = 'R')
+U.m.Z.col.diff$result = U.m.Z.col.diff.posterior
+
+# EE
+U.m.beta.col.diff.posterior = mash_compute_posterior_matrices(U.m.beta.col.diff, TestdataBeta.col.diff.subset, A=A, algorithm.version = 'R')
+U.m.beta.col.diff$result = U.m.beta.col.diff.posterior
+
+length(get_significant_results(U.m.beta.col.diff))
+length(get_significant_results(U.m.Z.col.diff))
+```
+
+Comparing loglikelihood
+```{r}
+get_loglik(U.m.beta.col.diff)
+get_loglik(U.m.Z.col.diff)
+```
+EE model has higher likelihood, since the data is simulated under EE.
+
+# Simulate Shat different among samples
+
+```{r}
+set.seed(1)
+simdata.samp.diff = simple_sims(500, 5, rep(c(0.5,0.4,5,1,1), 400))
+```
+
+```{r}
+TestdataBeta.samp.diff = set_mash_data(Bhat = simdata.samp.diff$Bhat, Shat = simdata.samp.diff$Shat)
+
+TestdataZ.samp.diff = set_mash_data(Bhat = simdata.samp.diff$Bhat/simdata.samp.diff$Shat, 
+                          Shat = matrix(1, nrow(simdata.samp.diff$Bhat), ncol(simdata.samp.diff$Bhat)))
+# center
+TestdataZ.samp.diff.center = set_mash_data(Bhat = apply(as.matrix(TestdataZ.samp.diff$Bhat), 2, function(x) x - mean(x)), 
+                          Shat = matrix(1, nrow(simdata.samp.diff$Bhat), ncol(simdata.samp.diff$Bhat)))
+
+# canonical cov
+U.c.samp.diff = cov_canonical(TestdataBeta.samp.diff)
+
+# data_driven from Z
+m.1by1.Z.samp.diff = mash_1by1(TestdataBeta.samp.diff, alpha=1)
+strong.Z.samp.diff = get_significant_results(m.1by1.Z.samp.diff,0.05)
+U.pca.Z.samp.diff = cov_pca(TestdataZ.samp.diff.center,5,strong.Z.samp.diff)
+
+```
+
+## EE model
+```{r}
+U.ed.beta.samp.diff = cov_ed(TestdataBeta.samp.diff, U.pca.Z.samp.diff, strong.Z.samp.diff)
+U.m.beta.samp.diff = mash(TestdataBeta.samp.diff, 
+                          c(U.c.samp.diff, U.ed.beta.samp.diff),
+                          outputlevel = 2, alpha=0)
+
+barplot(get_estimated_pi(U.m.beta.samp.diff), las = 2, cex.names = 0.7, main='EE')
+```
+
+## EZ model
+```{r}
+U.ed.Z.samp.diff = cov_ed(TestdataZ.samp.diff, U.pca.Z.samp.diff, strong.Z.samp.diff)
+U.m.Z.samp.diff = mash(TestdataBeta.samp.diff, c(U.c.samp.diff, U.ed.Z.samp.diff), 
+                   outputlevel = 2, alpha=1)
+barplot(get_estimated_pi(U.m.Z.samp.diff), las = 2, cex.names = 0.7, main='EZ')
+
+```
+
+**The estiamted weights are different if the Shat is not constant.**
+
+If the Shat are different for different condition or samples, the estimated weights are different using EE, EZ models. Using the EZ model, the covariance structures we found are about the standardized effects. Using the EE model, the covariance structure are about the raw effects. We'd better use EZ model.
+
+Check significant samples under transformation A
+```{r}
+A = rbind(c(1,-1,0,0,0))
+subset.data = get_significant_results(U.m.Z.samp.diff)
+TestdataBeta.samp.diff.subset = TestdataBeta.samp.diff
+TestdataBeta.samp.diff.subset$Bhat = TestdataBeta.samp.diff$Bhat[subset.data,]
+TestdataBeta.samp.diff.subset$Shat = TestdataBeta.samp.diff$Shat[subset.data,]
+
+# EZ
+U.m.Z.samp.diff.posterior = mash_compute_posterior_matrices(U.m.Z.samp.diff, TestdataBeta.samp.diff, A=A, algorithm.version = 'R')
+U.m.Z.samp.diff$result = U.m.Z.samp.diff.posterior
+
+# EE
+U.m.beta.samp.diff.posterior = mash_compute_posterior_matrices(U.m.beta.samp.diff, TestdataBeta.samp.diff, A=A, algorithm.version = 'R')
+U.m.beta.samp.diff$result = U.m.beta.samp.diff.posterior
+length(get_significant_results(U.m.beta.samp.diff))
+length(get_significant_results(U.m.Z.samp.diff))
+```
+
+Comparing loglikelihood
+```{r}
+get_loglik(U.m.beta.samp.diff)
+get_loglik(U.m.Z.samp.diff)
+```
+
+# Simulation alpha
+```{r}
+simple_sims_alpha = function(nsamp = 100, ncond = 5, err_sd, alpha){
+  Balpha.id = matrix(rnorm(nsamp * ncond), nrow = nsamp, ncol = ncond)
+  
+  b = rnorm(nsamp)
+  Balpha.all = matrix(rep(b, ncond), nrow = nsamp, ncol = ncond)
+  
+  Balpha.zero = matrix(0, nrow = nsamp, ncol = ncond)
+  
+  Balpha.one = Balpha.zero
+  b2 = rnorm(nsamp)
+  Balpha.one[, 1] = b2
+
+  Balpha = rbind(Balpha.zero, Balpha.id, Balpha.one, Balpha.all)
+  
+  E.alpha= matrix(rnorm(nrow(Balpha)*nrow(Balpha), sd=err_sd^(1-alpha)), nrow = nrow(Balpha), 
+             ncol = ncol(Balpha), byrow = T)
+  Balpha.hat = Balpha+E.alpha
+  
+  Shat = matrix(err_sd, nrow = nrow(Balpha), ncol = ncol(Balpha), byrow=T)
+  Bhat = Balpha.hat*Shat^(alpha)
+  B = Balpha*Shat^(alpha)
+  return(list(B=B,Bhat=Bhat,Shat=Shat))
+}
+
+```
+
+```{r}
+set.seed(1)
+simdata.B.diff = simple_sims_alpha(2000, 5, c(0.02,0.03,0.04,0.02,0.03), alpha = 0.8)
+vhat=0
+```
+
+```{r}
+if (vhat == 1) {
+  V = cor((simdata.B.diff$Bhat/simdata.B.diff$Shat)[which(apply(abs(simdata.B.diff$Bhat/simdata.B.diff$Shat),1, max) < 2),])
+} else {
+  V = diag(ncol(simdata.B.diff$Bhat))
+}
+
+TestdataBeta.B.diff = set_mash_data(Bhat=simdata.B.diff$Bhat, Shat=simdata.B.diff$Shat, V = as.matrix(V))
+
+TestdataZ.B.diff = set_mash_data(Bhat=simdata.B.diff$Bhat/simdata.B.diff$Shat, 
+                          Shat=matrix(1, nrow(simdata.B.diff$Bhat), ncol(simdata.B.diff$Bhat)), V = as.matrix(V))
+# center
+TestdataZ.B.diff.center = set_mash_data(Bhat=apply(as.matrix(TestdataZ.B.diff$Bhat), 2, function(x) x - mean(x)), 
+                          Shat=matrix(1, nrow(simdata.B.diff$Bhat), ncol(simdata.B.diff$Bhat)), V=as.matrix(V))
+
+# canonical cov
+U.c.B.diff = cov_canonical(TestdataBeta.B.diff)
+
+# data_driven from Z
+m.1by1.Z.B.diff = mash_1by1(TestdataBeta.B.diff, alpha=1)
+strong.Z.B.diff = get_significant_results(m.1by1.Z.B.diff,0.05)
+U.pca.Z.B.diff = cov_pca(TestdataZ.B.diff.center,5,strong.Z.B.diff)
+
+```
+
+## EE model
+```{r}
+U.ed.beta.B.diff = cov_ed(TestdataBeta.B.diff, U.pca.Z.B.diff, strong.Z.B.diff)
+U.m.beta.B.diff = mash(TestdataBeta.B.diff, c(U.c.B.diff, U.ed.beta.B.diff),
+                      outputlevel = 2, alpha=0)
+
+barplot(get_estimated_pi(U.m.beta.B.diff), las = 2, cex.names = 0.7, main='EE')
+```
+
+## EZ model
+```{r}
+U.ed.Z.B.diff = cov_ed(TestdataZ.B.diff, U.pca.Z.B.diff, strong.Z.B.diff)
+U.m.Z.B.diff = mash(TestdataBeta.B.diff, c(U.c.B.diff, U.ed.Z.B.diff), 
+                   outputlevel = 2, alpha = 1)
+barplot(get_estimated_pi(U.m.Z.B.diff), las = 2, cex.names = 0.7, main='EZ')
+
+```
+
+Compare loglikelihod
+```{r}
+get_loglik(U.m.beta.B.diff)
+get_loglik(U.m.Z.B.diff)
+```
+
+## Session information
+
+<!-- Insert the session information into the document -->
+```{r session-info}
+```
