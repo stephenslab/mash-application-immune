@@ -367,7 +367,7 @@ get_loglik(U.m.Z.diff)
 
 The data is simulated using $\alpha = 0.8$, which is near 1. The EZ model has larger log likelihood.
 
-## Session information
+# Session information
 
 <!-- Insert the session information into the document -->
 ```{r session-info}
