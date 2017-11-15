@@ -7,4 +7,9 @@ output:
 
 List of analyses I have done so far:
 
-* [Compare Beta and Z](CompareZBeta.html)
+
+* Simulations to compare the results of Exchangeable Effects and Exchangeable Z-scores model
+  
+    [Compare EE and EZ](CompareZBeta.html)
+  
+    The correct model has higher likelihood in simulations.
