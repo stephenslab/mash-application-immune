@@ -324,7 +324,7 @@ America/Chicago&#39;</code></pre>
 <p><strong>Last updated:</strong> 2017-11-16</p>
 <!-- Insert the code version (Git commit SHA1) if Git repository exists and R
  package git2r is installed -->
-<p><strong>Code version:</strong> d7cb2b5</p>
+<p><strong>Code version:</strong> 8e3e02b</p>
 <div id="set-up-the-data" class="section level1">
 <h1>Set up the data</h1>
 <pre class="r"><code># Load required packages
@@ -341,10 +341,7 @@ K = 10</code></pre>
 <div id="column-centered-z-scores" class="section level1">
 <h1>Column-centered Z scores</h1>
 <p><span class="math display">\[ \tilde{Z}_{n\times 7} = Z-[\mu_{1}, \cdots, \mu_{7}]\]</span></p>
-<pre class="r"><code>D.center = apply(as.matrix(data$max$z), 2, function(x) x - mean(x))
-mash_data_center = mashr::set_mash_data(Bhat = as.matrix(D.center), 
-                                        Shat = matrix(1, nrow(data$max$z),
-                                                      ncol(data$max$z)))</code></pre>
+<pre class="r"><code>D.center = apply(as.matrix(data$max$z), 2, function(x) x - mean(x))</code></pre>
 </div>
 <div id="using-flash-to-extract-the-main-pattern-in-tildez" class="section level1">
 <h1>Using <code>Flash</code> to extract the main pattern in <span class="math inline">\(\tilde{Z}\)</span></h1>
