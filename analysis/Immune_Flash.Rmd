@@ -21,6 +21,11 @@ knitr::read_chunk("chunks.R")
 ```{r code-version, echo=FALSE, results='asis'}
 ```
 
+```{r, echo=FALSE}
+# TEMPORARY.
+knitr::opts_chunk$set(eval = TRUE)
+```
+
 # Set up the data
 ```{r}
 # Load required packages
@@ -45,9 +50,9 @@ mash_data_center = mashr::set_mash_data(Bhat = as.matrix(D.center),
                                                       ncol(data$max$z)))
 ```
 
-# Using Flash to estimate the covariance
+# Using `Flash` to extract the main pattern in $\tilde{Z}$
 
-Using greedy algorithm, we can set the variance structure for the residuals. The available types of variance structure are 'by_column' and 'constant'. Since the columns of the data are different treatments. It is more reasonable to use 'by_column' structure, rather than 'constant'. We apply flash on 
+Using greedy algorithm, we can set the variance structure for the residuals. The available types of variance structure are 'by_column' and 'constant'. Since the columns of the data are different treatments, it is more reasonable to use 'by_column' structure, rather than 'constant'. We apply `flash` on 
 $$ \tilde{Z} = LF' + E $$
 where F is $7 \times K$, L is $n \times K$, E is $n\times7$.
 
