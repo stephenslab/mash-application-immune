@@ -324,7 +324,7 @@ America/Chicago&#39;</code></pre>
 <p><strong>Last updated:</strong> 2017-11-16</p>
 <!-- Insert the code version (Git commit SHA1) if Git repository exists and R
  package git2r is installed -->
-<p><strong>Code version:</strong> d427776</p>
+<p><strong>Code version:</strong> d7cb2b5</p>
 <div id="set-up-the-data" class="section level1">
 <h1>Set up the data</h1>
 <pre class="r"><code># Load required packages
@@ -346,9 +346,9 @@ mash_data_center = mashr::set_mash_data(Bhat = as.matrix(D.center),
                                         Shat = matrix(1, nrow(data$max$z),
                                                       ncol(data$max$z)))</code></pre>
 </div>
-<div id="using-flash-to-estimate-the-covariance" class="section level1">
-<h1>Using Flash to estimate the covariance</h1>
-<p>Using greedy algorithm, we can set the variance structure for the residuals. The available types of variance structure are ‘by_column’ and ‘constant’. Since the columns of the data are different treatments. It is more reasonable to use ‘by_column’ structure, rather than ‘constant’. We apply flash on <span class="math display">\[ \tilde{Z} = LF&#39; + E \]</span> where F is <span class="math inline">\(7 \times K\)</span>, L is <span class="math inline">\(n \times K\)</span>, E is <span class="math inline">\(n\times7\)</span>.</p>
+<div id="using-flash-to-extract-the-main-pattern-in-tildez" class="section level1">
+<h1>Using <code>Flash</code> to extract the main pattern in <span class="math inline">\(\tilde{Z}\)</span></h1>
+<p>Using greedy algorithm, we can set the variance structure for the residuals. The available types of variance structure are ‘by_column’ and ‘constant’. Since the columns of the data are different treatments, it is more reasonable to use ‘by_column’ structure, rather than ‘constant’. We apply <code>flash</code> on <span class="math display">\[ \tilde{Z} = LF&#39; + E \]</span> where F is <span class="math inline">\(7 \times K\)</span>, L is <span class="math inline">\(n \times K\)</span>, E is <span class="math inline">\(n\times7\)</span>.</p>
 <pre class="r"><code># use D.center
 mash_data_flash = flash_set_data(as.matrix(D.center))
 f_greedy = flash_add_greedy(mash_data_flash, Kmax=K, var_type = &#39;by_column&#39;)</code></pre>
@@ -380,15 +380,15 @@ flash_get_pve(FlashResult$f_greedy)</code></pre>
 <pre class="r"><code>F_greedy = flash_get_f(FlashResult$f_greedy)
 row.names(F_greedy) = c(&quot;ctrl&quot;, &quot;lps6h&quot;, &quot;lps90&quot;, &quot;mdp6h&quot;, &quot;mdp90&quot;, &quot;rna6h&quot;, &quot;rna90&quot;)
 barplot(F_greedy[,1], las=2, main=&#39;Loading 1&#39;)</code></pre>
-<p><img src="figure/Immune_Flash.Rmd/unnamed-chunk-6-1.png" width="672" style="display: block; margin: auto;" /></p>
+<p><img src="figure/Immune_Flash.Rmd/unnamed-chunk-7-1.png" width="672" style="display: block; margin: auto;" /></p>
 <pre class="r"><code>barplot(F_greedy[,2], las=2, main=&#39;Loading 2&#39;)</code></pre>
-<p><img src="figure/Immune_Flash.Rmd/unnamed-chunk-6-2.png" width="672" style="display: block; margin: auto;" /></p>
+<p><img src="figure/Immune_Flash.Rmd/unnamed-chunk-7-2.png" width="672" style="display: block; margin: auto;" /></p>
 <pre class="r"><code>barplot(F_greedy[,3], las=2, main=&#39;Loading 3&#39;)</code></pre>
-<p><img src="figure/Immune_Flash.Rmd/unnamed-chunk-6-3.png" width="672" style="display: block; margin: auto;" /></p>
+<p><img src="figure/Immune_Flash.Rmd/unnamed-chunk-7-3.png" width="672" style="display: block; margin: auto;" /></p>
 <pre class="r"><code>barplot(F_greedy[,4], las=2, main=&#39;Loading 4&#39;)</code></pre>
-<p><img src="figure/Immune_Flash.Rmd/unnamed-chunk-6-4.png" width="672" style="display: block; margin: auto;" /></p>
+<p><img src="figure/Immune_Flash.Rmd/unnamed-chunk-7-4.png" width="672" style="display: block; margin: auto;" /></p>
 <pre class="r"><code>barplot(F_greedy[,5], las=2, main=&#39;Loading 5&#39;)</code></pre>
-<p><img src="figure/Immune_Flash.Rmd/unnamed-chunk-6-5.png" width="672" style="display: block; margin: auto;" /></p>
+<p><img src="figure/Immune_Flash.Rmd/unnamed-chunk-7-5.png" width="672" style="display: block; margin: auto;" /></p>
 <p>Check fit of Flash greedy backfitting:</p>
 <p>The first factor explains the main proportion of variance in effects.</p>
 <pre class="r"><code>flash_get_pve(FlashResult$f)</code></pre>
@@ -398,15 +398,15 @@ barplot(F_greedy[,1], las=2, main=&#39;Loading 1&#39;)</code></pre>
 <p>The first factor is the overall summary of treatment effects.</p>
 <pre class="r"><code>row.names(FlashResult$F_flash) = c(&quot;ctrl&quot;, &quot;lps6h&quot;, &quot;lps90&quot;, &quot;mdp6h&quot;, &quot;mdp90&quot;, &quot;rna6h&quot;, &quot;rna90&quot;)
 barplot(FlashResult$F_flash[,1], las=2, main=&#39;Loading 1&#39;)</code></pre>
-<p><img src="figure/Immune_Flash.Rmd/unnamed-chunk-8-1.png" width="672" style="display: block; margin: auto;" /></p>
+<p><img src="figure/Immune_Flash.Rmd/unnamed-chunk-9-1.png" width="672" style="display: block; margin: auto;" /></p>
 <pre class="r"><code>barplot(FlashResult$F_flash[,2], las=2, main=&#39;Loading 2&#39;)</code></pre>
-<p><img src="figure/Immune_Flash.Rmd/unnamed-chunk-8-2.png" width="672" style="display: block; margin: auto;" /></p>
+<p><img src="figure/Immune_Flash.Rmd/unnamed-chunk-9-2.png" width="672" style="display: block; margin: auto;" /></p>
 <pre class="r"><code>barplot(FlashResult$F_flash[,3], las=2, main=&#39;Loading 3&#39;)</code></pre>
-<p><img src="figure/Immune_Flash.Rmd/unnamed-chunk-8-3.png" width="672" style="display: block; margin: auto;" /></p>
+<p><img src="figure/Immune_Flash.Rmd/unnamed-chunk-9-3.png" width="672" style="display: block; margin: auto;" /></p>
 <pre class="r"><code>barplot(FlashResult$F_flash[,4], las=2, main=&#39;Loading 4&#39;)</code></pre>
-<p><img src="figure/Immune_Flash.Rmd/unnamed-chunk-8-4.png" width="672" style="display: block; margin: auto;" /></p>
+<p><img src="figure/Immune_Flash.Rmd/unnamed-chunk-9-4.png" width="672" style="display: block; margin: auto;" /></p>
 <pre class="r"><code>barplot(FlashResult$F_flash[,5], las=2, main=&#39;Loading 5&#39;)</code></pre>
-<p><img src="figure/Immune_Flash.Rmd/unnamed-chunk-8-5.png" width="672" style="display: block; margin: auto;" /></p>
+<p><img src="figure/Immune_Flash.Rmd/unnamed-chunk-9-5.png" width="672" style="display: block; margin: auto;" /></p>
 <pre class="r"><code># dominated by rna6h</code></pre>
 <p>The loading structure is not sparse.</p>
 </div>
