@@ -45,9 +45,6 @@ K = 10
 $$ \tilde{Z}_{n\times 7} = Z-[\mu_{1}, \cdots, \mu_{7}]$$
 ```{r}
 D.center = apply(as.matrix(data$max$z), 2, function(x) x - mean(x))
-mash_data_center = mashr::set_mash_data(Bhat = as.matrix(D.center), 
-                                        Shat = matrix(1, nrow(data$max$z),
-                                                      ncol(data$max$z)))
 ```
 
 # Using `Flash` to extract the main pattern in $\tilde{Z}$
