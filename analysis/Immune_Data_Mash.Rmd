@@ -1,0 +1,189 @@
+---
+title: "Immune Data Mash"
+author: "Yuxin Zou"
+date: 2017-11-15
+output: html_document
+---
+```{r read-chunk, include=FALSE, cache=FALSE}
+knitr::read_chunk("chunks.R")
+```
+
+<!-- Update knitr chunk options -->
+```{r knitr-opts-chunk, include=FALSE}
+```
+
+<!-- Insert the date the file was last updated -->
+```{r last-updated, echo=FALSE, results='asis'}
+```
+
+<!-- Insert the code version (Git commit SHA1) if Git repository exists and R
+ package git2r is installed -->
+```{r code-version, echo=FALSE, results='asis'}
+```
+
+# Set up the data
+```{r}
+# Load required packages
+library(mashr); library(ExtremeDeconvolution); library(flashr2)
+```
+```{r}
+# read data
+data = readRDS('../data/ImmuneQTLSummary.4MASH.rds')
+data$max$se = data$max$beta/data$max$z
+data$null$se = data$null$beta / data$null$z
+
+# set parameters
+K = 10
+P = 5
+vhat = 1
+cov = 'xtx'
+```
+# Column-centered Z scores
+$$ \tilde{Z}_{n\times 7} = Z-[\mu_{1}, \cdots, \mu_{7}]$$
+```{r}
+D.center = apply(as.matrix(data$max$z), 2, function(x) x - mean(x))
+mash_data_center = mashr::set_mash_data(Bhat = as.matrix(D.center), 
+                                        Shat = matrix(1, nrow(data$max$z),
+                                                      ncol(data$max$z)))
+```
+
+# Using Flash to estimate the covariance
+
+Using greedy algorithm, we can set the variance structure for the residuals. The available types of variance structure are 'by_column' and 'constant'. Since the columns of the data are different treatments. It is more reasonable to use 'by_column' structure, rather than 'constant'. We apply flash on 
+$$ \tilde{Z} = LF' + E $$
+where F is $7 \times K$, L is $n \times K$, E is $n\times7$.
+
+```{r, warning = FALSE}
+# use D.center
+mash_data_flash = flash_set_data(as.matrix(D.center))
+f_greedy = flash_add_greedy(mash_data_flash, Kmax=K, var_type = 'by_column')
+```
+
+Backfitting
+```{r, warning = FALSE}
+f_greedy_bf = flash_backfit(mash_data_flash,f_greedy, var_type = 'by_column')
+F_flash = flash_get_f(f_greedy_bf)
+L_flash = flash_get_l(f_greedy_bf)
+
+saveRDS(list(f_greedy = f_greedy,
+             f = f_greedy_bf,
+             F_flash = F_flash,
+             L_flash = L_flash),
+        paste0("../output/Immune.flash2.center.greedy.K", K,".rds"))
+```
+
+## Flashr result
+
+Check fit of Flash greedy:
+```{r}
+FlashResult = readRDS('../output/Immune.flash2.center.greedy.K10.rds')
+flash_get_pve(FlashResult$f_greedy)
+flash_get_sizes(FlashResult$f_greedy)
+
+F_greedy = flash_get_f(FlashResult$f_greedy)
+row.names(F_greedy) = c("ctrl", "lps6h", "lps90", "mdp6h", "mdp90", "rna6h", "rna90")
+barplot(F_greedy[,1], las=2, main='Loading 1')
+barplot(F_greedy[,2], las=2, main='Loading 2')
+barplot(F_greedy[,3], las=2, main='Loading 3')
+barplot(F_greedy[,4], las=2, main='Loading 4')
+barplot(F_greedy[,5], las=2, main='Loading 5')
+```
+
+Check fit of Flash greedy backfitting:
+
+The first factor explains the main proportion of variance in effects.
+```{r}
+flash_get_pve(FlashResult$f)
+flash_get_sizes(FlashResult$f)
+```
+
+The first factor is the overall summary of treatment effects.
+```{r}
+row.names(FlashResult$F_flash) = c("ctrl", "lps6h", "lps90", "mdp6h", "mdp90", "rna6h", "rna90")
+barplot(FlashResult$F_flash[,1], las=2, main='Loading 1')
+barplot(FlashResult$F_flash[,2], las=2, main='Loading 2')
+barplot(FlashResult$F_flash[,3], las=2, main='Loading 3')
+barplot(FlashResult$F_flash[,4], las=2, main='Loading 4')
+barplot(FlashResult$F_flash[,5], las=2, main='Loading 5')
+# dominated by rna6h
+```
+
+The loading structure is not sparse. 
+
+# Create and refine multi-rank covariance matrices
+
+Here we create 3 covariance matrices:
+
+* Flash (rank 5, previously computed)
+  $$ \tilde{Z} = LF' + E $$
+  $$ U = \frac{1}{n} (LF')'(LF') $$
+    + plus single rank Flashs for each factor
+    The 5 matrices $F_{q}L_{q}' L_{q} F_{q}'$
+    
+* PCA (rank 5, to be computed)
+    + plus single rank PCAs
+    
+* Optionally
+    + Empirical covariance
+    
+and apply `Extreme Deconvolution` to refine these matrices. We observed that Extreme Deconvolution perserves rank.
+
+Additionally we include 2 other types of covariance matrices:
+
+* canonical configurations (aka `bmalite`)
+
+* simple heterogeneity models
+
+```{r}
+FlashResult = readRDS('../output/Immune.flash2.center.greedy.K10.rds')
+Flash_res = flash_get_lf(FlashResult$f)
+
+U.flash = c(mashr::cov_from_factors(t(as.matrix(FlashResult$F_flash[,1:5])), "Flash"), 
+            list("tFlash" = t(Flash_res) %*% Flash_res / nrow(data$max$z)))
+
+# Canonical
+U.can = cov_canonical(mash_data_center) 
+
+# PCA matrices
+U.pca = cov_pca(mash_data_center, P)
+
+# Emperical data matrices
+# Denoised data-driven matrices
+U.dd = c(U.flash, U.pca, list("XX" = t(D.center) %*% D.center / nrow(data$max$z)))
+
+mash_data = mashr::set_mash_data(Bhat = as.matrix(data$max$z), 
+                                 Shat = matrix(1, nrow(data$max$z),
+                                               ncol(data$max$z)))
+
+U.ed = cov_ed(mash_data, U.dd)
+# save Covariance matrix
+saveRDS(list(Ulist = c(U.ed, U.can), DD_raw = U.dd), 
+        paste0('../output/Immune.U.center.xtx.K',K,'.P',P,'.rds'))
+
+```
+
+# Fit mash model
+
+Using a random null set, the cell below computes the weights for input covariance matrices (priors) in MASH mixture. The output contains matrix of log-likelihoods as well as weights learned from the hierarchical model.
+
+```{r}
+if (vhat == 1) {
+  V = cor(data$null$z[which(apply(abs(data$null$z),1, max) < 2),])
+} else {
+  V = diag(ncol(data$null$z))
+}
+mash_data = mashr::set_mash_data(Bhat = as.matrix(data$null$beta), 
+                                 Shat = as.matrix(data$null$se), 
+                                 V=as.matrix(V), alpha=1)
+
+Ulist = readRDS('../output/Immune.U.center.xtx.K10.P5.rds')$Ulist
+saveRDS(mashr::mash(mash_data, Ulist, outputlevel = 1), 
+        paste0('../output/ImmuneEZ.V',vhat,'.center.mash_model.K',K,'.P',P,'.rds'))
+
+```
+
+# Session information
+
+<!-- Insert the session information into the document -->
+```{r session-info}
+```
