@@ -23,7 +23,7 @@ knitr::read_chunk("chunks.R")
 
 ```{r, echo=FALSE}
 # TEMPORARY.
-knitr::opts_chunk$set(eval = FALSE)
+knitr::opts_chunk$set(eval = TRUE)
 ```
 
 # Set up the data
