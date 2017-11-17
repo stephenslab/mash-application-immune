@@ -5,11 +5,49 @@ output:
     toc: false
 ---
 
-List of analyses I have done so far:
-
-
 * Simulations to compare the results of Exchangeable Effects and Exchangeable Z-scores model
   
     [Compare EE and EZ](CompareZBeta.html)
   
     The correct model has higher likelihood in simulations.
+    
+Here is the `MASH` analyses:
+
+* Generate the covariance matrices
+
+    + [EZ covariance matrices](Immune_Cov_EZ.html)
+    + [EE covariance matrices](Immune_Cov_EE.html)
+    
+    I realized a question here. We run the `cov_ed` using mash data and Ulist. The mash data has `Bhat`, `Shat`, `Shat_alpha`, `V`, `alpha`. In `cov_ed`, it only use the `Bhat` and `Shat`. Therefore, it assumes the errors are independent (V is identity). The `cov_ed` algorithm does not account for the V matrix. 
+    
+    We use extreme deconvolution to find the covariance candidates. Maybe, the ignorance of the dependency in ed does not matter. Will including the dependency improve the initial covariance matrices?
+    
+* Fit the `mash` model
+    + [EZ V1 mash model](Immune_Data_Mash_V1_EZ.html)
+    + [EE V1 mash model](Immune_Data_Mash_V1_EE.html)
+    
+    Changing the parameter `alpha` could obtain EE or EZ fitted model.
+    
+    Changing the parameter `vhat` could obtain different V matrices.
+      + `vhat = 0`, V is identity matrix
+      + `vhat = 1`, V is the estimated correlation matrix
+      
+      V is the correlation matrix here:
+      $$ \hat{\beta}_{j}|\beta_{j}, S_{j} \sim N(\hat{\beta}_{j}; \beta_{j}, S_{j}VS_{j}) $$
+    
+* Results:
+    + [EZ V1 model](Immune_Data_Mash_V1_EZ_Result.html)
+    + [EE V1 model](Immune_Data_Mash_V1_EE_Result.html)
+    + [EZ V0 model](Immune_Data_Mash_V0_EZ_Result.html)
+    + [EE V0 model](Immune_Data_Mash_V0_EE_Result.html)
+    
+    Among these models, EZ V1 has the highest log likelihood value.
+    
+    The estimated weights for covariance matrices are different for EE and EZ model when V is the estimated correlation. When V is Identity, the estimated weights are similar. But the measurements are correlated due to sample overlap (all based on same 134 individuals), I think it is reasonable to use the estimated correlation from the data (V1).
+    
+    Using Mash with V be the estimated correlation, we found more eQTLs, the number of eQTLs are similar using EE and EZ model. Based on the EZ model, the majority weights for the covariance matrix is on the null matrix (0, no effects). The remaining weights are on the covariance matrix capturing the pattern that the standardized effects are strong positively correlated among all treatments.
+    
+    I computed the number of reQTLs, treatment specific reQTLs and time point specific reQTLs using the linear transformation. We found more reQTLs, treatment specific reQTLs and time point specific reQTLs than the paper’s result.
+    
+    However, the number of reQTLs from EE model are much less than EZ model. I don’t know the reason for this.
+
