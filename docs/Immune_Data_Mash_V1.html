@@ -324,7 +324,7 @@ America/Chicago&#39;</code></pre>
 <p><strong>Last updated:</strong> 2017-11-17</p>
 <!-- Insert the code version (Git commit SHA1) if Git repository exists and R
  package git2r is installed -->
-<p><strong>Code version:</strong> b50eaf6</p>
+<p><strong>Code version:</strong> b009f16</p>
 <div id="set-up-the-data" class="section level1">
 <h1>Set up the data</h1>
 <pre class="r"><code># Load required packages
@@ -358,9 +358,9 @@ Ulist = readRDS(&#39;../output/Immune.U.center.xtx.K10.P5.rds&#39;)$Ulist
 saveRDS(mashr::mash(mash_data, Ulist, outputlevel = 1), 
         paste0(&#39;../output/ImmuneEZ.V&#39;,vhat,&#39;.center.mash_model.K&#39;,K,&#39;.P&#39;,P,&#39;.rds&#39;))</code></pre>
 <pre><code> - Computing 193301 x 476 likelihood matrix.
- - Likelihood calculations took 12.61 seconds.
+ - Likelihood calculations took 13.12 seconds.
  - Fitting model with 476 mixture components.
- - Model fitting took 337.77 seconds.</code></pre>
+ - Model fitting took 344.87 seconds.</code></pre>
 </div>
 <div id="posterior-inference" class="section level1">
 <h1>Posterior inference</h1>
@@ -379,6 +379,7 @@ mash_data = mashr::set_mash_data(Bhat = as.matrix(data$max$beta),
                                  alpha=1)</code></pre>
 <pre class="r"><code>saveRDS(mash_compute_posterior_matrices(U.m, mash_data), 
         paste0(&#39;../output/ImmuneEZ.V1.center.mash_posterior.K&#39;,K,&#39;.P&#39;,P,&#39;.rds&#39;))</code></pre>
+<pre><code>FIXME: &#39;compute_posterior_matrices&#39; in Rcpp does not transfer EZ to EE</code></pre>
 </div>
 
 <!-- Adjust MathJax settings so that all math formulae are shown using
