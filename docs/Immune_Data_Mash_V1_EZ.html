@@ -13,7 +13,7 @@
 
 <meta name="date" content="2017-11-15" />
 
-<title>Immune Data Mash Analysis EE V1</title>
+<title>Immune Data Mash Analysis EZ V1</title>
 
 <script src="site_libs/jquery-1.11.3/jquery.min.js"></script>
 <meta name="viewport" content="width=device-width, initial-scale=1" />
@@ -310,7 +310,7 @@ div.section {
 
 
 
-<h1 class="title toc-ignore">Immune Data Mash Analysis EE V1</h1>
+<h1 class="title toc-ignore">Immune Data Mash Analysis EZ V1</h1>
 <h4 class="author"><em>Yuxin Zou</em></h4>
 <h4 class="date"><em>2017-11-15</em></h4>
 
@@ -319,12 +319,12 @@ div.section {
 
 <!-- Update knitr chunk options -->
 <!-- Insert the date the file was last updated -->
-<pre><code>Warning in as.POSIXlt.POSIXct(Sys.time()): unknown timezone &#39;default/
-America/Chicago&#39;</code></pre>
+<pre><code>Warning in as.POSIXlt.POSIXct(Sys.time()): unknown timezone &#39;zone/tz/2017c.
+1.0/zoneinfo/America/Chicago&#39;</code></pre>
 <p><strong>Last updated:</strong> 2017-11-17</p>
 <!-- Insert the code version (Git commit SHA1) if Git repository exists and R
  package git2r is installed -->
-<p><strong>Code version:</strong> 3806f3f</p>
+<p><strong>Code version:</strong> 850ca41</p>
 <div id="set-up-the-data" class="section level1">
 <h1>Set up the data</h1>
 <pre class="r"><code># Load required packages
@@ -358,9 +358,9 @@ Ulist = readRDS(&#39;../output/ImmuneEZ.U.center.xtx.K10.P5.rds&#39;)$Ulist
 saveRDS(mashr::mash(mash_data, Ulist, outputlevel = 1), 
         paste0(&#39;../output/ImmuneEZ.V&#39;,vhat,&#39;.center.mash_model.K&#39;,K,&#39;.P&#39;,P,&#39;.rds&#39;))</code></pre>
 <pre><code> - Computing 193301 x 476 likelihood matrix.
- - Likelihood calculations took 12.75 seconds.
+ - Likelihood calculations took 11.69 seconds.
  - Fitting model with 476 mixture components.
- - Model fitting took 362.56 seconds.</code></pre>
+ - Model fitting took 325.46 seconds.</code></pre>
 </div>
 <div id="posterior-inference" class="section level1">
 <h1>Posterior inference</h1>

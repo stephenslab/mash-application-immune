@@ -13,7 +13,7 @@
 
 <meta name="date" content="2017-11-15" />
 
-<title>Immune Data MASH Model Covariance (EZ)</title>
+<title>Immune Data Mash Analysis EZ V0</title>
 
 <script src="site_libs/jquery-1.11.3/jquery.min.js"></script>
 <meta name="viewport" content="width=device-width, initial-scale=1" />
@@ -310,7 +310,7 @@ div.section {
 
 
 
-<h1 class="title toc-ignore">Immune Data MASH Model Covariance (EZ)</h1>
+<h1 class="title toc-ignore">Immune Data Mash Analysis EZ V0</h1>
 <h4 class="author"><em>Yuxin Zou</em></h4>
 <h4 class="date"><em>2017-11-15</em></h4>
 
@@ -337,62 +337,55 @@ data$null$se = data$null$beta / data$null$z
 
 # set parameters
 K = 10
-P = 5</code></pre>
-<p>We estimate the covariance using column-centered Z scores</p>
-<pre class="r"><code>D.center = apply(as.matrix(data$max$z), 2, function(x) x - mean(x))
-mash_data_center = mashr::set_mash_data(Bhat = as.matrix(D.center))</code></pre>
+P = 5
+vhat = 0</code></pre>
 </div>
-<div id="generate-covariance-matrices" class="section level1">
-<h1>Generate covariance matrices</h1>
-<p>Here we create 3 type of data-driven covariance matrices:</p>
-<ul>
-<li>Flash (rank 5, previously computed): <a href="Immune_Flash.html">Flash</a> <span class="math display">\[ \tilde{Z}_{n\times 7} = LF&#39; + E \]</span> <span class="math display">\[ U = \frac{1}{n} (LF&#39;)&#39;(LF&#39;) \]</span>
-<ul>
-<li>plus single rank Flashs for each factor The 5 matrices <span class="math inline">\(F_{q}L_{q}&#39; L_{q} F_{q}&#39;\)</span></li>
-</ul></li>
-<li>PCA (rank 5, to be computed)
-<ul>
-<li>plus single rank PCAs</li>
-</ul></li>
-<li>Optionally
-<ul>
-<li>Empirical covariance</li>
-</ul></li>
-</ul>
-<p>and apply <code>Extreme Deconvolution</code> to refine these matrices. We observed that Extreme Deconvolution perserves rank.</p>
-<p>Additionally we include 2 other types of covariance matrices:</p>
-<ul>
-<li><p>canonical configurations (aka <code>bmalite</code>)</p></li>
-<li><p>simple heterogeneity models</p></li>
-</ul>
-<div id="generate-and-refine-multi-rank-data-driven-covariance-matrices" class="section level2">
-<h2>Generate and refine multi-rank data-driven covariance matrices</h2>
-<pre class="r"><code>FlashResult = readRDS(&#39;../output/Immune.flash2.center.greedy.K10.rds&#39;)
-Flash_res = flash_get_lf(FlashResult$f)
+<div id="fit-mash-model" class="section level1">
+<h1>Fit <code>mash</code> model</h1>
+<p>Using a random null set, the cell below computes the weights for input covariance matrices (<a href="Immune_Cov_EZ.html">Covariance matrices</a>) in MASH mixture. The output contains matrix of log-likelihoods as well as weights learned from the hierarchical model.</p>
+<pre class="r"><code>if (vhat == 1) {
+  V = cor(data$null$z[which(apply(abs(data$null$z),1, max) &lt; 2),])
+} else {
+  V = diag(ncol(data$null$z))
+}
 
-U.flash = c(mashr::cov_from_factors(t(as.matrix(FlashResult$F_flash[,1:5])), &quot;Flash&quot;), 
-            list(&quot;tFlash&quot; = t(Flash_res) %*% Flash_res / nrow(data$max$z)))
+mash_data = mashr::set_mash_data(Bhat = as.matrix(data$null$beta), 
+                                 Shat = as.matrix(data$null$se), 
+                                 V=as.matrix(V), alpha=1)
 
-# PCA matrices
-U.pca = cov_pca(mash_data_center, P)
+Ulist = readRDS(&#39;../output/ImmuneEZ.U.center.xtx.K10.P5.rds&#39;)$Ulist
 
-# Emperical data matrices
-# Denoised data-driven matrices
-U.dd = c(U.flash, U.pca, list(&quot;XX&quot; = t(D.center) %*% D.center / nrow(data$max$z)))
-
-mash_data = mashr::set_mash_data(Bhat = as.matrix(data$max$z))
-
-U.ed = cov_ed(mash_data, U.dd)</code></pre>
+saveRDS(mashr::mash(mash_data, Ulist, outputlevel = 1), 
+        paste0(&#39;../output/ImmuneEZ.V&#39;,vhat,&#39;.center.mash_model.K&#39;,K,&#39;.P&#39;,P,&#39;.rds&#39;))</code></pre>
+<pre><code> - Computing 193301 x 476 likelihood matrix.
+ - Likelihood calculations took 12.03 seconds.
+ - Fitting model with 476 mixture components.</code></pre>
+<pre><code>Warning in REBayes::KWDual(A, rep(1, k), normalize(w), control = control): estimated mixing distribution has some negative values:
+               consider reducing rtol</code></pre>
+<pre><code>Warning in mixIP(matrix_lik = structure(c(0.286586473194241,
+0.862951568400178, : Optimization step yields mixture weights that are
+either too small, or negative; weights have been corrected and renormalized
+after the optimization.</code></pre>
+<pre><code> - Model fitting took 310.71 seconds.</code></pre>
 </div>
-<div id="generate-canonical-covariance-matrices" class="section level2">
-<h2>Generate canonical covariance matrices</h2>
-<pre class="r"><code># Canonical
-U.can = cov_canonical(mash_data) 
+<div id="posterior-inference" class="section level1">
+<h1>Posterior inference</h1>
+<p>Applying hyperparameters learned from the training (the null) set to the test (the top eQTL) set, the cell below computes posterior quantities.</p>
+<pre class="r"><code>U.m = readRDS(&#39;../output/ImmuneEZ.V0.center.mash_model.K10.P5.rds&#39;)
 
-# save Covariance matrix
-saveRDS(list(Ulist = c(U.ed, U.can), DD_raw = U.dd), 
-        paste0(&#39;../output/ImmuneEZ.U.center.xtx.K&#39;,K,&#39;.P&#39;,P,&#39;.rds&#39;))</code></pre>
-</div>
+if (vhat == 1) {
+  V = cor(data$null$z[which(apply(abs(data$null$z),1, max) &lt; 2),])
+} else {
+  V = diag(ncol(data$null$z))
+}
+
+mash_data = mashr::set_mash_data(Bhat = as.matrix(data$max$beta), 
+                                 Shat = as.matrix(data$max$se), 
+                                 V = as.matrix(V), 
+                                 alpha = 1)</code></pre>
+<pre class="r"><code>saveRDS(mash_compute_posterior_matrices(U.m, mash_data), 
+        paste0(&#39;../output/ImmuneEZ.V&#39;,vhat,&#39;.center.mash_posterior.K&#39;,K,&#39;.P&#39;,P,&#39;.rds&#39;))</code></pre>
+<pre><code>FIXME: &#39;compute_posterior_matrices&#39; in Rcpp does not transfer EZ to EE</code></pre>
 </div>
 <div id="session-information" class="section level1">
 <h1>Session information</h1>
@@ -423,13 +416,14 @@ loaded via a namespace (and not attached):
 [10] gtable_0.2.0      lattice_0.20-35   rlang_0.1.2      
 [13] Matrix_1.2-11     foreach_1.4.3     yaml_2.1.14      
 [16] parallel_3.4.2    mvtnorm_1.0-6     stringr_1.2.0    
-[19] knitr_1.17        rprojroot_1.2     grid_3.4.2       
-[22] rmarkdown_1.7     rmeta_2.16        ggplot2_2.2.1    
-[25] magrittr_1.5      backports_1.1.1   scales_0.5.0     
-[28] codetools_0.2-15  htmltools_0.3.6   MASS_7.3-47      
-[31] assertthat_0.2.0  colorspace_1.3-2  stringi_1.1.5    
-[34] lazyeval_0.2.1    pscl_1.5.2        doParallel_1.0.11
-[37] munsell_0.4.3     truncnorm_1.0-7   SQUAREM_2017.10-1</code></pre>
+[19] knitr_1.17        REBayes_0.85      rprojroot_1.2    
+[22] grid_3.4.2        rmarkdown_1.7     rmeta_2.16       
+[25] ggplot2_2.2.1     magrittr_1.5      backports_1.1.1  
+[28] scales_0.5.0      codetools_0.2-15  htmltools_0.3.6  
+[31] MASS_7.3-47       assertthat_0.2.0  colorspace_1.3-2 
+[34] stringi_1.1.5     Rmosek_8.0.69     lazyeval_0.2.1   
+[37] pscl_1.5.2        doParallel_1.0.11 munsell_0.4.3    
+[40] truncnorm_1.0-7   SQUAREM_2017.10-1</code></pre>
 </div>
 
 <!-- Adjust MathJax settings so that all math formulae are shown using

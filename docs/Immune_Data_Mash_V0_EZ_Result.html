@@ -13,7 +13,7 @@
 
 <meta name="date" content="2017-11-15" />
 
-<title>Immune Data Mash Analysis EZ V1 Results</title>
+<title>Immune Data Mash Analysis EZ V0 Results</title>
 
 <script src="site_libs/jquery-1.11.3/jquery.min.js"></script>
 <meta name="viewport" content="width=device-width, initial-scale=1" />
@@ -310,7 +310,7 @@ div.section {
 
 
 
-<h1 class="title toc-ignore">Immune Data Mash Analysis EZ V1 Results</h1>
+<h1 class="title toc-ignore">Immune Data Mash Analysis EZ V0 Results</h1>
 <h4 class="author"><em>Yuxin Zou</em></h4>
 <h4 class="date"><em>2017-11-15</em></h4>
 
@@ -340,7 +340,7 @@ data$null$se = data$null$beta / data$null$z
 
 K = 10
 P = 5
-vhat = 1</code></pre>
+vhat = 0</code></pre>
 <pre class="r"><code>if (vhat == 1) {
   V = cor(data$null$z[which(apply(abs(data$null$z),1, max) &lt; 2),])
 } else {
@@ -353,21 +353,22 @@ mash_data = mashr::set_mash_data(Bhat = as.matrix(data$max$beta),
 </div>
 <div id="mash-results" class="section level1">
 <h1>MASH results</h1>
+<p>The model is fitted in <a href="Immune_Data_Mash_V0_EZ.html">Mash model EZ V0</a></p>
 <pre class="r"><code># EZ
-resEZ = readRDS(&#39;../output/ImmuneEZ.V1.center.mash_model.K10.P5.rds&#39;)
-resEZ$result = readRDS(&#39;../output/ImmuneEZ.V1.center.mash_posterior.K10.P5.rds&#39;)</code></pre>
+resEZ = readRDS(&#39;../output/ImmuneEZ.V0.center.mash_model.K10.P5.rds&#39;)
+resEZ$result = readRDS(&#39;../output/ImmuneEZ.V0.center.mash_posterior.K10.P5.rds&#39;)</code></pre>
 </div>
 <div id="mash-model-fit" class="section level1">
 <h1>MASH model fit</h1>
 <p>The log-likelihood of fit is</p>
 <pre class="r"><code>get_loglik(resEZ)</code></pre>
-<pre><code>[1] 3201375</code></pre>
+<pre><code>[1] 3185703</code></pre>
 <p>Here is a plot of weights learned.</p>
 <pre class="r"><code>options(repr.plot.width=12, repr.plot.height=4)
 barplot(get_estimated_pi(resEZ), las = 2, cex.names = 0.7)</code></pre>
-<p><img src="figure/Immune_Data_Mash_V1_EZ_Result.Rmd/unnamed-chunk-5-1.png" width="672" style="display: block; margin: auto;" /></p>
-<p>Most of the mass is on the null, PCA1 and equal effects. <code>mash</code> placed 9.7949% of the mixture components weight on data-driven matrices, 5.4262% weight on equal effects matrix.</p>
-<p>Here is a visualization for PCA1, which capture 9.1026% mixture component in these data, (via correlation heatmap):</p>
+<p><img src="figure/Immune_Data_Mash_V0_EZ_Result.Rmd/unnamed-chunk-5-1.png" width="672" style="display: block; margin: auto;" /></p>
+<p>Most of the mass is on the null, PCA1 and equal effects. <code>mash</code> placed 8.8161% of the mixture components weight on data-driven matrices, 61.9691% weight on equal effects matrix.</p>
+<p>Here is a visualization for PCA1, which capture 8.5003% mixture component in these data, (via correlation heatmap):</p>
 <pre class="r"><code>x           &lt;- cov2cor(resEZ$fitted_g$Ulist[[&quot;ED_PCA_1&quot;]])
 x[x &gt; 1]    &lt;- 1
 x[x &lt; -1]   &lt;- -1
@@ -376,7 +377,7 @@ rownames(x) &lt;- colnames(x)
 corrplot.mixed(x, tl.pos=&quot;d&quot;,upper=&#39;color&#39;,cl.lim=c(0.2,1), upper.col=colorRampPalette(rev(c(&quot;#D73027&quot;,&quot;#FC8D59&quot;,&quot;#FEE090&quot;,&quot;#FFFFBF&quot;,
                                &quot;#E0F3F8&quot;,&quot;#91BFDB&quot;,&quot;#4575B4&quot;)))(40),
                tl.cex=1.2)</code></pre>
-<p><img src="figure/Immune_Data_Mash_V1_EZ_Result.Rmd/unnamed-chunk-6-1.png" width="672" style="display: block; margin: auto;" /></p>
+<p><img src="figure/Immune_Data_Mash_V0_EZ_Result.Rmd/unnamed-chunk-6-1.png" width="672" style="display: block; margin: auto;" /></p>
 <p>The main pattern captured by this component is that the effect of control is strongly correlated with other treatments.</p>
 <p>Next we perform SVD on the PCA 1 based covariance matrix, and plot the top eigen vector.</p>
 <pre class="r"><code>svd.out = svd(resEZ$fitted_g$Ulist[[&quot;ED_PCA_1&quot;]])
@@ -387,33 +388,33 @@ options(repr.plot.width=10, repr.plot.height=5)
 for (j in 1:1)
   barplot(v[,j]/v[,j][which.max(abs(v[,j]))], cex.names = 0.7,
           las = 2, main = paste0(&quot;EigenVector &quot;, j, &quot; for PCA-based covariance matrix&quot;))</code></pre>
-<p><img src="figure/Immune_Data_Mash_V1_EZ_Result.Rmd/unnamed-chunk-7-1.png" width="672" style="display: block; margin: auto;" /></p>
+<p><img src="figure/Immune_Data_Mash_V0_EZ_Result.Rmd/unnamed-chunk-7-1.png" width="672" style="display: block; margin: auto;" /></p>
 <p>It captures overall effects of the treatments.</p>
 <pre class="r"><code>head(get_significant_results(resEZ))</code></pre>
-<pre><code> ILMN_1656297_rs62226483  ILMN_1657446_rs35690547   ILMN_1659857_rs5751757 
-                     513                      632                      881 
-ILMN_1660923_rs116457857   ILMN_1670322_rs2548331  ILMN_1676372_rs10408468 
-                    1008                     1845                     2359 </code></pre>
+<pre><code> ILMN_1653469_rs2253928  ILMN_1670322_rs2548331 ILMN_1677785_rs28384491 
+                    222                    1845                    2486 
+ ILMN_1683888_rs6849183  ILMN_1697227_rs2279308  ILMN_1701906_rs1699603 
+                   3039                    4195                    4588 </code></pre>
 <div id="examples-of-how-mash-uses-patterns-of-sharing-to-inform-estimated-effect" class="section level2">
 <h2>Examples of how <code>mash</code> uses patterns of sharing to inform estimated effect:</h2>
 <ul>
-<li><p>Original estimates <img src="figure/Immune_Data_Mash_V1_EZ_Result.Rmd/unnamed-chunk-9-1.png" width="672" style="display: block; margin: auto;" /></p></li>
+<li><p>Original estimates <img src="figure/Immune_Data_Mash_V0_EZ_Result.Rmd/unnamed-chunk-9-1.png" width="672" style="display: block; margin: auto;" /></p></li>
 <li><p><code>MASH</code> estimates</p></li>
 </ul>
-<p><img src="figure/Immune_Data_Mash_V1_EZ_Result.Rmd/unnamed-chunk-10-1.png" width="672" style="display: block; margin: auto;" /></p>
+<p><img src="figure/Immune_Data_Mash_V0_EZ_Result.Rmd/unnamed-chunk-10-1.png" width="672" style="display: block; margin: auto;" /></p>
 <p>Here is one example of shinkage:</p>
 <ul>
-<li><p>Original estimates <img src="figure/Immune_Data_Mash_V1_EZ_Result.Rmd/unnamed-chunk-11-1.png" width="672" style="display: block; margin: auto;" /></p></li>
+<li><p>Original estimates <img src="figure/Immune_Data_Mash_V0_EZ_Result.Rmd/unnamed-chunk-11-1.png" width="672" style="display: block; margin: auto;" /></p></li>
 <li><p><code>MASH</code> estimates</p></li>
 </ul>
-<p><img src="figure/Immune_Data_Mash_V1_EZ_Result.Rmd/unnamed-chunk-12-1.png" width="672" style="display: block; margin: auto;" /></p>
+<p><img src="figure/Immune_Data_Mash_V0_EZ_Result.Rmd/unnamed-chunk-12-1.png" width="672" style="display: block; margin: auto;" /></p>
 <p>The estimated effects are closer to 0. <!--
 * Original estimates
-<img src="figure/Immune_Data_Mash_V1_EZ_Result.Rmd/unnamed-chunk-13-1.png" width="672" style="display: block; margin: auto;" />
+<img src="figure/Immune_Data_Mash_V0_EZ_Result.Rmd/unnamed-chunk-13-1.png" width="672" style="display: block; margin: auto;" />
 
 * `MASH` estimates
 
-<img src="figure/Immune_Data_Mash_V1_EZ_Result.Rmd/unnamed-chunk-14-1.png" width="672" style="display: block; margin: auto;" />
+<img src="figure/Immune_Data_Mash_V0_EZ_Result.Rmd/unnamed-chunk-14-1.png" width="672" style="display: block; margin: auto;" />
 
 All estimated effects become similar.
 --></p>
@@ -430,17 +431,17 @@ options(repr.plot.width=9, repr.plot.height=9)
 print(levelplot(x[n:1,],col.regions = clrs,xlab = &quot;&quot;,ylab = &quot;&quot;,
                 colorkey = TRUE, at = seq(0.7,1,length.out = 64),
                 scales = list(cex = 0.5,x = list(rot = 45))))</code></pre>
-<p><img src="figure/Immune_Data_Mash_V1_EZ_Result.Rmd/unnamed-chunk-15-1.png" width="672" style="display: block; margin: auto;" /></p>
+<p><img src="figure/Immune_Data_Mash_V0_EZ_Result.Rmd/unnamed-chunk-15-1.png" width="672" style="display: block; margin: auto;" /></p>
 </div>
 </div>
 <div id="compare-with-original-paper" class="section level1">
 <h1>Compare with original paper</h1>
 <div id="eqtls" class="section level2">
 <h2>eQTLs</h2>
-<p>Among the 21485 top SNPs, <code>MASH</code> found 5548 to be significant in at least one treatment. We refer to these as the ‘top eQTLs’.</p>
-<p>Using <code>MASH</code>, we found 5257 genes with an eQTL in control, 5144 genes with an eQTL in lps6h, 5266 genes with an eQTL in lps90, 5302 genes with an eQTL in mdp6h, 5298 genes with an eQTL in mdp90, 5318 genes with an eQTL in rna6h, 5384 genes with an eQTL in rna90.</p>
+<p>Among the 21485 top SNPs, <code>MASH</code> found 11613 to be significant in at least one treatment. We refer to these as the ‘top eQTLs’.</p>
+<p>Using <code>MASH</code>, we found 11228 genes with an eQTL in control, 11157 genes with an eQTL in lps6h, 11251 genes with an eQTL in lps90, 11430 genes with an eQTL in mdp6h, 11336 genes with an eQTL in mdp90, 11410 genes with an eQTL in rna6h, 11511 genes with an eQTL in rna90.</p>
 <p>In the original paper, they identified 717-1653 genes with an eQTL in each condition. So, we found more genes with an eQTL using <code>MASH</code>.</p>
-<p>There are 4792 top eQTLs with significant effects among all treatments.</p>
+<p>There are 10639 top eQTLs with significant effects among all treatments.</p>
 <!---
 ## Find genes specific to one treatment
 
@@ -475,26 +476,26 @@ for(i in 1:7){
 ```
 
 ```
-Gene has significant effect only in condition  1 : Total =  11 
- ILMN_1680348_rs10916988 ILMN_1838254_rs59297777 ILMN_2174045_rs4793554 ILMN_1685574_rs9877298 ILMN_1716922_rs12196740 ILMN_1744113_rs115578438 ILMN_2124833_rs112789148 ILMN_1678754_rs73012081 ILMN_3241254_rs4363199 ILMN_1912333_rs199992693 ILMN_2345739_rs2278558 
+Gene has significant effect only in condition  1 : Total =  1 
+ ILMN_1721134_rs1381317 
 
-Gene has significant effect only in condition  2 : Total =  9 
- ILMN_1659024_rs11240393 ILMN_1657237_rs1178432 ILMN_3307868_rs7515776 ILMN_1711245_rs1456297 ILMN_1665217_rs11919448 ILMN_1834488_rs402523 ILMN_2353240_rs12130871 ILMN_1792922_rs150617640 ILMN_1682727_rs4719884 
+Gene has significant effect only in condition  2 : Total =  6 
+ ILMN_3307868_rs7515776 ILMN_1834488_rs402523 ILMN_1792922_rs150617640 ILMN_1723058_rs35951057 ILMN_1737514_rs72859650 ILMN_1835035_rs16922908 
 
-Gene has significant effect only in condition  3 : Total =  5 
- ILMN_1788968_rs11212483 ILMN_3236249_rs56126097 ILMN_1761101_rs11741945 ILMN_1744647_rs11176664 ILMN_1792710_rs66697450 
+Gene has significant effect only in condition  3 : Total =  0 
+  
 
-Gene has significant effect only in condition  4 : Total =  1 
- ILMN_1675709_rs111145053 
+Gene has significant effect only in condition  4 : Total =  0 
+  
 
-Gene has significant effect only in condition  5 : Total =  3 
- ILMN_1835451_rs934478 ILMN_1829840_rs7567943 ILMN_3238893_rs9426742 
+Gene has significant effect only in condition  5 : Total =  0 
+  
 
-Gene has significant effect only in condition  6 : Total =  41 
- ILMN_2088124_rs200675344 ILMN_1764321_rs2009884 ILMN_1701441_rs6477803 ILMN_3241071_rs728278 ILMN_1743301_rs2410390 ILMN_1694268_rs150988329 ILMN_1812557_rs60118365 ILMN_2393456_rs3757351 ILMN_1755737_rs2294402 ILMN_1808590_rs202027765 ILMN_1743367_rs11235017 ILMN_2383489_rs60118365 ILMN_1731688_rs200536104 ILMN_1658586_rs4657740 ILMN_1703316_rs10413121 ILMN_1769787_rs2294402 ILMN_2104356_rs2621208 ILMN_1745904_rs68179910 ILMN_3307950_rs72823505 ILMN_1802458_rs34219540 ILMN_1796537_5-39249701 ILMN_1683494_rs11725194 ILMN_2307656_rs34219540 ILMN_1723211_rs12433317 ILMN_1797001_rs1197246 ILMN_1688755_rs11126239 ILMN_2081682_rs453270 ILMN_1655614_rs73373373 ILMN_1791759_rs17000106 ILMN_3201900_rs1034934 ILMN_1696028_rs117735470 ILMN_1785272_rs3763469 ILMN_1689380_rs2817642 ILMN_1810956_rs7395060 ILMN_1789500_rs151078490 ILMN_1772959_15-64537285 ILMN_1833858_rs1544653 ILMN_1665510_rs225133 ILMN_1722929_rs116252199 ILMN_1718030_rs13165846 ILMN_1689086_rs1451610 
+Gene has significant effect only in condition  6 : Total =  27 
+ ILMN_2088124_rs200675344 ILMN_1701441_rs6477803 ILMN_1764321_rs2009884 ILMN_1743301_rs2410390 ILMN_3241071_rs728278 ILMN_1812557_rs60118365 ILMN_1808590_rs202027765 ILMN_1743367_rs11235017 ILMN_1658586_rs4657740 ILMN_3307950_rs72823505 ILMN_2383489_rs60118365 ILMN_1731688_rs200536104 ILMN_1696028_rs117735470 ILMN_1694268_rs150988329 ILMN_2104356_rs2621208 ILMN_1769787_rs2294402 ILMN_1703316_rs10413121 ILMN_2098616_rs62372869 ILMN_1802458_rs34219540 ILMN_1655614_rs73373373 ILMN_2115633_rs59514891 ILMN_1683494_rs11725194 ILMN_1796537_5-39249701 ILMN_2307656_rs34219540 ILMN_1800951_rs9383178 ILMN_2184708_rs1450219 ILMN_1728224_rs186850658 
 
-Gene has significant effect only in condition  7 : Total =  2 
- ILMN_1765872_rs10425486 ILMN_2161577_rs1247695 
+Gene has significant effect only in condition  7 : Total =  0 
+  
 ```
 -->
 </div>
@@ -520,43 +521,43 @@ saveRDS(resEZ.lps6h,
         paste0(&#39;../output/ImmuneEZ.V&#39;,vhat,&#39;.center.resEZ.lps6h.K&#39;,K,&#39;.P&#39;,P,&#39;.rds&#39;))</code></pre>
 <pre class="r"><code>resEZ.lps6h = readRDS(paste0(&#39;../output/ImmuneEZ.V&#39;,vhat,&#39;.center.resEZ.lps6h.K&#39;,K,&#39;.P&#39;,P,&#39;.rds&#39;))
 length(get_significant_results(resEZ.lps6h))</code></pre>
-<pre><code>[1] 3053</code></pre>
-<p>Using <code>MASH</code>, we found 59.35% [17%] of lps 6h eQTLs are reQTLs.</p>
+<pre><code>[1] 8348</code></pre>
+<p>Using <code>MASH</code>, we found 74.82% [17%] of lps 6h eQTLs are reQTLs.</p>
 </div>
 <div id="lps-90" class="section level3">
 <h3>LPS 90</h3>
 <pre class="r"><code>resEZ.lps90 = readRDS(paste0(&#39;../output/ImmuneEZ.V&#39;,vhat,&#39;.center.resEZ.lps90.K&#39;,K,&#39;.P&#39;,P,&#39;.rds&#39;))
 length(get_significant_results(resEZ.lps90))</code></pre>
-<pre><code>[1] 2724</code></pre>
-<p>We found 51.73% [15%] of lps 90 eQTLs are reQTLs.</p>
+<pre><code>[1] 7812</code></pre>
+<p>We found 69.43% [15%] of lps 90 eQTLs are reQTLs.</p>
 </div>
 <div id="mdp-6h" class="section level3">
 <h3>MDP 6h</h3>
 <pre class="r"><code>resEZ.mdp6h = readRDS(paste0(&#39;../output/ImmuneEZ.V&#39;,vhat,&#39;.center.resEZ.mdp6h.K&#39;,K,&#39;.P&#39;,P,&#39;.rds&#39;))
 length(get_significant_results(resEZ.mdp6h))</code></pre>
-<pre><code>[1] 2778</code></pre>
-<p>We found 52.4% [9%] of mdp 6h eQTLs are reQTLs.</p>
+<pre><code>[1] 7527</code></pre>
+<p>We found 65.85% [9%] of mdp 6h eQTLs are reQTLs.</p>
 </div>
 <div id="mdp-90" class="section level3">
 <h3>MDP 90</h3>
 <pre class="r"><code>resEZ.mdp90 = readRDS(paste0(&#39;../output/ImmuneEZ.V&#39;,vhat,&#39;center.resEZ.mdp90.K&#39;,K,&#39;.P&#39;,P,&#39;.rds&#39;))
 length(get_significant_results(resEZ.mdp90))</code></pre>
-<pre><code>[1] 2493</code></pre>
-<p>We found 47.06% [9%] of mdp 90 eQTLs are reQTLs.</p>
+<pre><code>[1] 7040</code></pre>
+<p>We found 62.1% [9%] of mdp 90 eQTLs are reQTLs.</p>
 </div>
 <div id="rna-6h" class="section level3">
 <h3>RNA 6h</h3>
 <pre class="r"><code>resEZ.rna6h = readRDS(paste0(&#39;../output/ImmuneEZ.V&#39;,vhat,&#39;.center.resEZ.rna6h.K&#39;,K,&#39;.P&#39;,P,&#39;.rds&#39;))
 length(get_significant_results(resEZ.rna6h))</code></pre>
-<pre><code>[1] 2805</code></pre>
-<p>We found 52.75% [18%] of rna 6h eQTLs are reQTLs.</p>
+<pre><code>[1] 7050</code></pre>
+<p>We found 61.79% [18%] of rna 6h eQTLs are reQTLs.</p>
 </div>
 <div id="rna-90" class="section level3">
 <h3>RNA 90</h3>
 <pre class="r"><code>resEZ.rna90 = readRDS(paste0(&#39;../output/ImmuneEZ.V&#39;,vhat,&#39;.center.resEZ.rna90.K&#39;,K,&#39;.P&#39;,P,&#39;.rds&#39;))
 length(get_significant_results(resEZ.rna90))</code></pre>
-<pre><code>[1] 3632</code></pre>
-<p>We found 67.46% [3%] of rna 90 eQTLs are reQTLs.</p>
+<pre><code>[1] 9643</code></pre>
+<p>We found 83.77% [3%] of rna 90 eQTLs are reQTLs.</p>
 <p>In the paper, they found 3-18% of cis eQTLs in each condition are reQTLs.</p>
 </div>
 </div>
@@ -575,43 +576,43 @@ saveRDS(resEZ.lps6hTRT,
         paste0(&#39;../output/ImmuneEZ.V&#39;,vhat,&#39;.center.resEZ.lps6hTRT.K&#39;,K,&#39;.P&#39;,P,&#39;.rds&#39;))</code></pre>
 <pre class="r"><code>resEZ.lps6hTRT = readRDS(paste0(&#39;../output/ImmuneEZ.V&#39;,vhat,&#39;.center.resEZ.lps6hTRT.K&#39;,K,&#39;.P&#39;,P,&#39;.rds&#39;))
 length(get_significant_results(resEZ.lps6hTRT))</code></pre>
-<pre><code>[1] 2615</code></pre>
-<p>We found 72.88% [32%] lps6h reQTLs are stimulus specific compared with mdp6h, 71.73% [34%] lps6h reQTLs are stimulus specific compared with rna6h.</p>
+<pre><code>[1] 7766</code></pre>
+<p>We found 81.95% [32%] lps6h reQTLs are stimulus specific compared with mdp6h, 79.38% [34%] lps6h reQTLs are stimulus specific compared with rna6h.</p>
 </div>
 <div id="lps-90-1" class="section level3">
 <h3>LPS 90</h3>
 <pre class="r"><code>resEZ.lps90TRT = readRDS(paste0(&#39;../output/ImmuneEZ.V&#39;,vhat,&#39;.center.resEZ.lps90TRT.K&#39;,K,&#39;.P&#39;,P,&#39;.rds&#39;))
 length(get_significant_results(resEZ.lps90TRT))</code></pre>
-<pre><code>[1] 2496</code></pre>
-<p>We found 72.03% [14%] lps 90min reQTLs are stimulus specific compared with mdp 90min, 75% [51%] lps 90min reQTLs are stimulus specific compared with rna 90min.</p>
+<pre><code>[1] 7265</code></pre>
+<p>We found 78.67% [14%] lps 90min reQTLs are stimulus specific compared with mdp 90min, 76.09% [51%] lps 90min reQTLs are stimulus specific compared with rna 90min.</p>
 </div>
 <div id="mdp-6h-1" class="section level3">
 <h3>MDP 6h</h3>
 <pre class="r"><code>resEZ.mdp6hTRT = readRDS(paste0(&#39;../output/ImmuneEZ.V&#39;,vhat,&#39;.center.resEZ.mdp6hTRT.K&#39;,K,&#39;.P&#39;,P,&#39;.rds&#39;))
 length(get_significant_results(resEZ.mdp6hTRT))</code></pre>
-<pre><code>[1] 2451</code></pre>
-<p>We found 64.22% [15%] mdp 6h reQTLs are stimulus specific compared with lps 6h, 77.47% [13%] mdp 6h reQTLs are stimulus specific compared with rna 6h.</p>
+<pre><code>[1] 7170</code></pre>
+<p>We found 78.92% [15%] mdp 6h reQTLs are stimulus specific compared with lps 6h, 88.72% [13%] mdp 6h reQTLs are stimulus specific compared with rna 6h.</p>
 </div>
 <div id="mdp-90-1" class="section level3">
 <h3>MDP 90</h3>
 <pre class="r"><code>resEZ.mdp90TRT = readRDS(paste0(&#39;../output/ImmuneEZ.V&#39;,vhat,&#39;.center.resEZ.mdp90TRT.K&#39;,K,&#39;.P&#39;,P,&#39;.rds&#39;))
 length(get_significant_results(resEZ.mdp90TRT))</code></pre>
-<pre><code>[1] 2273</code></pre>
-<p>We found 69.11% [15%] mdp 90min reQTLs are stimulus specific compared with lps 90min, 71.12% [46%] mdp 90min reQTLs are stimulus specific compared with rna 90min.</p>
+<pre><code>[1] 6429</code></pre>
+<p>We found 77.95% [15%] mdp 90min reQTLs are stimulus specific compared with lps 90min, 66.88% [46%] mdp 90min reQTLs are stimulus specific compared with rna 90min.</p>
 </div>
 <div id="rna-6h-1" class="section level3">
 <h3>RNA 6h</h3>
 <pre class="r"><code>resEZ.rna6hTRT = readRDS(paste0(&#39;../output/ImmuneEZ.V&#39;,vhat,&#39;.center.resEZ.rna6hTRT.K&#39;,K,&#39;.P&#39;,P,&#39;.rds&#39;))
 length(get_significant_results(resEZ.rna6hTRT))</code></pre>
-<pre><code>[1] 2500</code></pre>
-<p>We found 64.71% [21%] rna 6h reQTLs are stimulus specific compared with lps 6h, 80.57% [45%] rna 6h reQTLs are stimulus specific compared with mdp 6h.</p>
+<pre><code>[1] 6688</code></pre>
+<p>We found 76.34% [21%] rna 6h reQTLs are stimulus specific compared with lps 6h, 89.18% [45%] rna 6h reQTLs are stimulus specific compared with mdp 6h.</p>
 </div>
 <div id="rna-90-1" class="section level3">
 <h3>RNA 90</h3>
 <pre class="r"><code>resEZ.rna90TRT = readRDS(paste0(&#39;../output/ImmuneEZ.V&#39;,vhat,&#39;.center.resEZ.rna90TRT.K&#39;,K,&#39;.P&#39;,P,&#39;.rds&#39;))
 length(get_significant_results(resEZ.rna90TRT))</code></pre>
-<pre><code>[1] 2832</code></pre>
-<p>We found 65.39% [38%] rna 90min reQTLs are stimulus specific compared with lps 90min, 61.45% [29%] rna 90min reQTLs are stimulus specific compared with mdp 90min.</p>
+<pre><code>[1] 7857</code></pre>
+<p>We found 72.1% [38%] rna 90min reQTLs are stimulus specific compared with lps 90min, 62.43% [29%] rna 90min reQTLs are stimulus specific compared with mdp 90min.</p>
 </div>
 </div>
 <div id="time-point-specificity-of-reqtls" class="section level2">
@@ -626,43 +627,43 @@ saveRDS(resEZ.lps6hTime,
         paste0(&#39;../output/ImmuneEZ.V&#39;,vhat,&#39;.center.resEZ.lps6hTime.K&#39;,K,&#39;.P&#39;,P,&#39;.rds&#39;))</code></pre>
 <pre class="r"><code>resEZ.lps6hTime = readRDS(paste0(&#39;../output/ImmuneEZ.V&#39;,vhat,&#39;.center.resEZ.lps6hTime.K&#39;,K,&#39;.P&#39;,P,&#39;.rds&#39;))
 length(get_significant_results(resEZ.lps6hTime))</code></pre>
-<pre><code>[1] 2390</code></pre>
-<p>We found 78.28% [45%] lps6h reQTLs are time point specific compared with lps90min.</p>
+<pre><code>[1] 7541</code></pre>
+<p>We found 90.33% [45%] lps6h reQTLs are time point specific compared with lps90min.</p>
 </div>
 <div id="lps-90-2" class="section level3">
 <h3>LPS 90</h3>
 <pre class="r"><code>resEZ.lps90Time = readRDS(paste0(&#39;../output/ImmuneEZ.V&#39;,vhat,&#39;.center.resEZ.lps90Time.K&#39;,K,&#39;.P&#39;,P,&#39;.rds&#39;))
 length(get_significant_results(resEZ.lps90Time))</code></pre>
-<pre><code>[1] 1997</code></pre>
-<p>We found 73.31% [36%] lps 90min reQTLs are time point specific compared with lps6h.</p>
+<pre><code>[1] 6945</code></pre>
+<p>We found 88.9% [36%] lps 90min reQTLs are time point specific compared with lps6h.</p>
 </div>
 <div id="mdp-6h-2" class="section level3">
 <h3>MDP 6h</h3>
 <pre class="r"><code>resEZ.mdp6hTime = readRDS(paste0(&#39;../output/ImmuneEZ.V&#39;,vhat,&#39;.center.resEZ.mdp6hTime.K&#39;,K,&#39;.P&#39;,P,&#39;.rds&#39;))
 length(get_significant_results(resEZ.mdp6hTime))</code></pre>
-<pre><code>[1] 2041</code></pre>
-<p>We found 64.22% [40%] mdp 6h reQTLs are time point specific compared with mdp 90min.</p>
+<pre><code>[1] 6599</code></pre>
+<p>We found 78.92% [40%] mdp 6h reQTLs are time point specific compared with mdp 90min.</p>
 </div>
 <div id="mdp-90-2" class="section level3">
 <h3>MDP 90</h3>
 <pre class="r"><code>resEZ.mdp90Time = readRDS(paste0(&#39;../output/ImmuneEZ.V&#39;,vhat,&#39;.center.resEZ.mdp90Time.K&#39;,K,&#39;.P&#39;,P,&#39;.rds&#39;))
 length(get_significant_results(resEZ.mdp90Time))</code></pre>
-<pre><code>[1] 1787</code></pre>
-<p>We found 71.68% [38%] mdp 90min reQTLs time point specific compared with mdp 6h.</p>
+<pre><code>[1] 6174</code></pre>
+<p>We found 87.7% [38%] mdp 90min reQTLs time point specific compared with mdp 6h.</p>
 </div>
 <div id="rna-6h-2" class="section level3">
 <h3>RNA 6h</h3>
 <pre class="r"><code>resEZ.rna6hTime = readRDS(paste0(&#39;../output/ImmuneEZ.V&#39;,vhat,&#39;.center.resEZ.rna6hTime.K&#39;,K,&#39;.P&#39;,P,&#39;.rds&#39;))
 length(get_significant_results(resEZ.rna6hTime))</code></pre>
-<pre><code>[1] 2179</code></pre>
-<p>We found 77.68% [64%] rna 6h reQTLs are time point specific compared with rna 90min.</p>
+<pre><code>[1] 5058</code></pre>
+<p>We found 71.74% [64%] rna 6h reQTLs are time point specific compared with rna 90min.</p>
 </div>
 <div id="rna-90-2" class="section level3">
 <h3>RNA 90</h3>
 <pre class="r"><code>resEZ.rna90Time = readRDS(paste0(&#39;../output/ImmuneEZ.V&#39;,vhat,&#39;.center.resEZ.rna90Time.K&#39;,K,&#39;.P&#39;,P,&#39;.rds&#39;))
 length(get_significant_results(resEZ.rna90Time))</code></pre>
-<pre><code>[1] 2405</code></pre>
-<p>We found 66.22% [32%] rna 90min reQTLs are time point specific compared with rna 6h.</p>
+<pre><code>[1] 6427</code></pre>
+<p>We found 66.65% [32%] rna 90min reQTLs are time point specific compared with rna 6h.</p>
 <!---
 
 ```r
@@ -674,7 +675,7 @@ get_reQTL_cond = function(m, cond, factor = 0.5, lfsr_thresh = 0.05, FUN = ident
               prop = mean(set)))
 }
 ```
-Using `MASH`, we found 12.75% of lps 6h eQTLs are reQTLs, 8.55% of lps90 eQTLs are reQTLs, 7.39% of mdp6h eQTLs are reQTLs, 6.13% of mdp90 eQTLs are reQTLs, 9.59% of rna6h eQTLs are reQTLs, 3.53% of rna90 eQTLs are reQTLs. Here, the proportion of reQTLs is estimated by the proportion of significant eQTLs that does not share magnitude with control.
+Using `MASH`, we found 10.28% of lps 6h eQTLs are reQTLs, 6.69% of lps90 eQTLs are reQTLs, 5.08% of mdp6h eQTLs are reQTLs, 4.63% of mdp90 eQTLs are reQTLs, 6.87% of rna6h eQTLs are reQTLs, 2.64% of rna90 eQTLs are reQTLs. Here, the proportion of reQTLs is estimated by the proportion of significant eQTLs that does not share magnitude with control.
 
 In the paper, they found 3-18% of cis eQTLs in each condition are reQTLs. 
 
@@ -693,23 +694,23 @@ get_pairwise_not_sharing_reQTL = function(m, cond1, cond2, factor = 0.5, lfsr_th
 Using `MASH`, 
 
 * LPS 90
-    + 10% [14%] lps90min reQTLs are stimulus specific compared with mdp90min
-    + 36.67% [51%] lps90min reQTLs are stimulus specific compared with rna90min
+    + 5.31% [14%] lps90min reQTLs are stimulus specific compared with mdp90min
+    + 29.75% [51%] lps90min reQTLs are stimulus specific compared with rna90min
 * MDP 90
-    + 8.31% [15%] mdp90min reQTLs are stimulus specific compared with lps90min
-    + 24.92% [46%] mdp90min reQTLs are stimulus specific compared with rna90min
+    + 4.57% [15%] mdp90min reQTLs are stimulus specific compared with lps90min
+    + 18.67% [46%] mdp90min reQTLs are stimulus specific compared with rna90min
 * RNA 90
-    + 32.63% [38%] rna90min reQTLs are stimulus specific compared with lps90min
-    + 23.68% [29%] rna90min reQTLs are stimulus specific compared with mdp90min
+    + 24.67% [38%] rna90min reQTLs are stimulus specific compared with lps90min
+    + 17.76% [29%] rna90min reQTLs are stimulus specific compared with mdp90min
 * LPS 6h
-    + 27.29% [32%] lps6h reQTLs are stimulus specific compared with mdp6h
-    + 28.05% [34%] lps6h reQTLs are stimulus specific compared with rna6h
+    + 23.8% [32%] lps6h reQTLs are stimulus specific compared with mdp6h
+    + 22.67% [34%] lps6h reQTLs are stimulus specific compared with rna6h
 * MDP 6h
-    + 30.1% [15%] mdp6h reQTLs are stimulus specific compared with lps6h
-    + 9.44% [13%] mdp6h reQTLs are stimulus specific compared with rna6h
+    + 24.61% [15%] mdp6h reQTLs are stimulus specific compared with lps6h
+    + 9.12% [13%] mdp6h reQTLs are stimulus specific compared with rna6h
 * RNA 6h
-    + 31.96% [21%] rna6h reQTLs are stimulus specific compared with lps6h
-    + 23.33% [45%] rna6h reQTLs are stimulus specific compared with mdp6h.
+    + 21.56% [21%] rna6h reQTLs are stimulus specific compared with lps6h
+    + 20.03% [45%] rna6h reQTLs are stimulus specific compared with mdp6h.
 
 The numbers in '[]' are results from paper.
 
@@ -717,14 +718,14 @@ The numbers in '[]' are results from paper.
 Using `MASH`, 
 
 * LPS
-    + 36.22% [36%] lps90min reQTLs are time point specific compared with lps6h
-    + 44.21% [45%] lps6h reQTLs are time point specific compared with lps90min
+    + 26.16% [36%] lps90min reQTLs are time point specific compared with lps6h
+    + 40.02% [45%] lps6h reQTLs are time point specific compared with lps90min
 * MDP
-    + 32.62% [32%] mdp90min reQTLs are time point specific compared with mdp6h
-    + 38.78% [64%] mdp6h reQTLs are time point specific compared with mdp90min
+    + 25.71% [32%] mdp90min reQTLs are time point specific compared with mdp6h
+    + 33.22% [64%] mdp6h reQTLs are time point specific compared with mdp90min
 * RNA
-    + 26.84% [38%] rna90min reQTLs are time point specific compared with rna6h
-    + 52.16% [40%] rna6h reQTLs are time point specific compared with rna90min
+    + 20.72% [38%] rna90min reQTLs are time point specific compared with rna6h
+    + 44.26% [40%] rna6h reQTLs are time point specific compared with rna90min
 
 The numbers in '[]' are results from paper.
 -->
