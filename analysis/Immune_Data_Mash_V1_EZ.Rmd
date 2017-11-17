@@ -47,7 +47,7 @@ vhat = 1
 
 # Fit `mash` model
 
-Using a random null set, the cell below computes the weights for input covariance matrices ([Covariance matrices](Immune_Cov.html)) in MASH mixture. The output contains matrix of log-likelihoods as well as weights learned from the hierarchical model.
+Using a random null set, the cell below computes the weights for input covariance matrices ([Covariance matrices](Immune_Cov_EZ.html)) in MASH mixture. The output contains matrix of log-likelihoods as well as weights learned from the hierarchical model.
 
 ```{r}
 if (vhat == 1) {
