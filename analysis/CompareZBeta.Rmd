@@ -36,11 +36,6 @@ TestdataBeta.equal = set_mash_data(simdata.equal$Bhat, simdata.equal$Shat, alpha
 TestdataZ.equal = set_mash_data(simdata.equal$Bhat, simdata.equal$Shat, alpha=1)
 ```
 
-```{r, echo=FALSE}
-# TEMPORARY.
-knitr::opts_chunk$set(eval = TRUE)
-```
-
 ## Create covariance matrices
 ```{r}
 # center
@@ -272,8 +267,6 @@ get_loglik(U.m.Z.samp.diff)
 ```
 Again, EE model has higher likelihood, since the data is simulated under EE.
 
-If the Shat are different for different condition or samples, the estimated weights are different using EE, EZ models. Using the EZ model, the covariance structures we found are about the standardized effects. Using the EE model, the covariance structure are about the raw effects.
-
 Check significant samples under transformation A
 ```{r}
 A = rbind(c(1,-1,0,0,0))
@@ -366,6 +359,10 @@ get_loglik(U.m.Z.diff)
 ```
 
 The data is simulated using $\alpha = 0.8$, which is near 1. The EZ model has larger log likelihood.
+
+If the Shat are different for different condition or samples, the estimated weights are different using EE, EZ models. Using the EZ model, the covariance structures we found are about the standardized effects. Using the EE model, the covariance structure are about the raw effects.
+
+The estimated weights are for covariance matrices instead of correlation matrices. If EZ model puts large weight on equal effect cov ($11’$), it means that the standardized effects $S_{j}^{-1} \beta_{j}$ are strongly correlated among conditions. But this means the raw effect $\beta_{j}$ has cov $S_{j}11’S_{j}$, which does not proportional to $11’$ (if diagonal of $S_{j}$ are not equal). Therefore, in the EE model, it will put large weight on cov $S_{j}11’S_{j}$, instead of $11’$. The covariance structure we found are different, but the correlation structure could be same.
 
 # Session information
 
