@@ -248,9 +248,9 @@ Changing the parameter <code>vhat</code> could obtain different V matrices.
 <li><a href="Immune_Data_Mash_V0_EZ_Result.html">EZ V0 model</a></li>
 <li><a href="Immune_Data_Mash_V0_EE_Result.html">EE V0 model</a></li>
 </ul>
-<p>Among these models, EZ V1 has the highest log likelihood value.</p>
 <p>The estimated weights for covariance matrices are different for EE and EZ model when V is the estimated correlation. When V is Identity, the estimated weights are similar. But the measurements are correlated due to sample overlap (all based on same 134 individuals), I think it is reasonable to use the estimated correlation from the data (V1).</p>
-<p>Using Mash with V be the estimated correlation, we found more eQTLs, the number of eQTLs are similar using EE and EZ model. Based on the EZ model, the majority weights for the covariance matrix is on the null matrix (0, no effects). The remaining weights are on the covariance matrix capturing the pattern that the standardized effects are strong positively correlated among all treatments.</p>
+<p>Among these models, EZ V1 has the highest log likelihood value.</p>
+<p>Using Mash with V be the estimated correlation, we found more eQTLs, the number of eQTLs are similar using EE and EZ model. Based on the EZ V1 model, the majority weights for the covariance matrix is on the null matrix (0, no effects). The remaining weights are on the covariance matrix capturing the pattern that the standardized effects are strong positively correlated among all treatments.</p>
 <p>I computed the number of reQTLs, treatment specific reQTLs and time point specific reQTLs using the linear transformation. We found more reQTLs, treatment specific reQTLs and time point specific reQTLs than the paper’s result.</p>
 <p>However, the number of reQTLs from EE model are much less than EZ model. I don’t know the reason for this.</p></li>
 </ul>
