@@ -215,11 +215,44 @@ div.section {
 </div>
 
 
-<p>List of analyses I have done so far:</p>
 <ul>
 <li><p>Simulations to compare the results of Exchangeable Effects and Exchangeable Z-scores model</p>
 <p><a href="CompareZBeta.html">Compare EE and EZ</a></p>
 <p>The correct model has higher likelihood in simulations.</p></li>
+</ul>
+<p>Here is the <code>MASH</code> analyses:</p>
+<ul>
+<li><p>Generate the covariance matrices</p>
+<ul>
+<li><a href="Immune_Cov_EZ.html">EZ covariance matrices</a></li>
+<li><a href="Immune_Cov_EE.html">EE covariance matrices</a></li>
+</ul>
+<p>I realized a question here. We run the <code>cov_ed</code> using mash data and Ulist. The mash data has <code>Bhat</code>, <code>Shat</code>, <code>Shat_alpha</code>, <code>V</code>, <code>alpha</code>. In <code>cov_ed</code>, it only use the <code>Bhat</code> and <code>Shat</code>. Therefore, it assumes the errors are independent (V is identity). The <code>cov_ed</code> algorithm does not account for the V matrix.</p>
+<p>We use extreme deconvolution to find the covariance candidates. Maybe, the ignorance of the dependency in ed does not matter. Will including the dependency improve the initial covariance matrices?</p></li>
+<li>Fit the <code>mash</code> model
+<ul>
+<li><a href="Immune_Data_Mash_V1_EZ.html">EZ V1 mash model</a></li>
+<li><a href="Immune_Data_Mash_V1_EE.html">EE V1 mash model</a></li>
+</ul>
+<p>Changing the parameter <code>alpha</code> could obtain EE or EZ fitted model.</p>
+Changing the parameter <code>vhat</code> could obtain different V matrices.
+<ul>
+<li><code>vhat = 0</code>, V is identity matrix</li>
+<li><code>vhat = 1</code>, V is the estimated correlation matrix</li>
+</ul>
+<p>V is the correlation matrix here: <span class="math display">\[ \hat{\beta}_{j}|\beta_{j}, S_{j} \sim N(\hat{\beta}_{j}; \beta_{j}, S_{j}VS_{j}) \]</span></p></li>
+<li>Results:
+<ul>
+<li><a href="Immune_Data_Mash_V1_EZ_Result.html">EZ V1 model</a></li>
+<li><a href="Immune_Data_Mash_V1_EE_Result.html">EE V1 model</a></li>
+<li><a href="Immune_Data_Mash_V0_EZ_Result.html">EZ V0 model</a></li>
+<li><a href="Immune_Data_Mash_V0_EE_Result.html">EE V0 model</a></li>
+</ul>
+<p>Among these models, EZ V1 has the highest log likelihood value.</p>
+<p>The estimated weights for covariance matrices are different for EE and EZ model when V is the estimated correlation. When V is Identity, the estimated weights are similar. But the measurements are correlated due to sample overlap (all based on same 134 individuals), I think it is reasonable to use the estimated correlation from the data (V1).</p>
+<p>Using Mash with V be the estimated correlation, we found more eQTLs, the number of eQTLs are similar using EE and EZ model. Based on the EZ model, the majority weights for the covariance matrix is on the null matrix (0, no effects). The remaining weights are on the covariance matrix capturing the pattern that the standardized effects are strong positively correlated among all treatments.</p>
+<p>I computed the number of reQTLs, treatment specific reQTLs and time point specific reQTLs using the linear transformation. We found more reQTLs, treatment specific reQTLs and time point specific reQTLs than the paper’s result.</p>
+<p>However, the number of reQTLs from EE model are much less than EZ model. I don’t know the reason for this.</p></li>
 </ul>
 
 <!-- Adjust MathJax settings so that all math formulae are shown using
