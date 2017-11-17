@@ -321,10 +321,12 @@ div.section {
 shared across the workflowr files. -->
 <!-- Update knitr chunk options -->
 <!-- Insert the date the file was last updated -->
-<p><strong>Last updated:</strong> 2017-11-15</p>
+<pre><code>Warning in as.POSIXlt.POSIXct(Sys.time()): unknown timezone &#39;default/
+America/Chicago&#39;</code></pre>
+<p><strong>Last updated:</strong> 2017-11-17</p>
 <!-- Insert the code version (Git commit SHA1) if Git repository exists and R
  package git2r is installed -->
-<p><strong>Code version:</strong> cc90551</p>
+<p><strong>Code version:</strong> 47a0086</p>
 <div id="simulate-shat-equal-data-r-5" class="section level1">
 <h1>Simulate Shat equal data R = 5</h1>
 <pre class="r"><code>library(mashr)</code></pre>
@@ -353,13 +355,13 @@ U.pca.Z.equal = cov_pca(TestdataZ.equal.center,5,strong.Z.equal)</code></pre>
 <pre class="r"><code>U.ed.beta.equal = cov_ed(TestdataBeta.equal, U.pca.Z.equal, strong.Z.equal)
 U.m.beta.equal = mash(TestdataBeta.equal, c(U.c.equal,U.ed.beta.equal))</code></pre>
 <pre><code> - Computing 2000 x 257 likelihood matrix.
- - Likelihood calculations took 0.15 seconds.
+ - Likelihood calculations took 0.14 seconds.
  - Fitting model with 257 mixture components.
- - Model fitting took 0.60 seconds.
+ - Model fitting took 0.58 seconds.
  - Computing posterior matrices.
  - Computation allocated took 0.01 seconds.</code></pre>
 <pre class="r"><code>barplot(get_estimated_pi(U.m.beta.equal), las = 2, cex.names = 0.7, main=&#39;EE&#39;)</code></pre>
-<p><img src="figure/CompareZBeta.Rmd/unnamed-chunk-4-1.png" width="672" style="display: block; margin: auto;" /></p>
+<p><img src="figure/CompareZBeta.Rmd/unnamed-chunk-3-1.png" width="672" style="display: block; margin: auto;" /></p>
 </div>
 <div id="ez-model" class="section level2">
 <h2>EZ model</h2>
@@ -373,7 +375,7 @@ U.m.Z.equal = mash(TestdataZ.equal, c(U.c.equal, U.ed.Z.equal))</code></pre>
  - Computation allocated took 0.01 seconds.</code></pre>
 <pre><code>FIXME: &#39;compute_posterior_matrices&#39; in Rcpp does not transfer EZ to EE</code></pre>
 <pre class="r"><code>barplot(get_estimated_pi(U.m.Z.equal), las = 2, cex.names = 0.7, main=&#39;EZ&#39;)</code></pre>
-<p><img src="figure/CompareZBeta.Rmd/unnamed-chunk-5-1.png" width="672" style="display: block; margin: auto;" /></p>
+<p><img src="figure/CompareZBeta.Rmd/unnamed-chunk-4-1.png" width="672" style="display: block; margin: auto;" /></p>
 <p>The estimated weights are similar. <!--
 Check significant samples under transformation A
 
@@ -453,27 +455,27 @@ U.pca.Z.col.diff = cov_pca(TestdataZ.col.diff.center,5,strong.Z.col.diff)</code>
 <pre class="r"><code>U.ed.beta.col.diff = cov_ed(TestdataBeta.col.diff, U.pca.Z.col.diff, strong.Z.col.diff)
 U.m.beta.col.diff = mash(TestdataBeta.col.diff, c(U.c.col.diff, U.ed.beta.col.diff))</code></pre>
 <pre><code> - Computing 2000 x 353 likelihood matrix.
- - Likelihood calculations took 0.07 seconds.
+ - Likelihood calculations took 0.08 seconds.
  - Fitting model with 353 mixture components.
- - Model fitting took 0.48 seconds.
+ - Model fitting took 0.46 seconds.
  - Computing posterior matrices.
  - Computation allocated took 0.01 seconds.</code></pre>
 <pre class="r"><code>barplot(get_estimated_pi(U.m.beta.col.diff), las = 2, cex.names = 0.7, main=&#39;EE&#39;)</code></pre>
-<p><img src="figure/CompareZBeta.Rmd/unnamed-chunk-9-1.png" width="672" style="display: block; margin: auto;" /></p>
+<p><img src="figure/CompareZBeta.Rmd/unnamed-chunk-8-1.png" width="672" style="display: block; margin: auto;" /></p>
 </div>
 <div id="ez-model-1" class="section level2">
 <h2>EZ model</h2>
 <pre class="r"><code>U.ed.Z.col.diff = cov_ed(TestdataZ.col.diff, U.pca.Z.col.diff, strong.Z.col.diff)
 U.m.Z.col.diff = mash(TestdataZ.col.diff, c(U.c.col.diff,U.ed.Z.col.diff))</code></pre>
 <pre><code> - Computing 2000 x 353 likelihood matrix.
- - Likelihood calculations took 0.08 seconds.
+ - Likelihood calculations took 0.06 seconds.
  - Fitting model with 353 mixture components.
- - Model fitting took 0.45 seconds.
+ - Model fitting took 0.44 seconds.
  - Computing posterior matrices.
  - Computation allocated took 0.01 seconds.</code></pre>
 <pre><code>FIXME: &#39;compute_posterior_matrices&#39; in Rcpp does not transfer EZ to EE</code></pre>
 <pre class="r"><code>barplot(get_estimated_pi(U.m.Z.col.diff), las = 2, cex.names = 0.7, main=&#39;EZ&#39;)</code></pre>
-<p><img src="figure/CompareZBeta.Rmd/unnamed-chunk-10-1.png" width="672" style="display: block; margin: auto;" /></p>
+<p><img src="figure/CompareZBeta.Rmd/unnamed-chunk-9-1.png" width="672" style="display: block; margin: auto;" /></p>
 <p>The estimated weights are different.</p>
 <pre class="r"><code>library(&#39;corrplot&#39;)</code></pre>
 <pre><code>corrplot 0.84 loaded</code></pre>
@@ -483,14 +485,14 @@ x[x &lt; -1]   &lt;- -1
 corrplot.mixed(x, tl.pos=&quot;d&quot;,upper=&#39;color&#39;,cl.lim=c(0.3,1), upper.col=colorRampPalette(rev(c(&quot;#D73027&quot;,&quot;#FC8D59&quot;,&quot;#FEE090&quot;,&quot;#FFFFBF&quot;,
                                &quot;#E0F3F8&quot;,&quot;#91BFDB&quot;,&quot;#4575B4&quot;)))(40),
                tl.cex=1.2)</code></pre>
-<p><img src="figure/CompareZBeta.Rmd/unnamed-chunk-11-1.png" width="672" style="display: block; margin: auto;" /></p>
+<p><img src="figure/CompareZBeta.Rmd/unnamed-chunk-10-1.png" width="672" style="display: block; margin: auto;" /></p>
 <pre class="r"><code>svd.out = svd(U.m.Z.col.diff$fitted_g$Ulist[[&quot;ED_tPCA&quot;]])
 v = svd.out$v
 options(repr.plot.width=10, repr.plot.height=5)
 for (j in 1:1)
   barplot(v[,j]/v[,j][which.max(abs(v[,j]))], cex.names = 0.7,
           las = 2, main = paste0(&quot;EigenVector &quot;, j, &quot; for PCA-based covariance matrix&quot;))</code></pre>
-<p><img src="figure/CompareZBeta.Rmd/unnamed-chunk-12-1.png" width="672" style="display: block; margin: auto;" /></p>
+<p><img src="figure/CompareZBeta.Rmd/unnamed-chunk-11-1.png" width="672" style="display: block; margin: auto;" /></p>
 <p>Check significant samples under transformation A</p>
 <pre class="r"><code>A = rbind(c(1,-1,0,0,0))
 subset.data = get_significant_results(U.m.beta.col.diff)
@@ -564,11 +566,11 @@ U.m.beta.samp.diff = mash(TestdataBeta.samp.diff,
 <pre><code> - Computing 2000 x 337 likelihood matrix.
  - Likelihood calculations took 0.65 seconds.
  - Fitting model with 337 mixture components.
- - Model fitting took 0.84 seconds.
+ - Model fitting took 0.80 seconds.
  - Computing posterior matrices.
  - Computation allocated took 0.10 seconds.</code></pre>
 <pre class="r"><code>barplot(get_estimated_pi(U.m.beta.samp.diff), las = 2, cex.names = 0.7, main=&#39;EE&#39;)</code></pre>
-<p><img src="figure/CompareZBeta.Rmd/unnamed-chunk-17-1.png" width="672" style="display: block; margin: auto;" /></p>
+<p><img src="figure/CompareZBeta.Rmd/unnamed-chunk-16-1.png" width="672" style="display: block; margin: auto;" /></p>
 </div>
 <div id="ez-model-2" class="section level2">
 <h2>EZ model</h2>
@@ -583,12 +585,12 @@ U.m.Z.samp.diff = mash(TestdataZ.samp.diff, c(U.c.samp.diff, U.ed.Z.samp.diff))<
 0.850310036770056, : Optimization step yields mixture weights that are
 either too small, or negative; weights have been corrected and renormalized
 after the optimization.</code></pre>
-<pre><code> - Model fitting took 0.47 seconds.
+<pre><code> - Model fitting took 0.45 seconds.
  - Computing posterior matrices.
- - Computation allocated took 0.07 seconds.</code></pre>
+ - Computation allocated took 0.08 seconds.</code></pre>
 <pre><code>FIXME: &#39;compute_posterior_matrices&#39; in Rcpp does not transfer EZ to EE</code></pre>
 <pre class="r"><code>barplot(get_estimated_pi(U.m.Z.samp.diff), las = 2, cex.names = 0.7, main=&#39;EZ&#39;)</code></pre>
-<p><img src="figure/CompareZBeta.Rmd/unnamed-chunk-18-1.png" width="672" style="display: block; margin: auto;" /></p>
+<p><img src="figure/CompareZBeta.Rmd/unnamed-chunk-17-1.png" width="672" style="display: block; margin: auto;" /></p>
 <p><strong>The estiamted weights are different if the Shat is not constant.</strong></p>
 <p>Comparing loglikelihood</p>
 <pre class="r"><code>get_loglik(U.m.beta.samp.diff)</code></pre>
@@ -596,7 +598,6 @@ after the optimization.</code></pre>
 <pre class="r"><code>get_loglik(U.m.Z.samp.diff)</code></pre>
 <pre><code>[1] -17164.99</code></pre>
 <p>Again, EE model has higher likelihood, since the data is simulated under EE.</p>
-<p>If the Shat are different for different condition or samples, the estimated weights are different using EE, EZ models. Using the EZ model, the covariance structures we found are about the standardized effects. Using the EE model, the covariance structure are about the raw effects.</p>
 <p>Check significant samples under transformation A</p>
 <pre class="r"><code>A = rbind(c(1,-1,0,0,0))
 subset.data = get_significant_results(U.m.beta.samp.diff)
@@ -686,18 +687,18 @@ U.m.beta.diff = mash(TestdataBeta.diff, c(U.c.diff, U.ed.beta.diff))</code></pre
 <pre><code> - Computing 2000 x 273 likelihood matrix.
  - Likelihood calculations took 0.06 seconds.
  - Fitting model with 273 mixture components.
- - Model fitting took 0.53 seconds.
+ - Model fitting took 0.52 seconds.
  - Computing posterior matrices.
  - Computation allocated took 0.08 seconds.</code></pre>
 <pre class="r"><code>barplot(get_estimated_pi(U.m.beta.diff), las = 2, cex.names = 0.7, main=&#39;EE&#39;)</code></pre>
-<p><img src="figure/CompareZBeta.Rmd/unnamed-chunk-23-1.png" width="672" style="display: block; margin: auto;" /></p>
+<p><img src="figure/CompareZBeta.Rmd/unnamed-chunk-22-1.png" width="672" style="display: block; margin: auto;" /></p>
 </div>
 <div id="ez-model-3" class="section level2">
 <h2>EZ model</h2>
 <pre class="r"><code>U.ed.Z.diff = cov_ed(TestdataZ.diff, U.pca.Z.diff, strong.Z.diff)
 U.m.Z.diff = mash(TestdataZ.diff, c(U.c.diff, U.ed.Z.diff))</code></pre>
 <pre><code> - Computing 2000 x 241 likelihood matrix.
- - Likelihood calculations took 0.04 seconds.
+ - Likelihood calculations took 0.05 seconds.
  - Fitting model with 241 mixture components.</code></pre>
 <pre><code>Warning in REBayes::KWDual(A, rep(1, k), normalize(w), control = control): estimated mixing distribution has some negative values:
                consider reducing rtol</code></pre>
@@ -705,18 +706,20 @@ U.m.Z.diff = mash(TestdataZ.diff, c(U.c.diff, U.ed.Z.diff))</code></pre>
 0.764185624697885, : Optimization step yields mixture weights that are
 either too small, or negative; weights have been corrected and renormalized
 after the optimization.</code></pre>
-<pre><code> - Model fitting took 0.45 seconds.
+<pre><code> - Model fitting took 0.48 seconds.
  - Computing posterior matrices.
- - Computation allocated took 0.02 seconds.</code></pre>
+ - Computation allocated took 0.03 seconds.</code></pre>
 <pre><code>FIXME: &#39;compute_posterior_matrices&#39; in Rcpp does not transfer EZ to EE</code></pre>
 <pre class="r"><code>barplot(get_estimated_pi(U.m.Z.diff), las = 2, cex.names = 0.7, main=&#39;EZ&#39;)</code></pre>
-<p><img src="figure/CompareZBeta.Rmd/unnamed-chunk-24-1.png" width="672" style="display: block; margin: auto;" /></p>
+<p><img src="figure/CompareZBeta.Rmd/unnamed-chunk-23-1.png" width="672" style="display: block; margin: auto;" /></p>
 <p>Compare loglikelihod</p>
 <pre class="r"><code>get_loglik(U.m.beta.diff)</code></pre>
 <pre><code>[1] -3953.136</code></pre>
 <pre class="r"><code>get_loglik(U.m.Z.diff)</code></pre>
 <pre><code>[1] -3890.032</code></pre>
 <p>The data is simulated using <span class="math inline">\(\alpha = 0.8\)</span>, which is near 1. The EZ model has larger log likelihood.</p>
+<p>If the Shat are different for different condition or samples, the estimated weights are different using EE, EZ models. Using the EZ model, the covariance structures we found are about the standardized effects. Using the EE model, the covariance structure are about the raw effects.</p>
+<p>The estimated weights are for covariance matrices instead of correlation matrices. If EZ model puts large weight on equal effect cov (<span class="math inline">\(11’\)</span>), it means that the standardized effects <span class="math inline">\(S_{j}^{-1} \beta_{j}\)</span> are strongly correlated among conditions. But this means the raw effect <span class="math inline">\(\beta_{j}\)</span> has cov <span class="math inline">\(S_{j}11’S_{j}\)</span>, which does not proportional to <span class="math inline">\(11’\)</span> (if diagonal of <span class="math inline">\(S_{j}\)</span> are not equal). Therefore, in the EE model, it will put large weight on cov <span class="math inline">\(S_{j}11’S_{j}\)</span>, instead of <span class="math inline">\(11’\)</span>. The covariance structure we found are different, but the correlation structure could be same.</p>
 </div>
 </div>
 <div id="session-information" class="section level1">
@@ -725,7 +728,7 @@ after the optimization.</code></pre>
 <pre class="r"><code>sessionInfo()</code></pre>
 <pre><code>R version 3.4.2 (2017-09-28)
 Platform: x86_64-apple-darwin15.6.0 (64-bit)
-Running under: macOS Sierra 10.12.6
+Running under: macOS High Sierra 10.13.1
 
 Matrix products: default
 BLAS: /Library/Frameworks/R.framework/Versions/3.4/Resources/lib/libRblas.0.dylib
