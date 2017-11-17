@@ -85,7 +85,7 @@ mash_data = mashr::set_mash_data(Bhat = as.matrix(data$max$beta),
                                  alpha=1)
 ```
 
-```{r eval=FALSE}
+```{r}
 saveRDS(mash_compute_posterior_matrices(U.m, mash_data), 
         paste0('../output/ImmuneEZ.V1.center.mash_posterior.K',K,'.P',P,'.rds'))
 
