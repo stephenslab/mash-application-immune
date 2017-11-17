@@ -1,5 +1,5 @@
 ---
-title: "Immune Data Mash Analysis EZ V1"
+title: "Immune Data Mash Analysis EZ V0"
 author: "Yuxin Zou"
 date: 2017-11-15
 output: html_document
@@ -42,7 +42,7 @@ data$null$se = data$null$beta / data$null$z
 # set parameters
 K = 10
 P = 5
-vhat = 1
+vhat = 0
 ```
 
 # Fit `mash` model
@@ -71,7 +71,7 @@ saveRDS(mashr::mash(mash_data, Ulist, outputlevel = 1),
 Applying hyperparameters learned from the training (the null) set to the test (the top eQTL) set, the cell below computes posterior quantities.
 
 ```{r}
-U.m = readRDS('../output/ImmuneEZ.V1.center.mash_model.K10.P5.rds')
+U.m = readRDS('../output/ImmuneEZ.V0.center.mash_model.K10.P5.rds')
 
 if (vhat == 1) {
   V = cor(data$null$z[which(apply(abs(data$null$z),1, max) < 2),])

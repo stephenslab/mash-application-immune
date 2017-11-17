@@ -1,5 +1,5 @@
 ---
-title: "Immune Data Mash Analysis EZ V1 Results"
+title: "Immune Data Mash Analysis EZ V0 Results"
 author: "Yuxin Zou"
 date: 2017-11-15
 output: html_document
@@ -36,7 +36,7 @@ data$null$se = data$null$beta / data$null$z
 
 K = 10
 P = 5
-vhat = 1
+vhat = 0
 ```
 
 ```{r}
@@ -53,10 +53,11 @@ mash_data = mashr::set_mash_data(Bhat = as.matrix(data$max$beta),
 
 # MASH results
 
+The model is fitted in [Mash model EZ V0](Immune_Data_Mash_V0_EZ.html)
 ```{r}
 # EZ
-resEZ = readRDS('../output/ImmuneEZ.V1.center.mash_model.K10.P5.rds')
-resEZ$result = readRDS('../output/ImmuneEZ.V1.center.mash_posterior.K10.P5.rds')
+resEZ = readRDS('../output/ImmuneEZ.V0.center.mash_model.K10.P5.rds')
+resEZ$result = readRDS('../output/ImmuneEZ.V0.center.mash_posterior.K10.P5.rds')
 ```
 
 # MASH model fit
@@ -114,28 +115,28 @@ head(get_significant_results(resEZ))
 * Original estimates
 ```{r echo=FALSE}
 # raw effect
-stronggene = data.frame(data$max$beta[513,])
+stronggene = data.frame(data$max$beta[222,])
 colnames(stronggene) = 'EffectSize'
 stronggene$Group = row.names(stronggene)
-stronggene$se = data.frame(data$max$se[513,])
+stronggene$se = data.frame(data$max$se[222,])
 ggplot(stronggene, aes(y = EffectSize, x = Group, color=Group)) + 
-  geom_point() + ylim(c(-0.25, 0)) + 
+  geom_point() + ylim(c(-0.2, 0)) + 
   geom_errorbar(aes(ymin=EffectSize-1.96*se, ymax=EffectSize+1.96*se), width=0.4) + 
-  theme_bw(base_size=12) + coord_flip() + ggtitle('ILMN_1656297_rs62226483')
+  theme_bw(base_size=12) + coord_flip() + ggtitle('ILMN_1653469_rs2253928')
 ```
 
 * `MASH` estimates
 
 ```{r echo=FALSE}
 # Improved
-stronggenePost = data.frame(resEZ$result$PosteriorMean[513,])
+stronggenePost = data.frame(resEZ$result$PosteriorMean[222,])
 colnames(stronggenePost) = 'EffectSize'
 stronggenePost$Group = row.names(stronggenePost)
-stronggenePost$se = resEZ$result$PosteriorSD[513,]
+stronggenePost$se = resEZ$result$PosteriorSD[222,]
 ggplot(stronggenePost, aes(y = EffectSize, x = Group, color=Group)) + 
-  geom_point() + ylim(c(-0.25, 0)) + 
+  geom_point() + ylim(c(-0.2, 0)) + 
   geom_errorbar(aes(ymin=EffectSize-1.96*se, ymax=EffectSize+1.96*se), width=0.4) + 
-  theme_bw(base_size=12) + coord_flip() + ggtitle('ILMN_1656297_rs62226483')
+  theme_bw(base_size=12) + coord_flip() + ggtitle('ILMN_1653469_rs2253928')
 ```
 
 Here is one example of shinkage:
