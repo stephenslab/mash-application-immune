@@ -1,0 +1,112 @@
+---
+title: "Immune Data MASH Model Covariance (EZ)"
+author: "Yuxin Zou"
+date: 2017-11-15
+output: html_document
+---
+```{r read-chunk, include=FALSE, cache=FALSE}
+knitr::read_chunk("chunks.R")
+```
+
+<!-- Update knitr chunk options -->
+```{r knitr-opts-chunk, include=FALSE}
+```
+
+<!-- Insert the date the file was last updated -->
+```{r last-updated, echo=FALSE, results='asis'}
+```
+
+<!-- Insert the code version (Git commit SHA1) if Git repository exists and R
+ package git2r is installed -->
+```{r code-version, echo=FALSE, results='asis'}
+```
+
+```{r, echo=FALSE}
+# TEMPORARY.
+knitr::opts_chunk$set(eval = TRUE)
+```
+
+# Set up the data
+```{r}
+# Load required packages
+library(mashr); library(ExtremeDeconvolution); library(flashr2)
+```
+```{r}
+# read data
+data = readRDS('../data/ImmuneQTLSummary.4MASH.rds')
+data$max$se = data$max$beta/data$max$z
+data$null$se = data$null$beta / data$null$z
+
+# set parameters
+K = 10
+P = 5
+```
+
+We estimate the covariance using column-centered Z scores
+```{r}
+D.center = apply(as.matrix(data$max$z), 2, function(x) x - mean(x))
+mash_data_center = mashr::set_mash_data(Bhat = as.matrix(D.center))
+```
+
+# Generate covariance matrices
+
+Here we create 3 type of data-driven covariance matrices:
+
+* Flash (rank 5, previously computed): [Flash](Immune_Flash.html)
+  $$ \tilde{Z}_{n\times 7} = LF' + E $$
+  $$ U = \frac{1}{n} (LF')'(LF') $$
+    + plus single rank Flashs for each factor
+    The 5 matrices $F_{q}L_{q}' L_{q} F_{q}'$
+    
+* PCA (rank 5, to be computed)
+    + plus single rank PCAs
+    
+* Optionally
+    + Empirical covariance
+    
+and apply `Extreme Deconvolution` to refine these matrices. We observed that Extreme Deconvolution perserves rank.
+
+Additionally we include 2 other types of covariance matrices:
+
+* canonical configurations (aka `bmalite`)
+
+* simple heterogeneity models
+
+## Generate and refine multi-rank data-driven covariance matrices
+
+```{r}
+FlashResult = readRDS('../output/Immune.flash2.center.greedy.K10.rds')
+Flash_res = flash_get_lf(FlashResult$f)
+
+U.flash = c(mashr::cov_from_factors(t(as.matrix(FlashResult$F_flash[,1:5])), "Flash"), 
+            list("tFlash" = t(Flash_res) %*% Flash_res / nrow(data$max$z)))
+
+# PCA matrices
+U.pca = cov_pca(mash_data_center, P)
+
+# Emperical data matrices
+# Denoised data-driven matrices
+U.dd = c(U.flash, U.pca, list("XX" = t(D.center) %*% D.center / nrow(data$max$z)))
+
+mash_data = mashr::set_mash_data(Bhat = as.matrix(data$max$z))
+
+U.ed = cov_ed(mash_data, U.dd)
+```
+
+## Generate canonical covariance matrices
+
+```{r}
+# Canonical
+U.can = cov_canonical(mash_data) 
+
+# save Covariance matrix
+saveRDS(list(Ulist = c(U.ed, U.can), DD_raw = U.dd), 
+        paste0('../output/ImmuneEZ.U.center.xtx.K',K,'.P',P,'.rds'))
+
+```
+
+# Session information
+
+<!-- Insert the session information into the document -->
+```{r session-info}
+```
