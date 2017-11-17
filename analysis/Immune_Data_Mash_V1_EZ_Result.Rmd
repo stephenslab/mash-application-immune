@@ -1,0 +1,749 @@
+---
+title: "Immune Data Mash Analysis EE V1 Results"
+author: "Yuxin Zou"
+date: 2017-11-15
+output: html_document
+---
+
+```{r read-chunk, include=FALSE, cache=FALSE}
+knitr::read_chunk("chunks.R")
+knitr::read_chunk('../code/subset.data.R')
+```
+
+<!-- Update knitr chunk options -->
+```{r knitr-opts-chunk, include=FALSE}
+```
+
+<!-- Insert the date the file was last updated -->
+```{r last-updated, echo=FALSE, results='asis'}
+```
+
+<!-- Insert the code version (Git commit SHA1) if Git repository exists and R
+ package git2r is installed -->
+```{r code-version, echo=FALSE, results='asis'}
+```
+
+# Set up data
+```{r}
+library(lattice)
+library(ggplot2)
+library(colorRamps)
+library(mashr)
+library(corrplot)
+data = readRDS('../data/ImmuneQTLSummary.4MASH.rds')
+data$max$se = data$max$beta/data$max$z
+data$null$se = data$null$beta / data$null$z
+
+K = 10
+P = 5
+vhat = 1
+```
+
+```{r}
+if (vhat == 1) {
+  V = cor(data$null$z[which(apply(abs(data$null$z),1, max) < 2),])
+} else {
+  V = diag(ncol(data$null$z))
+}
+mash_data = mashr::set_mash_data(Bhat = as.matrix(data$max$beta), 
+                                 Shat = as.matrix(data$max$se), 
+                                 V = as.matrix(V), 
+                                 alpha = 1)
+```
+
+# MASH results
+
+```{r}
+# EZ
+resEZ = readRDS('../output/ImmuneEZ.V1.center.mash_model.K10.P5.rds')
+resEZ$result = readRDS('../output/ImmuneEZ.V1.center.mash_posterior.K10.P5.rds')
+```
+
+# MASH model fit
+
+The log-likelihood of fit is
+```{r} 
+get_loglik(resEZ)
+```
+
+Here is a plot of weights learned.
+
+```{r}
+options(repr.plot.width=12, repr.plot.height=4)
+barplot(get_estimated_pi(resEZ), las = 2, cex.names = 0.7)
+```
+
+Most of the mass is on the null, PCA1 and equal effects. `mash` placed `r sum(get_estimated_pi(resEZ)[2:14])*100`% of the mixture components weight on data-driven matrices, `r get_estimated_pi(resEZ)['equal_effects']*100`% weight on equal effects matrix.
+
+Here is a visualization for PCA1, which capture `r get_estimated_pi(resEZ)['ED_PCA_1']*100`% mixture component in these data, (via correlation heatmap):
+
+```{r}
+x           <- cov2cor(resEZ$fitted_g$Ulist[["ED_PCA_1"]])
+x[x > 1]    <- 1
+x[x < -1]   <- -1
+colnames(x) <- colnames(get_lfsr(resEZ))
+rownames(x) <- colnames(x)
+corrplot.mixed(x, tl.pos="d",upper='color',cl.lim=c(0.2,1), upper.col=colorRampPalette(rev(c("#D73027","#FC8D59","#FEE090","#FFFFBF",
+                               "#E0F3F8","#91BFDB","#4575B4")))(40),
+               tl.cex=1.2)
+```
+
+The main pattern captured by this component is that the effect of control is strongly correlated with other treatments.
+
+Next we perform SVD on the PCA 1 based covariance matrix, and plot the top eigen vector.
+
+```{r}
+svd.out = svd(resEZ$fitted_g$Ulist[["ED_PCA_1"]])
+v = svd.out$v
+colnames(v) = colnames(get_lfsr(resEZ))
+rownames(v) = colnames(v)
+options(repr.plot.width=10, repr.plot.height=5)
+for (j in 1:1)
+  barplot(v[,j]/v[,j][which.max(abs(v[,j]))], cex.names = 0.7,
+          las = 2, main = paste0("EigenVector ", j, " for PCA-based covariance matrix"))
+```
+
+It captures overall effects of the treatments.
+
+```{r}
+head(get_significant_results(resEZ))
+```
+
+## Examples of how `mash` uses patterns of sharing to inform estimated effect:
+
+* Original estimates
+```{r echo=FALSE}
+# raw effect
+stronggene = data.frame(data$max$beta[513,])
+colnames(stronggene) = 'EffectSize'
+stronggene$Group = row.names(stronggene)
+stronggene$se = data.frame(data$max$se[513,])
+ggplot(stronggene, aes(y = EffectSize, x = Group, color=Group)) + 
+  geom_point() + ylim(c(-0.25, 0)) + 
+  geom_errorbar(aes(ymin=EffectSize-1.96*se, ymax=EffectSize+1.96*se), width=0.4) + 
+  theme_bw(base_size=12) + coord_flip() + ggtitle('ILMN_1656297_rs62226483')
+```
+
+* `MASH` estimates
+
+```{r echo=FALSE}
+# Improved
+stronggenePost = data.frame(resEZ$result$PosteriorMean[513,])
+colnames(stronggenePost) = 'EffectSize'
+stronggenePost$Group = row.names(stronggenePost)
+stronggenePost$se = resEZ$result$PosteriorSD[513,]
+ggplot(stronggenePost, aes(y = EffectSize, x = Group, color=Group)) + 
+  geom_point() + ylim(c(-0.25, 0)) + 
+  geom_errorbar(aes(ymin=EffectSize-1.96*se, ymax=EffectSize+1.96*se), width=0.4) + 
+  theme_bw(base_size=12) + coord_flip() + ggtitle('ILMN_1656297_rs62226483')
+```
+
+Here is one example of shinkage:
+
+* Original estimates
+```{r echo=FALSE}
+# raw effect
+stronggene = data.frame(data$max$beta[1,])
+colnames(stronggene) = 'EffectSize'
+stronggene$Group = row.names(stronggene)
+stronggene$se = data$max$se[1,]
+ggplot(stronggene, aes(y = EffectSize, x = Group, color=Group)) + 
+  geom_point() + geom_hline(yintercept = 0) + 
+  geom_errorbar(aes(ymin=EffectSize-1.96*se, ymax=EffectSize+1.96*se), width=0.4) + 
+  theme_bw(base_size=12) + coord_flip() + ggtitle('ILMN_1343291_rs13216349')
+```
+
+* `MASH` estimates
+
+```{r echo=FALSE}
+# Improved
+stronggenePost = data.frame(resEZ$result$PosteriorMean[1,])
+colnames(stronggenePost) = 'EffectSize'
+stronggenePost$Group = row.names(stronggenePost)
+stronggenePost$se = resEZ$result$PosteriorSD[1,]
+ggplot(stronggenePost, aes(y = EffectSize, x = Group, color=Group)) + 
+  geom_point() + geom_hline(yintercept = 0) + 
+  geom_errorbar(aes(ymin=EffectSize-1.96*se, ymax=EffectSize+1.96*se), width=0.4) + 
+  theme_bw(base_size=12) + coord_flip() + ggtitle('ILMN_1343291_rs13216349')
+```
+
+The estimated effects are closer to 0.
+<!--
+* Original estimates
+```{r echo=FALSE}
+# raw effect
+stronggene = data.frame(data$max$beta[2,])
+colnames(stronggene) = 'EffectSize'
+stronggene$Group = row.names(stronggene)
+stronggene$se = data$max$se[2,]
+ggplot(stronggene, aes(y = EffectSize, x = Group, color=Group)) + 
+  geom_point() + geom_hline(yintercept = 0) + 
+  geom_errorbar(aes(ymin=EffectSize-1.96*se, ymax=EffectSize+1.96*se), width=0.4) + 
+  theme_bw(base_size=12) + coord_flip() + ggtitle('ILMN_1343295_rs80259531')
+```
+
+* `MASH` estimates
+
+```{r echo=FALSE}
+# Improved
+stronggenePost = data.frame(resEZ$result$PosteriorMean[2,])
+colnames(stronggenePost) = 'EffectSize'
+stronggenePost$Group = row.names(stronggenePost)
+stronggenePost$se = resEZ$result$PosteriorSD[2,]
+ggplot(stronggenePost, aes(y = EffectSize, x = Group, color=Group)) + 
+  geom_point() + geom_hline(yintercept = 0) + 
+  geom_errorbar(aes(ymin=EffectSize-1.96*se, ymax=EffectSize+1.96*se), width=0.4) + 
+  theme_bw(base_size=12) + coord_flip() + ggtitle('ILMN_1343295_rs80259531')
+```
+
+All estimated effects become similar.
+-->
+
+Pairwise sharing
+
+```{r}
+x           <- get_pairwise_sharing(resEZ)
+colnames(x) <- colnames(get_lfsr(resEZ))
+rownames(x) <- colnames(x)
+x <- x[rev(rownames(x)),rev(colnames(x))]
+x[lower.tri(x)] <- NA
+clrs <- colorRampPalette(rev(c("#D73027","#FC8D59","#FEE090","#FFFFBF",
+                               "#E0F3F8","#91BFDB","#4575B4")))(64)
+n <- nrow(x)
+options(repr.plot.width=9, repr.plot.height=9)
+print(levelplot(x[n:1,],col.regions = clrs,xlab = "",ylab = "",
+                colorkey = TRUE, at = seq(0.7,1,length.out = 64),
+                scales = list(cex = 0.5,x = list(rot = 45))))
+
+```
+
+# Compare with original paper
+
+## eQTLs
+Among the 21485 top SNPs, `MASH` found `r length(get_significant_results(resEZ))` to be significant in at least one treatment. We refer to these as the 'top eQTLs'.
+
+Using `MASH`, we found `r length(get_significant_results(resEZ, conditions = 1))` genes with an eQTL in control, `r length(get_significant_results(resEZ, conditions = 2))` genes with an eQTL in lps6h, `r length(get_significant_results(resEZ, conditions = 3))` genes with an eQTL in lps90, `r length(get_significant_results(resEZ, conditions = 4))` genes with an eQTL in mdp6h, `r length(get_significant_results(resEZ, conditions = 5))` genes with an eQTL in mdp90, `r length(get_significant_results(resEZ, conditions = 6))` genes with an eQTL in rna6h, `r length(get_significant_results(resEZ, conditions = 7))` genes with an eQTL in rna90.
+
+In the original paper, they identified 717-1653 genes with an eQTL in each condition. So, we found more genes with an eQTL using `MASH`.
+
+```{r echo=FALSE}
+comm = Reduce(intersect, list(get_significant_results(resEZ, conditions=1),
+                       get_significant_results(resEZ, conditions=2),
+                       get_significant_results(resEZ, conditions=3),
+                       get_significant_results(resEZ, conditions=4),
+                       get_significant_results(resEZ, conditions=5),
+                       get_significant_results(resEZ, conditions=6),
+                       get_significant_results(resEZ, conditions=7)))
+```
+
+There are `r length(comm)` top eQTLs with significant effects among all treatments.
+
+<!---
+## Find genes specific to one treatment
+
+```{r}
+# function to find gene specific to condition i
+Geneto1Cond = function(resEZ, cond){
+  conditiontotal = seq(1,ncol(resEZ$result$PosteriorMean))
+  OtherCond = conditiontotal[-cond]
+  for(i in 1:6){
+    if(i == 1){
+      setd = setdiff(get_significant_results(resEZ, conditions=cond), 
+                     get_significant_results(resEZ, conditions=OtherCond[i]))
+    }
+    else{
+      setd = setdiff(setd,
+                     get_significant_results(resEZ, conditions=OtherCond[i]))
+    }
+    
+  }
+  return(setd)
+}
+```
+
+```{r}
+GeneNames = row.names(data$max$beta)
+for(i in 1:7){
+  cat('Gene has significant effect only in condition ', i, ': Total = ', length(GeneNames[Geneto1Cond(resEZ,i)]), '\n', GeneNames[Geneto1Cond(resEZ,i)], '\n')
+  cat('\n')
+}
+```
+-->
+
+## reQTLs
+Find genes having $\beta_{Trt}$ significantly different from $\beta_{Ctrl}$, among the top eQTLs. The number in [] is the result from the paper.
+
+```{r subset.data}
+```
+
+### LPS 6h
+```{r}
+eQTL.index.lps6h = get_significant_results(resEZ, conditions = 2)
+A.lps6h = rbind(c(1,-1,0,0,0,0,0))
+row.names(A.lps6h) = c('Ctrl-lps6h')
+```
+
+```{r}
+resEZ.lps6h = resEZ
+eQTL.lps6h = subset.data(mash_data, eQTL.index.lps6h)
+resEZ.lps6h$result = mash_compute_posterior_matrices(resEZ, eQTL.lps6h, A=A.lps6h, algorithm.version = 'R')
+saveRDS(resEZ.lps6h, 
+        paste0('../output/ImmuneEZ.V',vhat,'.center.resEZ.lps6h.K',K,'.P',P,'.rds'))
+
+```
+
+```{r}
+resEZ.lps6h = readRDS(paste0('../output/ImmuneEZ.V',vhat,'.center.resEZ.lps6h.K',K,'.P',P,'.rds'))
+length(get_significant_results(resEZ.lps6h))
+```
+
+Using `MASH`, we found `r round(length(get_significant_results(resEZ.lps6h))/length(eQTL.index.lps6h) * 100,2)`% [17%] of lps 6h eQTLs are reQTLs.
+
+### LPS 90
+```{r, echo=FALSE}
+eQTL.index.lps90 = get_significant_results(resEZ, conditions = 3)
+A.lps90 = rbind(c(1,0,-1,0,0,0,0))
+row.names(A.lps90) = c('Ctrl-lps90')
+```
+
+```{r, echo=FALSE}
+resEZ.lps90 = resEZ
+eQTL.lps90 = subset.data(mash_data, eQTL.index.lps90)
+resEZ.lps90$result = mash_compute_posterior_matrices(resEZ, eQTL.lps90, A=A.lps90, algorithm.version = 'R')
+saveRDS(resEZ.lps90, 
+        paste0('../output/ImmuneEZ.V',vhat,'.center.resEZ.lps90.K',K,'.P',P,'.rds'))
+
+```
+
+```{r}
+resEZ.lps90 = readRDS(paste0('../output/ImmuneEZ.V',vhat,'.center.resEZ.lps90.K',K,'.P',P,'.rds'))
+length(get_significant_results(resEZ.lps90))
+```
+
+We found `r round(length(get_significant_results(resEZ.lps90))/length(eQTL.index.lps90) * 100,2)`% [15%] of lps 90 eQTLs are reQTLs.
+
+### MDP 6h
+```{r, echo=FALSE}
+eQTL.index.mdp6h = get_significant_results(resEZ, conditions = 4)
+A.mdp6h = rbind(c(1,0,0,-1,0,0,0))
+row.names(A.mdp6h) = c('Ctrl-mdp6h')
+```
+
+```{r, echo=FALSE}
+resEZ.mdp6h = resEZ
+eQTL.mdp6h = subset.data(mash_data, eQTL.index.mdp6h)
+resEZ.mdp6h$result = mash_compute_posterior_matrices(resEZ, eQTL.mdp6h, A=A.mdp6h, algorithm.version = 'R')
+saveRDS(resEZ.mdp6h, 
+        paste0('../output/ImmuneEZ.V',vhat,'.center.resEZ.mdp6h.K',K,'.P',P,'.rds'))
+
+```
+
+```{r}
+resEZ.mdp6h = readRDS(paste0('../output/ImmuneEZ.V',vhat,'.center.resEZ.mdp6h.K',K,'.P',P,'.rds'))
+length(get_significant_results(resEZ.mdp6h))
+```
+
+We found `r round(length(get_significant_results(resEZ.mdp6h))/length(eQTL.index.mdp6h) * 100,2)`% [9%] of mdp 6h eQTLs are reQTLs.
+
+### MDP 90
+```{r, echo=FALSE}
+eQTL.index.mdp90 = get_significant_results(resEZ, conditions = 5)
+A.mdp90 = rbind(c(1,0,0,0,-1,0,0))
+row.names(A.mdp90) = c('Ctrl-mdp90')
+```
+
+```{r, echo=FALSE}
+resEZ.mdp90 = resEZ
+eQTL.mdp90 = subset.data(mash_data, eQTL.index.mdp90)
+resEZ.mdp90$result = mash_compute_posterior_matrices(resEZ, eQTL.mdp90, A=A.mdp90, algorithm.version = 'R')
+saveRDS(resEZ.mdp90, 
+        paste0('../output/ImmuneEZ.V',vhat,'center.resEZ.mdp90.K',K,'.P',P,'.rds'))
+
+```
+
+```{r}
+resEZ.mdp90 = readRDS(paste0('../output/ImmuneEZ.V',vhat,'center.resEZ.mdp90.K',K,'.P',P,'.rds'))
+length(get_significant_results(resEZ.mdp90))
+```
+
+We found `r round(length(get_significant_results(resEZ.mdp90))/length(eQTL.index.mdp90) * 100,2)`% [9%] of mdp 90 eQTLs are reQTLs.
+
+### RNA 6h
+```{r, echo=FALSE}
+eQTL.index.rna6h = get_significant_results(resEZ, conditions = 6)
+A.rna6h = rbind(c(1,0,0,0,0,-1,0))
+row.names(A.rna6h) = c('Ctrl-rna6h')
+```
+
+```{r, echo=FALSE}
+resEZ.rna6h = resEZ
+eQTL.rna6h = subset.data(mash_data, eQTL.index.rna6h)
+resEZ.rna6h$result = mash_compute_posterior_matrices(resEZ, eQTL.rna6h, A=A.rna6h, algorithm.version = 'R')
+saveRDS(resEZ.rna6h, 
+        paste0('../output/ImmuneEZ.V',vhat,'.center.resEZ.rna6h.K',K,'.P',P,'.rds'))
+
+```
+
+```{r}
+resEZ.rna6h = readRDS(paste0('../output/ImmuneEZ.V',vhat,'.center.resEZ.rna6h.K',K,'.P',P,'.rds'))
+length(get_significant_results(resEZ.rna6h))
+```
+
+We found `r round(length(get_significant_results(resEZ.rna6h))/length(eQTL.index.rna6h) * 100,2)`% [18%] of rna 6h eQTLs are reQTLs.
+
+### RNA 90
+```{r, echo=FALSE}
+eQTL.index.rna90 = get_significant_results(resEZ, conditions = 7)
+A.rna90 = rbind(c(1,0,0,0,0,0,-1))
+row.names(A.rna90) = c('Ctrl-rna90')
+```
+
+```{r, echo=FALSE}
+resEZ.rna90 = resEZ
+eQTL.rna90 = subset.data(mash_data, eQTL.index.rna90)
+resEZ.rna90$result = mash_compute_posterior_matrices(resEZ, eQTL.rna90, A=A.rna90, algorithm.version = 'R')
+saveRDS(resEZ.rna90, 
+        paste0('../output/ImmuneEZ.V',vhat,'.center.resEZ.rna90.K',K,'.P',P,'.rds'))
+
+```
+
+```{r}
+resEZ.rna90 = readRDS(paste0('../output/ImmuneEZ.V',vhat,'.center.resEZ.rna90.K',K,'.P',P,'.rds'))
+length(get_significant_results(resEZ.rna90))
+```
+
+We found `r round(length(get_significant_results(resEZ.rna90))/length(eQTL.index.rna90) * 100,2)`% [3%] of rna 90 eQTLs are reQTLs.
+
+In the paper, they found 3-18% of cis eQTLs in each condition are reQTLs.
+
+## Treatment specificity of reQTLs
+
+### LPS 6h
+```{r}
+reQTL.index.lps6h = get_significant_results(resEZ.lps6h)
+A.lps6hTRT = rbind(c(0,1,0,-1,0,0,0),
+          c(0,1,0,0,0,-1,0))
+row.names(A.lps6hTRT) = c('lps6h-mdp6h', 'lps6h-rna6h')
+```
+```{r}
+resEZ.lps6hTRT = resEZ
+reQTL.lps6h = subset.data(eQTL.lps6h, reQTL.index.lps6h)
+resEZ.lps6hTRT$result = mash_compute_posterior_matrices(resEZ, reQTL.lps6h, A=A.lps6hTRT, algorithm.version = 'R')
+saveRDS(resEZ.lps6hTRT, 
+        paste0('../output/ImmuneEZ.V',vhat,'.center.resEZ.lps6hTRT.K',K,'.P',P,'.rds'))
+
+```
+
+```{r}
+resEZ.lps6hTRT = readRDS(paste0('../output/ImmuneEZ.V',vhat,'.center.resEZ.lps6hTRT.K',K,'.P',P,'.rds'))
+length(get_significant_results(resEZ.lps6hTRT))
+```
+
+We found `r round(length(get_significant_results(resEZ.lps6hTRT, conditions = 1))/length(reQTL.index.lps6h) * 100,2)`% [32%] lps6h reQTLs are stimulus specific compared with mdp6h, `r round(length(get_significant_results(resEZ.lps6hTRT, conditions = 2))/length(reQTL.index.lps6h) * 100,2)`% [34%] lps6h reQTLs are stimulus specific compared with rna6h.
+
+### LPS 90
+```{r, echo=FALSE}
+reQTL.index.lps90 = get_significant_results(resEZ.lps90)
+A.lps90TRT = rbind(c(0,0,1,0,-1,0,0),
+                   c(0,0,1,0,0,0,-1))
+row.names(A.lps90TRT) = c('lps90-mdp90', 'lps90-rna90')
+```
+```{r, echo=FALSE}
+resEZ.lps90TRT = resEZ
+reQTL.lps90 = subset.data(eQTL.lps90, reQTL.index.lps90)
+resEZ.lps90TRT$result = mash_compute_posterior_matrices(resEZ, reQTL.lps90, A=A.lps90TRT, algorithm.version = 'R')
+saveRDS(resEZ.lps90TRT, 
+        paste0('../output/ImmuneEZ.V',vhat,'.center.resEZ.lps90TRT.K',K,'.P',P,'.rds'))
+
+```
+
+```{r}
+resEZ.lps90TRT = readRDS(paste0('../output/ImmuneEZ.V',vhat,'.center.resEZ.lps90TRT.K',K,'.P',P,'.rds'))
+length(get_significant_results(resEZ.lps90TRT))
+```
+
+We found `r round(length(get_significant_results(resEZ.lps90TRT, conditions = 1))/length(reQTL.index.lps90) * 100,2)`% [14%] lps 90min reQTLs are stimulus specific compared with mdp 90min, `r round(length(get_significant_results(resEZ.lps90TRT, conditions = 2))/length(reQTL.index.lps90) * 100,2)`% [51%] lps 90min reQTLs are stimulus specific compared with rna 90min.
+
+### MDP 6h
+```{r, echo=FALSE}
+reQTL.index.mdp6h = get_significant_results(resEZ.mdp6h)
+A.mdp6hTRT = rbind(c(0,-1,0,1,0,0,0),
+                   c(0,0,0,1,0,-1,0))
+row.names(A.mdp6hTRT) = c('mdp6h-lps6h', 'mdp6h-rna6h')
+```
+```{r, echo=FALSE}
+resEZ.mdp6hTRT = resEZ
+reQTL.mdp6h = subset.data(eQTL.mdp6h, reQTL.index.mdp6h)
+resEZ.mdp6hTRT$result = mash_compute_posterior_matrices(resEZ, reQTL.mdp6h, A=A.mdp6hTRT, algorithm.version = 'R')
+saveRDS(resEZ.mdp6hTRT, 
+        paste0('../output/ImmuneEZ.V',vhat,'.center.resEZ.mdp6hTRT.K',K,'.P',P,'.rds'))
+
+```
+
+```{r}
+resEZ.mdp6hTRT = readRDS(paste0('../output/ImmuneEZ.V',vhat,'.center.resEZ.mdp6hTRT.K',K,'.P',P,'.rds'))
+length(get_significant_results(resEZ.mdp6hTRT))
+```
+
+We found `r round(length(get_significant_results(resEZ.mdp6hTRT, conditions = 1))/length(reQTL.index.mdp6h) * 100,2)`% [15%] mdp 6h reQTLs are stimulus specific compared with lps 6h, `r round(length(get_significant_results(resEZ.mdp6hTRT, conditions = 2))/length(reQTL.index.mdp6h) * 100,2)`% [13%] mdp 6h reQTLs are stimulus specific compared with rna 6h.
+
+### MDP 90
+```{r, echo=FALSE}
+reQTL.index.mdp90 = get_significant_results(resEZ.mdp90)
+A.mdp90TRT = rbind(c(0,0,-1,0,1,0,0),
+                   c(0,0,0,0,1,0,-1))
+row.names(A.mdp90TRT) = c('mdp90-lps90', 'mdp90-rna90')
+```
+```{r, echo=FALSE}
+resEZ.mdp90TRT = resEZ
+reQTL.mdp90 = subset.data(eQTL.mdp90, reQTL.index.mdp90)
+resEZ.mdp90TRT$result = mash_compute_posterior_matrices(resEZ, reQTL.mdp90, A=A.mdp90TRT, algorithm.version = 'R')
+saveRDS(resEZ.mdp90TRT, 
+        paste0('../output/ImmuneEZ.V',vhat,'.center.resEZ.mdp90TRT.K',K,'.P',P,'.rds'))
+
+```
+
+```{r}
+resEZ.mdp90TRT = readRDS(paste0('../output/ImmuneEZ.V',vhat,'.center.resEZ.mdp90TRT.K',K,'.P',P,'.rds'))
+length(get_significant_results(resEZ.mdp90TRT))
+```
+
+We found `r round(length(get_significant_results(resEZ.mdp90TRT, conditions = 1))/length(reQTL.index.mdp90) * 100,2)`% [15%] mdp 90min reQTLs are stimulus specific compared with lps 90min, `r round(length(get_significant_results(resEZ.mdp90TRT, conditions = 2))/length(reQTL.index.mdp90) * 100,2)`% [46%] mdp 90min reQTLs are stimulus specific compared with rna 90min.
+
+### RNA 6h
+```{r, echo=FALSE}
+reQTL.index.rna6h = get_significant_results(resEZ.rna6h)
+A.rna6hTRT = rbind(c(0,-1,0,0,0,1,0),
+                   c(0,0,0,-1,0,1,0))
+row.names(A.rna6hTRT) = c('rna6h-lps6h', 'rna6h-mdp6h')
+```
+```{r, echo=FALSE}
+resEZ.rna6hTRT = resEZ
+reQTL.rna6h = subset.data(eQTL.rna6h, reQTL.index.rna6h)
+resEZ.rna6hTRT$result = mash_compute_posterior_matrices(resEZ, reQTL.rna6h, A=A.rna6hTRT, algorithm.version = 'R')
+saveRDS(resEZ.rna6hTRT, 
+        paste0('../output/ImmuneEZ.V',vhat,'.center.resEZ.rna6hTRT.K',K,'.P',P,'.rds'))
+
+```
+
+```{r}
+resEZ.rna6hTRT = readRDS(paste0('../output/ImmuneEZ.V',vhat,'.center.resEZ.rna6hTRT.K',K,'.P',P,'.rds'))
+length(get_significant_results(resEZ.rna6hTRT))
+```
+
+We found `r round(length(get_significant_results(resEZ.rna6hTRT, conditions = 1))/length(reQTL.index.rna6h) * 100,2)`% [21%] rna 6h reQTLs are stimulus specific compared with lps 6h, `r round(length(get_significant_results(resEZ.rna6hTRT, conditions = 2))/length(reQTL.index.rna6h) * 100,2)`% [45%] rna 6h reQTLs are stimulus specific compared with mdp 6h.
+
+### RNA 90
+```{r, echo=FALSE}
+reQTL.index.rna90 = get_significant_results(resEZ.rna90)
+A.rna90TRT = rbind(c(0,0,-1,0,0,0,1),
+                   c(0,0,0,0,-1,0,1))
+row.names(A.rna90TRT) = c('rna90-lps90', 'rna90-mdp90')
+```
+```{r, echo=FALSE}
+resEZ.rna90TRT = resEZ
+reQTL.rna90 = subset.data(eQTL.rna90, reQTL.index.rna90)
+resEZ.rna90TRT$result = mash_compute_posterior_matrices(resEZ, reQTL.rna90, A=A.rna90TRT, algorithm.version = 'R')
+saveRDS(resEZ.rna90TRT, 
+        paste0('../output/ImmuneEZ.V',vhat,'.center.resEZ.rna90TRT.K',K,'.P',P,'.rds'))
+
+```
+
+```{r}
+resEZ.rna90TRT = readRDS(paste0('../output/ImmuneEZ.V',vhat,'.center.resEZ.rna90TRT.K',K,'.P',P,'.rds'))
+length(get_significant_results(resEZ.rna90TRT))
+```
+
+We found `r round(length(get_significant_results(resEZ.rna90TRT, conditions = 1))/length(reQTL.index.rna90) * 100,2)`% [38%] rna 90min reQTLs are stimulus specific compared with lps 90min, `r round(length(get_significant_results(resEZ.rna90TRT, conditions = 2))/length(reQTL.index.rna90) * 100,2)`% [29%] rna 90min reQTLs are stimulus specific compared with mdp 90min.
+
+## Time point specificity of reQTLs
+
+### LPS 6h
+```{r}
+A.lps6hTime = rbind(c(0,1,-1,0,0,0,0))
+row.names(A.lps6hTime) = c('lps6h-lps90')
+```
+```{r}
+resEZ.lps6hTime = resEZ
+resEZ.lps6hTime$result = mash_compute_posterior_matrices(resEZ, reQTL.lps6h , A=A.lps6hTime, algorithm.version = 'R')
+saveRDS(resEZ.lps6hTime, 
+        paste0('../output/ImmuneEZ.V',vhat,'.center.resEZ.lps6hTime.K',K,'.P',P,'.rds'))
+
+```
+
+```{r}
+resEZ.lps6hTime = readRDS(paste0('../output/ImmuneEZ.V',vhat,'.center.resEZ.lps6hTime.K',K,'.P',P,'.rds'))
+length(get_significant_results(resEZ.lps6hTime))
+```
+
+We found `r round(length(get_significant_results(resEZ.lps6hTime, conditions = 1))/length(reQTL.index.lps6h) * 100,2)`% [45%] lps6h reQTLs are time point specific compared with lps90min.
+
+### LPS 90
+```{r, echo=FALSE}
+A.lps90Time = rbind(c(0,-1,1,0,0,0,0))
+row.names(A.lps90Time) = c('lps90-lps6h')
+```
+```{r, echo=FALSE}
+resEZ.lps90Time = resEZ
+resEZ.lps90Time$result = mash_compute_posterior_matrices(resEZ, reQTL.lps90, A=A.lps90Time, algorithm.version = 'R')
+saveRDS(resEZ.lps90Time, 
+        paste0('../output/ImmuneEZ.V',vhat,'.center.resEZ.lps90Time.K',K,'.P',P,'.rds'))
+
+```
+
+```{r}
+resEZ.lps90Time = readRDS(paste0('../output/ImmuneEZ.V',vhat,'.center.resEZ.lps90Time.K',K,'.P',P,'.rds'))
+length(get_significant_results(resEZ.lps90Time))
+```
+
+We found `r round(length(get_significant_results(resEZ.lps90Time, conditions = 1))/length(reQTL.index.lps90) * 100,2)`% [36%] lps 90min reQTLs are time point specific compared with lps6h.
+
+### MDP 6h
+```{r, echo=FALSE}
+A.mdp6hTime = rbind(c(0,0,0,1,-1,0,0))
+row.names(A.mdp6hTime) = c('mdp6h-mdp90')
+```
+```{r, echo=FALSE}
+resEZ.mdp6hTime = resEZ
+resEZ.mdp6hTime$result = mash_compute_posterior_matrices(resEZ, reQTL.mdp6h, A=A.mdp6hTime, algorithm.version = 'R')
+saveRDS(resEZ.mdp6hTime, 
+        paste0('../output/ImmuneEZ.V',vhat,'.center.resEZ.mdp6hTime.K',K,'.P',P,'.rds'))
+
+```
+
+```{r}
+resEZ.mdp6hTime = readRDS(paste0('../output/ImmuneEZ.V',vhat,'.center.resEZ.mdp6hTime.K',K,'.P',P,'.rds'))
+length(get_significant_results(resEZ.mdp6hTime))
+```
+
+We found `r round(length(get_significant_results(resEZ.mdp6hTRT, conditions = 1))/length(reQTL.index.mdp6h) * 100,2)`% [40%] mdp 6h reQTLs are time point specific compared with mdp 90min.
+
+### MDP 90
+```{r, echo=FALSE}
+A.mdp90Time = rbind(c(0,0,0,-1,1,0,0))
+row.names(A.mdp90Time) = c('mdp90-mdp6h')
+```
+```{r, echo=FALSE}
+resEZ.mdp90Time = resEZ
+resEZ.mdp90Time$result = mash_compute_posterior_matrices(resEZ, reQTL.mdp90, A=A.mdp90Time, algorithm.version = 'R')
+saveRDS(resEZ.mdp90Time, 
+        paste0('../output/ImmuneEZ.V',vhat,'.center.resEZ.mdp90Time.K',K,'.P',P,'.rds'))
+
+```
+
+```{r}
+resEZ.mdp90Time = readRDS(paste0('../output/ImmuneEZ.V',vhat,'.center.resEZ.mdp90Time.K',K,'.P',P,'.rds'))
+length(get_significant_results(resEZ.mdp90Time))
+```
+
+We found `r round(length(get_significant_results(resEZ.mdp90Time, conditions = 1))/length(reQTL.index.mdp90) * 100,2)`% [38%] mdp 90min reQTLs time point specific compared with mdp 6h.
+
+### RNA 6h
+```{r, echo=FALSE}
+A.rna6hTime = rbind(c(0,0,0,0,0,1,-1))
+row.names(A.rna6hTime) = c('rna6h-rna90')
+```
+```{r, echo=FALSE}
+resEZ.rna6hTime = resEZ
+resEZ.rna6hTime$result = mash_compute_posterior_matrices(resEZ, reQTL.rna6h, A=A.rna6hTime, algorithm.version = 'R')
+saveRDS(resEZ.rna6hTime, 
+        paste0('../output/ImmuneEZ.V',vhat,'.center.resEZ.rna6hTime.K',K,'.P',P,'.rds'))
+
+```
+
+```{r}
+resEZ.rna6hTime = readRDS(paste0('../output/ImmuneEZ.V',vhat,'.center.resEZ.rna6hTime.K',K,'.P',P,'.rds'))
+length(get_significant_results(resEZ.rna6hTime))
+```
+
+We found `r round(length(get_significant_results(resEZ.rna6hTime, conditions = 1))/length(reQTL.index.rna6h) * 100,2)`% [64%] rna 6h reQTLs are time point specific compared with rna 90min.
+
+### RNA 90
+```{r, echo=FALSE}
+A.rna90Time = rbind(c(0,0,0,0,0,-1,1))
+row.names(A.rna90Time) = c('rna90-rna6h')
+```
+```{r, echo=FALSE}
+resEZ.rna90Time = resEZ
+resEZ.rna90Time$result = mash_compute_posterior_matrices(resEZ, reQTL.rna90, A=A.rna90Time, algorithm.version = 'R')
+saveRDS(resEZ.rna90Time, 
+        paste0('../output/ImmuneEZ.V',vhat,'.center.resEZ.rna90Time.K',K,'.P',P,'.rds'))
+
+```
+
+```{r}
+resEZ.rna90Time = readRDS(paste0('../output/ImmuneEZ.V',vhat,'.center.resEZ.rna90Time.K',K,'.P',P,'.rds'))
+length(get_significant_results(resEZ.rna90Time))
+```
+
+We found `r round(length(get_significant_results(resEZ.rna90Time, conditions = 1))/length(reQTL.index.rna90) * 100,2)`% [32%] rna 90min reQTLs are time point specific compared with rna 6h.
+
+<!---
+```{r}
+get_reQTL_cond = function(m, cond, factor = 0.5, lfsr_thresh = 0.05, FUN = identity){
+  condsig = get_significant_results(m, conditions = cond, thresh = lfsr_thresh)
+  ratio = FUN(get_pm(m)[condsig, 1])/FUN(get_pm(m)[condsig, cond])
+  set = ratio <= factor | ratio >= (1/factor)
+  return(list(index= condsig[set], 
+              prop = mean(set)))
+}
+```
+Using `MASH`, we found `r round(get_reQTL_cond(resEZ, 2, FUN=abs)$prop*100,2)`% of lps 6h eQTLs are reQTLs, `r round(get_reQTL_cond(resEZ, 3, FUN=abs)$prop*100,2)`% of lps90 eQTLs are reQTLs, `r round(get_reQTL_cond(resEZ, 4, FUN=abs)$prop*100,2)`% of mdp6h eQTLs are reQTLs, `r round(get_reQTL_cond(resEZ, 5, FUN=abs)$prop*100,2)`% of mdp90 eQTLs are reQTLs, `r round(get_reQTL_cond(resEZ, 6, FUN=abs)$prop*100,2)`% of rna6h eQTLs are reQTLs, `r round(get_reQTL_cond(resEZ, 7, FUN=abs)$prop*100,2)`% of rna90 eQTLs are reQTLs. Here, the proportion of reQTLs is estimated by the proportion of significant eQTLs that does not share magnitude with control.
+
+In the paper, they found 3-18% of cis eQTLs in each condition are reQTLs. 
+
+### Treatment specificity of reQTLs
+```{r}
+get_pairwise_not_sharing_reQTL = function(m, cond1, cond2, factor = 0.5, lfsr_thresh = 0.05, FUN=identity){
+  cond1_reQTL_index = get_reQTL_cond(m, cond1, factor = factor, lfsr_thresh = lfsr_thresh, FUN = FUN)$index
+  
+  ratio = FUN(get_pm(m)[cond1_reQTL_index, cond1])/FUN(get_pm(m)[cond1_reQTL_index, cond2])
+  
+  return(mean(ratio <= factor | ratio >= (1/factor)))
+}
+```
+
+Using `MASH`, 
+
+* LPS 90
+    + `r round(get_pairwise_not_sharing_reQTL(resEZ, 3,5, FUN = abs)*100,2)`% [14%] lps90min reQTLs are stimulus specific compared with mdp90min
+    + `r round(get_pairwise_not_sharing_reQTL(resEZ, 3,7, FUN = abs)*100,2)`% [51%] lps90min reQTLs are stimulus specific compared with rna90min
+* MDP 90
+    + `r round(get_pairwise_not_sharing_reQTL(resEZ, 5,3, FUN = abs)*100,2)`% [15%] mdp90min reQTLs are stimulus specific compared with lps90min
+    + `r round(get_pairwise_not_sharing_reQTL(resEZ, 5,7, FUN = abs)*100,2)`% [46%] mdp90min reQTLs are stimulus specific compared with rna90min
+* RNA 90
+    + `r round(get_pairwise_not_sharing_reQTL(resEZ, 7,3, FUN = abs)*100,2)`% [38%] rna90min reQTLs are stimulus specific compared with lps90min
+    + `r round(get_pairwise_not_sharing_reQTL(resEZ, 7,5, FUN = abs)*100,2)`% [29%] rna90min reQTLs are stimulus specific compared with mdp90min
+* LPS 6h
+    + `r round(get_pairwise_not_sharing_reQTL(resEZ, 2,4, FUN = abs)*100,2)`% [32%] lps6h reQTLs are stimulus specific compared with mdp6h
+    + `r round(get_pairwise_not_sharing_reQTL(resEZ, 2,6, FUN = abs)*100,2)`% [34%] lps6h reQTLs are stimulus specific compared with rna6h
+* MDP 6h
+    + `r round(get_pairwise_not_sharing_reQTL(resEZ, 4,2, FUN = abs)*100,2)`% [15%] mdp6h reQTLs are stimulus specific compared with lps6h
+    + `r round(get_pairwise_not_sharing_reQTL(resEZ, 4,6, FUN = abs)*100,2)`% [13%] mdp6h reQTLs are stimulus specific compared with rna6h
+* RNA 6h
+    + `r round(get_pairwise_not_sharing_reQTL(resEZ, 6,2, FUN = abs)*100,2)`% [21%] rna6h reQTLs are stimulus specific compared with lps6h
+    + `r round(get_pairwise_not_sharing_reQTL(resEZ, 6,4, FUN = abs)*100,2)`% [45%] rna6h reQTLs are stimulus specific compared with mdp6h.
+
+The numbers in '[]' are results from paper.
+
+### Time point specificity of reQTLs
+Using `MASH`, 
+
+* LPS
+    + `r round(get_pairwise_not_sharing_reQTL(resEZ, 3,2, FUN = abs)*100,2)`% [36%] lps90min reQTLs are time point specific compared with lps6h
+    + `r round(get_pairwise_not_sharing_reQTL(resEZ, 2,3, FUN = abs)*100,2)`% [45%] lps6h reQTLs are time point specific compared with lps90min
+* MDP
+    + `r round(get_pairwise_not_sharing_reQTL(resEZ, 5,4, FUN = abs)*100,2)`% [32%] mdp90min reQTLs are time point specific compared with mdp6h
+    + `r round(get_pairwise_not_sharing_reQTL(resEZ, 4,5, FUN = abs)*100,2)`% [64%] mdp6h reQTLs are time point specific compared with mdp90min
+* RNA
+    + `r round(get_pairwise_not_sharing_reQTL(resEZ, 7,6, FUN = abs)*100,2)`% [38%] rna90min reQTLs are time point specific compared with rna6h
+    + `r round(get_pairwise_not_sharing_reQTL(resEZ, 6,7, FUN = abs)*100,2)`% [40%] rna6h reQTLs are time point specific compared with rna90min
+
+The numbers in '[]' are results from paper.
+-->
+
+# Session information
+
+<!-- Insert the session information into the document -->
+```{r session-info}
+```
