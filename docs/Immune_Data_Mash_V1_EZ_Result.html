@@ -324,7 +324,7 @@ America/Chicago&#39;</code></pre>
 <p><strong>Last updated:</strong> 2017-11-17</p>
 <!-- Insert the code version (Git commit SHA1) if Git repository exists and R
  package git2r is installed -->
-<p><strong>Code version:</strong> dd58c7f</p>
+<p><strong>Code version:</strong> 23e27ff</p>
 <div id="set-up-data" class="section level1">
 <h1>Set up data</h1>
 <pre class="r"><code>library(lattice)
@@ -366,8 +366,8 @@ resEZ$result = readRDS(&#39;../output/ImmuneEZ.V1.center.mash_posterior.K10.P5.r
 <pre class="r"><code>options(repr.plot.width=12, repr.plot.height=4)
 barplot(get_estimated_pi(resEZ), las = 2, cex.names = 0.7)</code></pre>
 <p><img src="figure/Immune_Data_Mash_V1_EZ_Result.Rmd/unnamed-chunk-5-1.png" width="672" style="display: block; margin: auto;" /></p>
-<p>Most of the mass is on the null, PCA1 and equal effects. <code>mash</code> placed 9.7949223% of the mixture components weight on data-driven matrices, 5.4261657% weight on equal effects matrix.</p>
-<p>Here is a visualization for PCA1, which capture 9.1026356% mixture component in these data, (via correlation heatmap):</p>
+<p>Most of the mass is on the null, PCA1 and equal effects. <code>mash</code> placed 9.7949% of the mixture components weight on data-driven matrices, 5.4262% weight on equal effects matrix.</p>
+<p>Here is a visualization for PCA1, which capture 9.1026% mixture component in these data, (via correlation heatmap):</p>
 <pre class="r"><code>x           &lt;- cov2cor(resEZ$fitted_g$Ulist[[&quot;ED_PCA_1&quot;]])
 x[x &gt; 1]    &lt;- 1
 x[x &lt; -1]   &lt;- -1
