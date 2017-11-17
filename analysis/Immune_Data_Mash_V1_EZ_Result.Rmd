@@ -73,9 +73,9 @@ options(repr.plot.width=12, repr.plot.height=4)
 barplot(get_estimated_pi(resEZ), las = 2, cex.names = 0.7)
 ```
 
-Most of the mass is on the null, PCA1 and equal effects. `mash` placed `r sum(get_estimated_pi(resEZ)[2:14])*100`% of the mixture components weight on data-driven matrices, `r get_estimated_pi(resEZ)['equal_effects']*100`% weight on equal effects matrix.
+Most of the mass is on the null, PCA1 and equal effects. `mash` placed `r round(sum(get_estimated_pi(resEZ)[2:14])*100, 4)`% of the mixture components weight on data-driven matrices, `r round(get_estimated_pi(resEZ)['equal_effects']*100,4)`% weight on equal effects matrix.
 
-Here is a visualization for PCA1, which capture `r get_estimated_pi(resEZ)['ED_PCA_1']*100`% mixture component in these data, (via correlation heatmap):
+Here is a visualization for PCA1, which capture `r round(get_estimated_pi(resEZ)['ED_PCA_1']*100,4)`% mixture component in these data, (via correlation heatmap):
 
 ```{r}
 x           <- cov2cor(resEZ$fitted_g$Ulist[["ED_PCA_1"]])
