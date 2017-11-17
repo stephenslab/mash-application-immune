@@ -278,7 +278,7 @@ for(i in 1:7){
 -->
 
 ## reQTLs
-Find genes having $\beta_{Trt}$ significantly different from $\beta_{Ctrl}$, among the top eQTLs. The number in [] is the result from the paper.
+Find genes having $\beta_{Trt}$ significantly different from $\beta_{Ctrl}$, among the top eQTLs. The number in [] is the result from the paper. Note that, there are only percentages provided in the paper. Since the number of top eQTLs we found are different, the percentage may not directly comparable.
 
 ```{r subset.data}
 ```
