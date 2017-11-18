@@ -93,7 +93,7 @@ The mash fit ([EZ V1 model](Immune_Data_Mash_V1_EZ_Result.html)) strongly favor 
 	\beta_{j1} - \beta_{j2}|\left(\begin{array}{c}
 	\hat{\beta}_{j1} \\
 	\hat{\beta}_{j2}
-	\end{array}\right) &\propto \pi_{0} \delta_{0} + \pi_{1} N\left(-2\hat{\beta}_{j1}-0.5\hat{\beta}_{j2}, 0.25\right)
+	\end{array}\right) &\propto \hat{\pi}_{0} \delta_{0} + \hat{\pi}_{1} N\left(-2\hat{\beta}_{j1}-0.5\hat{\beta}_{j2}, 0.25\right)
 	\end{align*}
 	
 	$$
@@ -157,5 +157,5 @@ The mash fit ([EZ V1 model](Immune_Data_Mash_V1_EZ_Result.html)) strongly favor 
 	\beta_{j1} - \beta_{j2}|\left(\begin{array}{c}
 	\hat{\beta}_{j1} \\
 	\hat{\beta}_{j2}
-	\end{array}\right) &\propto \pi_{0} \delta_{0} + \pi_{1} N\left(0, 0\right)
+	\end{array}\right) &\propto \hat{\pi}_{0} \delta_{0} + \hat{\pi}_{1} N\left(0, 0\right)
 	\end{align*}
