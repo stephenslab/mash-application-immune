@@ -45,7 +45,9 @@ Here is the `MASH` analyses:
     
     Among these models, EZ V1 has the highest log likelihood value.
     
-    Using Mash with V be the estimated correlation, we found more eQTLs, the number of eQTLs are similar using EE and EZ model. Based on the EZ V1 model, the majority weights for the covariance matrix is on the null matrix (0, no effects). The remaining weights are on the covariance matrix capturing the pattern that the standardized effects are strong positively correlated among all treatments.
+    Using Mash with V be the estimated correlation, we found more eQTLs, the number of eQTLs are similar using EE and EZ model. Based on the EZ V1 model, the majority weights for the covariance matrix is on the null matrix (0, no effects). The remaining weights are on the covariance matrix capturing the pattern that the standardized effects are strong positively correlated among all treatments. 
+    
+    The mash fit strongly favor components where **standardized** effects are very similar, which does not mean the raw effects are similar. The similarity of standardized effects counld imply the similarity of raw effects if and only if the stanard errors of the estimated effects are all similar. The derivation is in [Mash Posterior under non-equal $s_{jr}$](PostNONsd.html).
     
     I computed the number of reQTLs, treatment specific reQTLs and time point specific reQTLs using the linear transformation. We found more reQTLs, treatment specific reQTLs and time point specific reQTLs than the paper’s result.
     

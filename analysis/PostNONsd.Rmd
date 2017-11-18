@@ -1,0 +1,161 @@
+---
+title: "Mash Posterior under non-equal $s_{jr}$"
+author: "Yuxin Zou"
+date: 2017-11-18
+output: html_document
+---
+
+The mash fit ([EZ V1 model](Immune_Data_Mash_V1_EZ_Result.html)) strongly favor components where standardized effects are very similar, which does not mean the raw effects are similar.
+
+* The covariance is for the standardized effect, $S_{j}^{-1}\beta_{j}$.
+	
+	For example,
+	$$
+	S_{j}^2 = \left(\begin{array}{c c}
+	0.5^2 & 0 \\
+	0 & 1
+	\end{array}\right)
+	$$
+	Using EZ model
+	
+	\begin{align*}
+	\left(\begin{array}{c}
+	\hat{\beta}_{j1}/0.5 \\
+	\hat{\beta}_{j2}
+	\end{array}\right) | \left(\begin{array}{c}
+	\beta_{j1}\\
+	\beta_{j2}
+	\end{array}\right) &\sim N\left(\left(\begin{array}{c}
+	\beta_{j1} \\
+	\beta_{j2}
+	\end{array}\right), S_{j}^2 \right) \\
+	\left(\begin{array}{c}
+	\beta_{j1}/0.5 \\
+	\beta_{j2}
+	\end{array}\right) | \hat{\pi} &\sim \hat{\pi}_{0} \delta_{0} + \hat{\pi}_{1} N(0,\left(\begin{array}{c c}
+	1 & 1 \\
+	1 & 1
+	\end{array}\right))
+	\end{align*}
+	
+	The posterior becomes
+	\begin{align*}
+	\left(\begin{array}{c}
+	\beta_{j1}/0.5\\
+	\beta_{j2}
+	\end{array}\right) | \left(\begin{array}{c}
+	\hat{\beta}_{j1} \\
+	\hat{\beta}_{j2}
+	\end{array}\right) &\propto \hat{\pi}_{0} \delta_{0} + \hat{\pi}_{1} N\left( \left(\begin{array}{c}
+	\mu_{j1} \\
+	\mu_{j2}
+	\end{array}\right),c \left(\begin{array}{c c}
+	1 & 1 \\
+	1 & 1
+	\end{array}\right) \right) \\
+	&= \hat{\pi}_{0} \delta_{0} + \hat{\pi}_{1} N\left( c \left(\begin{array}{c c}
+	1 & 1 \\
+	1 & 1
+	\end{array}\right) \left(\begin{array}{c}
+	4\hat{\beta}_{j1} \\
+	\hat{\beta}_{j2}
+	\end{array}\right) , c \left(\begin{array}{c c}
+	1 & 1 \\
+	1 & 1
+	\end{array}\right) \right) \\
+	&= \hat{\pi}_{0} \delta_{0} + \hat{\pi}_{1} N\left( c \left(\begin{array}{c}
+	4\hat{\beta}_{j1} + \hat{\beta}_{j2} \\ 
+	4\hat{\beta}_{j1} + \hat{\beta}_{j2}
+	\end{array}\right) , c \left(\begin{array}{c c}
+	1 & 1 \\
+	1 & 1
+	\end{array}\right) \right) \\
+	\left(\begin{array}{c}
+	\beta_{j1}\\
+	\beta_{j2}
+	\end{array}\right) | \left(\begin{array}{c}
+	\hat{\beta}_{j1} \\
+	\hat{\beta}_{j2}
+	\end{array}\right) &\propto \hat{\pi}_{0} \delta_{0} + \hat{\pi}_{1} N\left( \left(\begin{array}{c}
+	0.5 \mu_{j1} \\
+	\mu_{j2}
+	\end{array}\right), c \left(\begin{array}{c c}
+	0.5^2 & 0.5 \\
+	0.5 & 1
+	\end{array}\right) \right) \\
+	&= \hat{\pi}_{0} \delta_{0} + \hat{\pi}_{1} N\left( c \left(\begin{array}{c}
+	2\hat{\beta}_{j1} + 0.5 \hat{\beta}_{j2} \\ 
+	4\hat{\beta}_{j1} + \hat{\beta}_{j2}
+	\end{array}\right) , c \left(\begin{array}{c c}
+	0.5^2 & 0.5 \\
+	0.5 & 1
+	\end{array}\right) \right) \\
+	\beta_{j1} - \beta_{j2}|\left(\begin{array}{c}
+	\hat{\beta}_{j1} \\
+	\hat{\beta}_{j2}
+	\end{array}\right) &\propto \pi_{0} \delta_{0} + \pi_{1} N\left(-2\hat{\beta}_{j1}-0.5\hat{\beta}_{j2}, 0.25\right)
+	\end{align*}
+	
+	$$
+	P(\beta_{j1}-\beta_{j2} = 0|\hat{\beta}_{j}, \hat{\pi}) = \pi_{0}
+  $$
+	$$
+	lfsr = min\left[P(\beta_{j1}-\beta_{j2} \leq 0|\hat{\beta}_{j}, \hat{\pi}), P(\beta_{j1}-\beta_{j2} \geq 0|\hat{\beta}_{j}, \hat{\pi})\right]
+	$$
+	
+	Since the $S_{j}$'s diagonal elements are not equal, the $\beta_{j1}$ and $\beta_{j2}$ would not have similar magnitude.
+	
+* If the diagonal of $S_{j}$ are equal, like the case in the mash paper (in the paper, $s_{jr}$ are all around 0.1)
+	$$
+	S_{j} = \left(\begin{array}{c c}
+	1 & 0 \\
+	0 & 1
+	\end{array}\right)
+	$$
+	
+	\begin{align*}
+	\left(\begin{array}{c}
+	\hat{\beta}_{j1} \\
+	\hat{\beta}_{j2}
+	\end{array}\right) | \left(\begin{array}{c}
+	\beta_{j1}\\
+	\beta_{j2}
+	\end{array}\right) &\sim N\left(\left(\begin{array}{c}
+	\beta_{j1} \\
+	\beta_{j2}
+	\end{array}\right), S_{j}\right) \\
+	\left(\begin{array}{c}
+	\beta_{j1} \\
+	\beta_{j2}
+	\end{array}\right) | \hat{\pi} &\sim \hat{\pi}_{0} \delta_{0} + \hat{\pi}_{1} N(0,\left(\begin{array}{c c}
+	1 & 1 \\
+	1 & 1
+	\end{array}\right)) \\
+	\left(\begin{array}{c}
+	\beta_{j1}\\
+	\beta_{j2}
+	\end{array}\right) | \left(\begin{array}{c}
+	\hat{\beta}_{j1} \\
+	\hat{\beta}_{j2}
+	\end{array}\right) &\propto \hat{\pi}_{0} \delta_{0} + \hat{\pi}_{1} N\left( \left(\begin{array}{c}
+	\mu_{j1} \\
+	\mu_{j2}
+	\end{array}\right), \left(\begin{array}{c c}
+	1 & 1 \\
+	1 & 1
+	\end{array}\right) \left(\begin{array}{c c}
+	2 & 1 \\
+	1 & 2
+	\end{array}\right)^{-1} \right) \\
+	&= \hat{\pi}_{0} \delta_{0} + \hat{\pi}_{1} N\left( c \left(\begin{array}{c c}
+	\hat{\beta}_{j1} +  \hat{\beta}_{j2} \\
+	\hat{\beta}_{j1} +  \hat{\beta}_{j2}
+	\end{array}\right), c \left(\begin{array}{c c}
+	1 & 1 \\
+	1 & 1
+	\end{array}\right) \right) \\
+	\beta_{j1} - \beta_{j2}|\left(\begin{array}{c}
+	\hat{\beta}_{j1} \\
+	\hat{\beta}_{j2}
+	\end{array}\right) &\propto \pi_{0} \delta_{0} + \pi_{1} N\left(0, 0\right)
+	\end{align*}
