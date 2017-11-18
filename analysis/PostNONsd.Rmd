@@ -97,7 +97,7 @@ The mash fit ([EZ V1 model](Immune_Data_Mash_V1_EZ_Result.html)) strongly favor 
 	\end{align*}
 	
 	$$
-	P(\beta_{j1}-\beta_{j2} = 0|\hat{\beta}_{j}, \hat{\pi}) = \pi_{0}
+	P(\beta_{j1}-\beta_{j2} = 0|\hat{\beta}_{j}, \hat{\pi}) = \hat{\pi}_{0}
   $$
 	$$
 	lfsr = min\left[P(\beta_{j1}-\beta_{j2} \leq 0|\hat{\beta}_{j}, \hat{\pi}), P(\beta_{j1}-\beta_{j2} \geq 0|\hat{\beta}_{j}, \hat{\pi})\right]
