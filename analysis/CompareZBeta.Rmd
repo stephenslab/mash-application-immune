@@ -9,6 +9,7 @@ output: html_document
 shared across the workflowr files. -->
 ```{r read-chunk, include=FALSE, cache=FALSE}
 knitr::read_chunk("chunks.R")
+knitr::read_chunk('../code/subset.data.R')
 knitr::read_chunk("../code/simple_sims_alpha.R")
 ```
 
@@ -69,22 +70,22 @@ barplot(get_estimated_pi(U.m.Z.equal), las = 2, cex.names = 0.7, main='EZ')
 The estimated weights are similar.
 <!--
 Check significant samples under transformation A
+
+```{r subset.data}
+```
+
 ```{r}
 A = rbind(c(1,-1,0,0,0))
-subset.data = get_significant_results(U.m.beta.equal)
-simdata.equal.subset = simdata.equal
-simdata.equal.subset$Bhat = simdata.equal$Bhat[subset.data,]
-simdata.equal.subset$Shat = simdata.equal$Shat[subset.data,]
-
-TestdataBeta.equal.subset = set_mash_data(simdata.equal.subset$Bhat, simdata.equal.subset$Shat, alpha = 0)
-TestdataZ.equal.subset = set_mash_data(simdata.equal.subset$Bhat, simdata.equal.subset$Shat, alpha = 1)
+subset.index = get_significant_results(U.m.beta.equal)
+Beta.equal.subset = subset.data(TestdataBeta.equal, subset.index)
+Z.equal.subset = subset.data(TestdataZ.equal, subset.index)
 
 # EE
-U.m.beta.equal.posterior = mash_compute_posterior_matrices(U.m.beta.equal, TestdataBeta.equal.subset, A=A, algorithm.version = 'R')
+U.m.beta.equal.posterior = mash_compute_posterior_matrices(U.m.beta.equal, Beta.equal.subset, A=A, algorithm.version = 'R')
 U.m.beta.equal$result = U.m.beta.equal.posterior
 
 # EZ
-U.m.Z.equal.posterior = mash_compute_posterior_matrices(U.m.Z.equal, TestdataZ.equal.subset, algorithm.version = 'R', A=A)
+U.m.Z.equal.posterior = mash_compute_posterior_matrices(U.m.Z.equal, Z.equal.subset, algorithm.version = 'R', A=A)
 U.m.Z.equal$result = U.m.Z.equal.posterior
 
 length(get_significant_results(U.m.beta.equal))
