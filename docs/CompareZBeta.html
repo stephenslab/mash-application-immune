@@ -321,12 +321,12 @@ div.section {
 shared across the workflowr files. -->
 <!-- Update knitr chunk options -->
 <!-- Insert the date the file was last updated -->
-<pre><code>Warning in as.POSIXlt.POSIXct(Sys.time()): unknown timezone &#39;default/
-America/Chicago&#39;</code></pre>
-<p><strong>Last updated:</strong> 2017-11-17</p>
+<pre><code>Warning in as.POSIXlt.POSIXct(Sys.time()): unknown timezone &#39;zone/tz/2017c.
+1.0/zoneinfo/America/Chicago&#39;</code></pre>
+<p><strong>Last updated:</strong> 2017-11-24</p>
 <!-- Insert the code version (Git commit SHA1) if Git repository exists and R
  package git2r is installed -->
-<p><strong>Code version:</strong> 47a0086</p>
+<p><strong>Code version:</strong> 963d26b</p>
 <div id="simulate-shat-equal-data-r-5" class="section level1">
 <h1>Simulate Shat equal data R = 5</h1>
 <pre class="r"><code>library(mashr)</code></pre>
@@ -355,7 +355,7 @@ U.pca.Z.equal = cov_pca(TestdataZ.equal.center,5,strong.Z.equal)</code></pre>
 <pre class="r"><code>U.ed.beta.equal = cov_ed(TestdataBeta.equal, U.pca.Z.equal, strong.Z.equal)
 U.m.beta.equal = mash(TestdataBeta.equal, c(U.c.equal,U.ed.beta.equal))</code></pre>
 <pre><code> - Computing 2000 x 257 likelihood matrix.
- - Likelihood calculations took 0.14 seconds.
+ - Likelihood calculations took 0.15 seconds.
  - Fitting model with 257 mixture components.
  - Model fitting took 0.58 seconds.
  - Computing posterior matrices.
@@ -368,9 +368,9 @@ U.m.beta.equal = mash(TestdataBeta.equal, c(U.c.equal,U.ed.beta.equal))</code></
 <pre class="r"><code>U.ed.Z.equal = cov_ed(TestdataZ.equal, U.pca.Z.equal, strong.Z.equal)
 U.m.Z.equal = mash(TestdataZ.equal, c(U.c.equal, U.ed.Z.equal))</code></pre>
 <pre><code> - Computing 2000 x 257 likelihood matrix.
- - Likelihood calculations took 0.05 seconds.
+ - Likelihood calculations took 0.06 seconds.
  - Fitting model with 257 mixture components.
- - Model fitting took 0.49 seconds.
+ - Model fitting took 0.48 seconds.
  - Computing posterior matrices.
  - Computation allocated took 0.01 seconds.</code></pre>
 <pre><code>FIXME: &#39;compute_posterior_matrices&#39; in Rcpp does not transfer EZ to EE</code></pre>
@@ -379,22 +379,30 @@ U.m.Z.equal = mash(TestdataZ.equal, c(U.c.equal, U.ed.Z.equal))</code></pre>
 <p>The estimated weights are similar. <!--
 Check significant samples under transformation A
 
+
+```r
+subset.data = function(data, subset){
+  data.subset = data
+  data.subset$Bhat = data$Bhat[subset,]
+  data.subset$Shat = data$Shat[subset,]
+  data.subset$Shat_alpha = data$Shat_alpha[subset,]
+  data.subset
+}
+```
+
+
 ```r
 A = rbind(c(1,-1,0,0,0))
-subset.data = get_significant_results(U.m.beta.equal)
-simdata.equal.subset = simdata.equal
-simdata.equal.subset$Bhat = simdata.equal$Bhat[subset.data,]
-simdata.equal.subset$Shat = simdata.equal$Shat[subset.data,]
-
-TestdataBeta.equal.subset = set_mash_data(simdata.equal.subset$Bhat, simdata.equal.subset$Shat, alpha = 0)
-TestdataZ.equal.subset = set_mash_data(simdata.equal.subset$Bhat, simdata.equal.subset$Shat, alpha = 1)
+subset.index = get_significant_results(U.m.beta.equal)
+Beta.equal.subset = subset.data(TestdataBeta.equal, subset.index)
+Z.equal.subset = subset.data(TestdataZ.equal, subset.index)
 
 # EE
-U.m.beta.equal.posterior = mash_compute_posterior_matrices(U.m.beta.equal, TestdataBeta.equal.subset, A=A, algorithm.version = 'R')
+U.m.beta.equal.posterior = mash_compute_posterior_matrices(U.m.beta.equal, Beta.equal.subset, A=A, algorithm.version = 'R')
 U.m.beta.equal$result = U.m.beta.equal.posterior
 
 # EZ
-U.m.Z.equal.posterior = mash_compute_posterior_matrices(U.m.Z.equal, TestdataZ.equal.subset, algorithm.version = 'R', A=A)
+U.m.Z.equal.posterior = mash_compute_posterior_matrices(U.m.Z.equal, Z.equal.subset, algorithm.version = 'R', A=A)
 U.m.Z.equal$result = U.m.Z.equal.posterior
 
 length(get_significant_results(U.m.beta.equal))
@@ -455,7 +463,7 @@ U.pca.Z.col.diff = cov_pca(TestdataZ.col.diff.center,5,strong.Z.col.diff)</code>
 <pre class="r"><code>U.ed.beta.col.diff = cov_ed(TestdataBeta.col.diff, U.pca.Z.col.diff, strong.Z.col.diff)
 U.m.beta.col.diff = mash(TestdataBeta.col.diff, c(U.c.col.diff, U.ed.beta.col.diff))</code></pre>
 <pre><code> - Computing 2000 x 353 likelihood matrix.
- - Likelihood calculations took 0.08 seconds.
+ - Likelihood calculations took 0.06 seconds.
  - Fitting model with 353 mixture components.
  - Model fitting took 0.46 seconds.
  - Computing posterior matrices.
@@ -468,9 +476,9 @@ U.m.beta.col.diff = mash(TestdataBeta.col.diff, c(U.c.col.diff, U.ed.beta.col.di
 <pre class="r"><code>U.ed.Z.col.diff = cov_ed(TestdataZ.col.diff, U.pca.Z.col.diff, strong.Z.col.diff)
 U.m.Z.col.diff = mash(TestdataZ.col.diff, c(U.c.col.diff,U.ed.Z.col.diff))</code></pre>
 <pre><code> - Computing 2000 x 353 likelihood matrix.
- - Likelihood calculations took 0.06 seconds.
+ - Likelihood calculations took 0.07 seconds.
  - Fitting model with 353 mixture components.
- - Model fitting took 0.44 seconds.
+ - Model fitting took 0.43 seconds.
  - Computing posterior matrices.
  - Computation allocated took 0.01 seconds.</code></pre>
 <pre><code>FIXME: &#39;compute_posterior_matrices&#39; in Rcpp does not transfer EZ to EE</code></pre>
@@ -564,9 +572,9 @@ U.pca.Z.samp.diff = cov_pca(TestdataZ.samp.diff.center,5,strong.Z.samp.diff)</co
 U.m.beta.samp.diff = mash(TestdataBeta.samp.diff, 
                           c(U.c.samp.diff, U.ed.beta.samp.diff))</code></pre>
 <pre><code> - Computing 2000 x 337 likelihood matrix.
- - Likelihood calculations took 0.65 seconds.
+ - Likelihood calculations took 0.66 seconds.
  - Fitting model with 337 mixture components.
- - Model fitting took 0.80 seconds.
+ - Model fitting took 0.81 seconds.
  - Computing posterior matrices.
  - Computation allocated took 0.10 seconds.</code></pre>
 <pre class="r"><code>barplot(get_estimated_pi(U.m.beta.samp.diff), las = 2, cex.names = 0.7, main=&#39;EE&#39;)</code></pre>
@@ -585,7 +593,7 @@ U.m.Z.samp.diff = mash(TestdataZ.samp.diff, c(U.c.samp.diff, U.ed.Z.samp.diff))<
 0.850310036770056, : Optimization step yields mixture weights that are
 either too small, or negative; weights have been corrected and renormalized
 after the optimization.</code></pre>
-<pre><code> - Model fitting took 0.45 seconds.
+<pre><code> - Model fitting took 0.46 seconds.
  - Computing posterior matrices.
  - Computation allocated took 0.08 seconds.</code></pre>
 <pre><code>FIXME: &#39;compute_posterior_matrices&#39; in Rcpp does not transfer EZ to EE</code></pre>
@@ -685,7 +693,7 @@ U.pca.Z.diff = cov_pca(TestdataZ.diff.center,5,strong.Z.diff)</code></pre>
 <pre class="r"><code>U.ed.beta.diff = cov_ed(TestdataBeta.diff, U.pca.Z.diff, strong.Z.diff)
 U.m.beta.diff = mash(TestdataBeta.diff, c(U.c.diff, U.ed.beta.diff))</code></pre>
 <pre><code> - Computing 2000 x 273 likelihood matrix.
- - Likelihood calculations took 0.06 seconds.
+ - Likelihood calculations took 0.05 seconds.
  - Fitting model with 273 mixture components.
  - Model fitting took 0.52 seconds.
  - Computing posterior matrices.
@@ -698,7 +706,7 @@ U.m.beta.diff = mash(TestdataBeta.diff, c(U.c.diff, U.ed.beta.diff))</code></pre
 <pre class="r"><code>U.ed.Z.diff = cov_ed(TestdataZ.diff, U.pca.Z.diff, strong.Z.diff)
 U.m.Z.diff = mash(TestdataZ.diff, c(U.c.diff, U.ed.Z.diff))</code></pre>
 <pre><code> - Computing 2000 x 241 likelihood matrix.
- - Likelihood calculations took 0.05 seconds.
+ - Likelihood calculations took 0.04 seconds.
  - Fitting model with 241 mixture components.</code></pre>
 <pre><code>Warning in REBayes::KWDual(A, rep(1, k), normalize(w), control = control): estimated mixing distribution has some negative values:
                consider reducing rtol</code></pre>
@@ -706,7 +714,7 @@ U.m.Z.diff = mash(TestdataZ.diff, c(U.c.diff, U.ed.Z.diff))</code></pre>
 0.764185624697885, : Optimization step yields mixture weights that are
 either too small, or negative; weights have been corrected and renormalized
 after the optimization.</code></pre>
-<pre><code> - Model fitting took 0.48 seconds.
+<pre><code> - Model fitting took 0.43 seconds.
  - Computing posterior matrices.
  - Computation allocated took 0.03 seconds.</code></pre>
 <pre><code>FIXME: &#39;compute_posterior_matrices&#39; in Rcpp does not transfer EZ to EE</code></pre>
