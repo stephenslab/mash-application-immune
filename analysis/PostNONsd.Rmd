@@ -5,8 +5,9 @@ date: 2017-11-18
 output: html_document
 ---
 
-The mash fit ([EZ V1 model](Immune_Data_Mash_V1_EZ_Result.html)) strongly favor components where standardized effects are very similar, which does not mean the raw effects are similar.
+The mash fit ([EZ V1 model](Immune_Data_Mash_V1_EZ_Result.html)) favor three covariance components. One is null (no effect, 84.6%). The other two components show the standardized effects are positively correlated (14.5%). The covariance component $11'$ (5.4%) shows that the standardized effects are similar, which does not mean the raw effects are similar. The other covariance component has the formate $D11'D$ (9.1%), D is a diagnoal matrix, which means the standardized effects are different in size, but they are strongly correlated.
 
+# Similarity of standardized effects does not mean the similarity of raw effects
 * The covariance is for the standardized effect, $S_{j}^{-1}\beta_{j}$.
 	
 	For example,
@@ -159,3 +160,99 @@ The mash fit ([EZ V1 model](Immune_Data_Mash_V1_EZ_Result.html)) strongly favor 
 	\hat{\beta}_{j2}
 	\end{array}\right) &\propto \hat{\pi}_{0} \delta_{0} + \hat{\pi}_{1} N\left(0, 0\right)
 	\end{align*}
+
+# Standardized effects are strongly positive correlated.
+
+$$
+S_{j} = \left(\begin{array}{c c}
+1 & 0 \\
+0 & 1
+\end{array}\right)
+$$
+\begin{align*}
+\left(\begin{array}{c}
+\hat{\beta}_{j1} \\
+\hat{\beta}_{j2}
+\end{array}\right) | \left(\begin{array}{c}
+\beta_{j1}\\
+\beta_{j2}
+\end{array}\right) &\sim N\left(\left(\begin{array}{c}
+\beta_{j1} \\
+\beta_{j2}
+\end{array}\right), S_{j}\right) \\
+\left(\begin{array}{c}
+\beta_{j1} \\
+\beta_{j2}
+\end{array}\right) | \hat{\pi} &\sim \hat{\pi}_{0} \delta_{0} + \hat{\pi}_{1} N(0,D\left(\begin{array}{c c}
+1 & 1 \\
+1 & 1
+\end{array}\right)D)
+\end{align*}
+$\Rightarrow$
+\begin{align*}
+D^{-1} \left(\begin{array}{c}
+\hat{\beta}_{j1} \\
+\hat{\beta}_{j2}
+\end{array}\right) | \left(\begin{array}{c}
+\beta_{j1}\\
+\beta_{j2}
+\end{array}\right) &\sim N\left(D^{-1}\left(\begin{array}{c}
+\beta_{j1} \\
+\beta_{j2}
+\end{array}\right), D^{-1}S_{j}D^{-1}\right) \\
+D^{-1} \left(\begin{array}{c}
+\beta_{j1} \\
+\beta_{j2}
+\end{array}\right) | \hat{\pi} &\sim \hat{\pi}_{0} \delta_{0} + \hat{\pi}_{1} N(0,\left(\begin{array}{c c}
+1 & 1 \\
+1 & 1
+\end{array}\right))
+\end{align*}
+
+\begin{align*}
+D^{-1} \left(\begin{array}{c}
+\beta_{j1}\\
+\beta_{j2}
+\end{array}\right) | \left(\begin{array}{c}
+\hat{\beta}_{j1} \\
+\hat{\beta}_{j2}
+\end{array}\right) &\propto \hat{\pi}_{0} \delta_{0} + \hat{\pi}_{1} N\left( \left(\begin{array}{c}
+\mu_{j1} \\
+\mu_{j2}
+\end{array}\right), c \left(\begin{array}{c c}
+1 & 1 \\
+1 & 1
+\end{array}\right) \right) \\
+&= \hat{\pi}_{0} \delta_{0} + \hat{\pi}_{1} N\left( c \left(\begin{array}{c c}
+1 & 1 \\
+1 & 1
+\end{array}\right) D \left( \begin{array}{c}
+\beta_{1} \\
+\beta_{2} \end{array} \right), c \left( \begin{array}{c c}
+1 & 1 \\
+1 & 1
+\end{array}\right) \right) \\
+\left(\begin{array}{c}
+\beta_{j1}\\
+\beta_{j2}
+\end{array}\right) | \left(\begin{array}{c}
+\hat{\beta}_{j1} \\
+\hat{\beta}_{j2}
+\end{array}\right) &\propto \hat{\pi}_{0} \delta_{0} + \hat{\pi}_{1} N\left( c D \left(\begin{array}{c c}
+1 & 1 \\
+1 & 1
+\end{array}\right) D \left( \begin{array}{c}
+\beta_{1} \\
+\beta_{2} \end{array} \right), c D\left( \begin{array}{c c}
+1 & 1 \\
+1 & 1
+\end{array}\right)D \right)
+\end{align*}
+
+$D^{-1}\left( \begin{array}{c} \beta_{1} \\ \beta_{2} \end{array} \right)$ have similar effect size, but $\left( \begin{array}{c} \beta_{1} \\ \beta_{2} \end{array} \right)$ have different effect size. 
+
+# Session information
+
+<!-- Insert the session information into the document -->
+```{r session-info}
+```
