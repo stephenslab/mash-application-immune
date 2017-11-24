@@ -88,7 +88,7 @@ corrplot.mixed(x, tl.pos="d",upper='color',cl.lim=c(0.2,1), upper.col=colorRampP
                tl.cex=1.2)
 ```
 
-The main pattern captured by this component is that the effect of control is strongly correlated with other treatments.
+The main pattern captured by this component is that the effect of control is strongly correlated with other treatments. The effects may not equal, but they are strongly correlated, $\beta_{lpa6h} = d \beta_{ctrl}$.
 
 Next we perform SVD on the PCA 1 based covariance matrix, and plot the top eigen vector.
 
