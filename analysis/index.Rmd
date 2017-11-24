@@ -45,7 +45,7 @@ Here is the `MASH` analyses:
     
     Among these models, EZ V1 has the highest log likelihood value.
     
-    Using Mash with V be the estimated correlation, we found more eQTLs, the number of eQTLs are similar using EE and EZ model. Based on the EZ V1 model, the majority weights for the covariance matrix is on the null matrix (0, no effects, 84.6%). The remaining weights are on the covariance matrix capturing the pattern that the standardized effects are strong positively correlated among all treatments (14.5%). The covariance component $11'$ (5.4%) shows that the standardized effects are similar. The other covariance component has the formate $D11'D$ (9.1%), D is a diagnoal matrix, which means the standardized effects are different in size, but they are strongly correlated ($\beta_{lpa6h} = d \beta_{ctrl}$ etc.).
+    Using Mash with V be the estimated correlation, we found more eQTLs, the number of eQTLs are similar using EE and EZ model. Based on the EZ V1 model, the majority weights for the covariance matrix is on the null matrix (0, no effects, 84.6%). The remaining weights are on the covariance matrix capturing the pattern that the standardized effects are strong positively correlated among all treatments (14.5%). The covariance component $11'$ (5.4%) shows that the standardized effects are similar. The other covariance component has the formate $D11'D$ (9.1%), D is a diagnoal matrix, which means the standardized effects are different in size, but they are strongly correlated ($\beta_{lpa6h} = d *  \beta_{ctrl}$ etc.).
     
     The mash fit favors component where **standardized** effects are very similar, which does not mean the raw effects are similar. The similarity of standardized effects could imply the similarity of raw effects if and only if the standard errors of the estimated effects are all similar. The derivation is in [Mash Posterior under non-equal $s_{jr}$](PostNONsd.html). In this dataset, the $s_{jr}$ are not similar aross treatments. The `equal effect` covariance structure (correlation) is for the **standardized** effects. The raw effects have the same correlation structure, but with different covariance, different mean.
     
@@ -53,4 +53,6 @@ Here is the `MASH` analyses:
     
     However, the number of reQTLs from EE model are much less than EZ model. I don’t know the reason for this.
     
-    If we define the reQTL as different standardized effects, the result is [EZ V1 model reQTL](Immune_Data_Mash_V1_EZ_reQTLs.html).
+* If we define the reQTL as **different standardized effects**, the result is [EZ V1 model reQTL](Immune_Data_Mash_V1_EZ_reQTLs.html).
+    
+    The number of reQTLs are fewer than the original reQTLs.
