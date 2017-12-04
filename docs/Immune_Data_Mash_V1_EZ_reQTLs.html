@@ -321,10 +321,10 @@ div.section {
 <!-- Insert the date the file was last updated -->
 <pre><code>Warning in as.POSIXlt.POSIXct(Sys.time()): unknown timezone &#39;zone/tz/2017c.
 1.0/zoneinfo/America/Chicago&#39;</code></pre>
-<p><strong>Last updated:</strong> 2017-11-24</p>
+<p><strong>Last updated:</strong> 2017-12-04</p>
 <!-- Insert the code version (Git commit SHA1) if Git repository exists and R
  package git2r is installed -->
-<p><strong>Code version:</strong> c21d5c4</p>
+<p><strong>Code version:</strong> 5be320e</p>
 <div id="set-up-data" class="section level1">
 <h1>Set up data</h1>
 <pre class="r"><code>library(lattice)
@@ -409,7 +409,7 @@ length(get_significant_results(resEZ.mdp6h))</code></pre>
 </div>
 <div id="mdp-90" class="section level3">
 <h3>MDP 90</h3>
-<pre class="r"><code>resEZ.mdp90 = readRDS(paste0(&#39;../output/ImmuneEZ.V&#39;,vhat,&#39;center.resEZ.reQTL.mdp90.K&#39;,K,&#39;.P&#39;,P,&#39;.rds&#39;))
+<pre class="r"><code>resEZ.mdp90 = readRDS(paste0(&#39;../output/ImmuneEZ.V&#39;,vhat,&#39;.center.resEZ.reQTL.mdp90.K&#39;,K,&#39;.P&#39;,P,&#39;.rds&#39;))
 length(get_significant_results(resEZ.mdp90))</code></pre>
 <pre><code>[1] 1845</code></pre>
 <p>We found 34.82% [9%] of mdp 90 eQTLs are reQTLs.</p>
@@ -559,7 +559,7 @@ other attached packages:
 [5] ggplot2_2.2.1   lattice_0.20-35
 
 loaded via a namespace (and not attached):
- [1] Rcpp_0.12.13      compiler_3.4.2    git2r_0.19.0     
+ [1] Rcpp_0.12.14      compiler_3.4.2    git2r_0.19.0     
  [4] plyr_1.8.4        iterators_1.0.8   tools_3.4.2      
  [7] digest_0.6.12     evaluate_0.10.1   tibble_1.3.4     
 [10] gtable_0.2.0      rlang_0.1.2       Matrix_1.2-11    
