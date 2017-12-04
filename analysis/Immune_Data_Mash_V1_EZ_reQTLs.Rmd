@@ -183,12 +183,11 @@ resEZ.mdp90 = resEZ
 eQTL.mdp90 = subset.data(mash_data, eQTL.index.mdp90)
 resEZ.mdp90$result = mash_compute_posterior_matrices(resEZ, eQTL.mdp90, A=A.mdp90, algorithm.version = 'R')
 saveRDS(resEZ.mdp90, 
-        paste0('../output/ImmuneEZ.V',vhat,'center.resEZ.reQTL.mdp90.K',K,'.P',P,'.rds'))
-
+        paste0('../output/ImmuneEZ.V',vhat,'.center.resEZ.reQTL.mdp90.K',K,'.P',P,'.rds'))
 ```
 
 ```{r}
-resEZ.mdp90 = readRDS(paste0('../output/ImmuneEZ.V',vhat,'center.resEZ.reQTL.mdp90.K',K,'.P',P,'.rds'))
+resEZ.mdp90 = readRDS(paste0('../output/ImmuneEZ.V',vhat,'.center.resEZ.reQTL.mdp90.K',K,'.P',P,'.rds'))
 length(get_significant_results(resEZ.mdp90))
 ```
 
