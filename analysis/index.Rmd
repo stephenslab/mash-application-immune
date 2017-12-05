@@ -56,3 +56,17 @@ Here is the `MASH` analyses:
 * If we define the reQTL as **different standardized effects**, the result is [EZ V1 model reQTL](Immune_Data_Mash_V1_EZ_reQTLs.html).
     
     The number of reQTLs are fewer than the original reQTLs.
+
+* The plot of logFC:
+    
+    The y axis is logFC = $log_{2} \frac{mean \ sti}{mean \ base}$. The x axis is the group of genes: 'eQTL in both baseline and the stimulate', 'eQTL in baseline', 'eQTL in stimulate'.
+    
+    [EZ V1 eQTL logFC](Immune_Data_Mash_V1_EZ_Compare.html)
+    
+    The logFC in different groups are similar. 
+    
+    Here, the x axis is: 'eQTL only in baseline', 'eQTL only in stimulate'.
+    
+    [EZ V1 eQTL logFC ONLY](Immune_Data_Mash_V1_EZ_CompareONLY.html)
+    
+    The logFC in 'eQTL only in stimulate' group is slightly higher.
