@@ -1,5 +1,5 @@
 ---
-title: "Immune Mash V1 EZ eQTL Sti&Ctrl thre=0.05"
+title: "Immune Mash V1 EZ eQTL Sti&Ctrl thresh=0.005"
 author: "Yuxin Zou"
 date: "12/3/2017"
 output: html_document
@@ -50,7 +50,7 @@ resEZ$result = readRDS('../output/ImmuneEZ.V1.center.mash_posterior.K10.P5.rds')
 eQTL index in each group 
 
 ```{r}
-thre = 0.05
+thre = 0.005
 eQTL.base = get_significant_results(resEZ, conditions=1, thresh = thre)
 eQTL.lps6h = get_significant_results(resEZ, conditions=2, thresh = thre)
 eQTL.lps90 = get_significant_results(resEZ, conditions=3, thresh = thre)
