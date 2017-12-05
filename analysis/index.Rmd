@@ -67,6 +67,12 @@ Here is the `MASH` analyses:
     
     Here, the x axis is: 'eQTL only in baseline', 'eQTL only in stimulate'.
     
-    [EZ V1 eQTL logFC ONLY](Immune_Data_Mash_V1_EZ_CompareONLY.html)
+    [EZ V1 eQTL logFC ONLY thresh=0.05](Immune_Data_Mash_V1_EZ_CompareONLY.html)
+    
+    [EZ V1 eQTL logFC ONLY thresh=0.005](Immune_Data_Mash_V1_EZ_CompareONLY_0.005.html)
+    
+    [EZ V1 eQTL logFC ONLY thresh=0.00001](Immune_Data_Mash_V1_EZ_CompareONLY_0.00001.html)
     
     The logFC in 'eQTL only in stimulate' group is slightly higher.
+    
+    As the statistical significance cutoff decreases, the differences become slightly clearer. The number of eQTLs decreases because of the decreasing of the cutoff, but the number of eQTLs for a treatment only (not eQTL in baseline) does not necessarily drop.
