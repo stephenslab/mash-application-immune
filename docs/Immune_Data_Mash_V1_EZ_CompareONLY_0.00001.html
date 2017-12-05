@@ -12,7 +12,7 @@
 <meta name="author" content="Yuxin Zou" />
 
 
-<title>Immune Mash V1 EZ eQTL Sti&amp;Ctrl thre=0.05</title>
+<title>Immune Mash V1 EZ eQTL Sti&amp;Ctrl thresh=0.00001</title>
 
 <script src="site_libs/jquery-1.11.3/jquery.min.js"></script>
 <meta name="viewport" content="width=device-width, initial-scale=1" />
@@ -309,7 +309,7 @@ div.section {
 
 
 
-<h1 class="title toc-ignore">Immune Mash V1 EZ eQTL Sti&amp;Ctrl thre=0.05</h1>
+<h1 class="title toc-ignore">Immune Mash V1 EZ eQTL Sti&amp;Ctrl thresh=0.00001</h1>
 <h4 class="author"><em>Yuxin Zou</em></h4>
 <h4 class="date"><em>12/3/2017</em></h4>
 
@@ -347,7 +347,7 @@ vhat = 1</code></pre>
 resEZ = readRDS(&#39;../output/ImmuneEZ.V1.center.mash_model.K10.P5.rds&#39;)
 resEZ$result = readRDS(&#39;../output/ImmuneEZ.V1.center.mash_posterior.K10.P5.rds&#39;)</code></pre>
 <p>eQTL index in each group</p>
-<pre class="r"><code>thre = 0.05
+<pre class="r"><code>thre = 0.00001
 eQTL.base = get_significant_results(resEZ, conditions=1, thresh = thre)
 eQTL.lps6h = get_significant_results(resEZ, conditions=2, thresh = thre)
 eQTL.lps90 = get_significant_results(resEZ, conditions=3, thresh = thre)
@@ -436,7 +436,7 @@ give.n &lt;- function(x){
 g = ggplot(lps90.logFC, aes(x = group, y = logFC)) + geom_violin(trim = FALSE)
 g = g + geom_boxplot(width=0.1) + stat_summary(fun.data = give.n, geom = &quot;text&quot;, color=&#39;red&#39;)
 g</code></pre>
-<p><img src="figure/Immune_Data_Mash_V1_EZ_CompareONLY.Rmd/unnamed-chunk-7-1.png" width="672" style="display: block; margin: auto;" /></p>
+<p><img src="figure/Immune_Data_Mash_V1_EZ_CompareONLY_0.00001.Rmd/unnamed-chunk-7-1.png" width="672" style="display: block; margin: auto;" /></p>
 </div>
 <div id="lps-6h" class="section level1">
 <h1>LPS 6h</h1>
@@ -445,7 +445,7 @@ g</code></pre>
 g = ggplot(lps6h.logFC, aes(x = group, y = logFC)) + geom_violin(trim = FALSE)
 g = g + geom_boxplot(width=0.1) + stat_summary(fun.data = give.n, geom = &quot;text&quot;, color=&#39;red&#39;)
 g</code></pre>
-<p><img src="figure/Immune_Data_Mash_V1_EZ_CompareONLY.Rmd/unnamed-chunk-8-1.png" width="672" style="display: block; margin: auto;" /></p>
+<p><img src="figure/Immune_Data_Mash_V1_EZ_CompareONLY_0.00001.Rmd/unnamed-chunk-8-1.png" width="672" style="display: block; margin: auto;" /></p>
 </div>
 <div id="mdp-90" class="section level1">
 <h1>MDP 90</h1>
@@ -454,7 +454,7 @@ g</code></pre>
 g = ggplot(mdp90.logFC, aes(x = group, y = logFC)) + geom_violin(trim = FALSE)
 g = g + geom_boxplot(width=0.1) + stat_summary(fun.data = give.n, geom = &quot;text&quot;, color=&#39;red&#39;)
 g</code></pre>
-<p><img src="figure/Immune_Data_Mash_V1_EZ_CompareONLY.Rmd/unnamed-chunk-9-1.png" width="672" style="display: block; margin: auto;" /></p>
+<p><img src="figure/Immune_Data_Mash_V1_EZ_CompareONLY_0.00001.Rmd/unnamed-chunk-9-1.png" width="672" style="display: block; margin: auto;" /></p>
 </div>
 <div id="mdp-6h" class="section level1">
 <h1>MDP 6h</h1>
@@ -463,7 +463,7 @@ g</code></pre>
 g = ggplot(mdp6h.logFC, aes(x = group, y = logFC)) + geom_violin(trim = FALSE)
 g = g + geom_boxplot(width=0.1) + stat_summary(fun.data = give.n, geom = &quot;text&quot;, color=&#39;red&#39;)
 g</code></pre>
-<p><img src="figure/Immune_Data_Mash_V1_EZ_CompareONLY.Rmd/unnamed-chunk-10-1.png" width="672" style="display: block; margin: auto;" /></p>
+<p><img src="figure/Immune_Data_Mash_V1_EZ_CompareONLY_0.00001.Rmd/unnamed-chunk-10-1.png" width="672" style="display: block; margin: auto;" /></p>
 </div>
 <div id="rna-90" class="section level1">
 <h1>RNA 90</h1>
@@ -472,7 +472,7 @@ g</code></pre>
 g = ggplot(rna90.logFC, aes(x = group, y = logFC)) + geom_violin(trim = FALSE)
 g = g + geom_boxplot(width=0.1) + stat_summary(fun.data = give.n, geom = &quot;text&quot;, color=&#39;red&#39;)
 g</code></pre>
-<p><img src="figure/Immune_Data_Mash_V1_EZ_CompareONLY.Rmd/unnamed-chunk-11-1.png" width="672" style="display: block; margin: auto;" /></p>
+<p><img src="figure/Immune_Data_Mash_V1_EZ_CompareONLY_0.00001.Rmd/unnamed-chunk-11-1.png" width="672" style="display: block; margin: auto;" /></p>
 </div>
 <div id="rna-6h" class="section level1">
 <h1>RNA 6h</h1>
@@ -481,7 +481,7 @@ g</code></pre>
 g = ggplot(rna6h.logFC, aes(x = group, y = logFC)) + geom_violin(trim = FALSE)
 g = g + geom_boxplot(width=0.1) + stat_summary(fun.data = give.n, geom = &quot;text&quot;, color=&#39;red&#39;)
 g</code></pre>
-<p><img src="figure/Immune_Data_Mash_V1_EZ_CompareONLY.Rmd/unnamed-chunk-12-1.png" width="672" style="display: block; margin: auto;" /></p>
+<p><img src="figure/Immune_Data_Mash_V1_EZ_CompareONLY_0.00001.Rmd/unnamed-chunk-12-1.png" width="672" style="display: block; margin: auto;" /></p>
 </div>
 <div id="session-information" class="section level1">
 <h1>Session information</h1>
