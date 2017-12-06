@@ -1,0 +1,210 @@
+---
+title: "Immune Mash V1 EZ eQTL Sti&Ctrl thre=0.05"
+author: "Yuxin Zou"
+date: "12/3/2017"
+output: html_document
+---
+```{r read-chunk, include=FALSE, cache=FALSE}
+knitr::read_chunk("chunks.R")
+```
+
+<!-- Update knitr chunk options -->
+```{r knitr-opts-chunk, include=FALSE}
+```
+
+<!-- Insert the date the file was last updated -->
+```{r last-updated, echo=FALSE, results='asis'}
+```
+
+<!-- Insert the code version (Git commit SHA1) if Git repository exists and R
+ package git2r is installed -->
+```{r code-version, echo=FALSE, results='asis'}
+```
+
+# Set up data
+
+```{r}
+library(lattice)
+library(ggplot2)
+library(mashr)
+load('../data/processed.RData')
+gene.names.pro = processed.data$ctrl$V4
+data = readRDS('../data/ImmuneQTLSummary.4MASH.rds')
+data$max$se = data$max$beta/data$max$z
+data$null$se = data$null$beta / data$null$z
+gene.names.data = substr(row.names(data$max$beta),1,12)
+
+K = 10
+P = 5
+vhat = 1
+thre = 0.05
+```
+
+# MASH results
+
+```{r}
+# EZ
+resEZ = readRDS('../output/ImmuneEZ.V1.center.mash_model.K10.P5.rds')
+resEZ$result = readRDS('../output/ImmuneEZ.V1.center.mash_posterior.K10.P5.rds')
+```
+
+eQTL index in each group 
+
+```{r}
+eQTL.index.mash = list(base=get_significant_results(resEZ, conditions=1),
+                       lps6h=get_significant_results(resEZ, conditions=2),
+                       lps90=get_significant_results(resEZ, conditions=3),
+                       mdp6h=get_significant_results(resEZ, conditions=4),
+                       mdp90=get_significant_results(resEZ, conditions=5),
+                       rna6h=get_significant_results(resEZ, conditions=6),
+                       rna90=get_significant_results(resEZ, conditions=7))
+```
+
+<!--
+eQTL index in the processed data
+
+```{r}
+eQTL.index = list(base=which(gene.names.pro %in% gene.names.data[eQTL.index.mash$base]),
+                  lps6h=which(gene.names.pro %in% gene.names.data[eQTL.index.mash$lps6h]),
+                  lps90=which(gene.names.pro %in% gene.names.data[eQTL.index.mash$lps90]),
+                  mdp6h=which(gene.names.pro %in% gene.names.data[eQTL.index.mash$mdp6h]),
+                  mdp90=which(gene.names.pro %in% gene.names.data[eQTL.index.mash$mdp90]),
+                  rna6h=which(gene.names.pro %in% gene.names.data[eQTL.index.mash$rna6h]),
+                  rna90=which(gene.names.pro %in% gene.names.data[eQTL.index.mash$rna90]))
+```
+-->
+<!--
+```{r}
+gene.names.lps6h = substr(row.names(data$max$beta[eQTL.index.mash$lps6h,]),1,12)
+resEZ.lps6h = readRDS(paste0('../output/ImmuneEZ.V',vhat,'.center.resEZ.reQTL.lps6h.K',K,'.P',P,'.rds'))
+
+gene.names.lps90 = substr(row.names(data$max$beta[eQTL.index.mash$lps90,]),1,12)
+resEZ.lps90 = readRDS(paste0('../output/ImmuneEZ.V',vhat,'.center.resEZ.reQTL.lps90.K',K,'.P',P,'.rds'))
+
+gene.names.mdp6h = substr(row.names(data$max$beta[eQTL.index.mash$mdp6h,]),1,12)
+resEZ.mdp6h = readRDS(paste0('../output/ImmuneEZ.V',vhat,'.center.resEZ.reQTL.mdp6h.K',K,'.P',P,'.rds'))
+
+gene.names.mdp90 = substr(row.names(data$max$beta[eQTL.index.mash$mdp90,]),1,12)
+resEZ.mdp90 = readRDS(paste0('../output/ImmuneEZ.V',vhat,'.center.resEZ.reQTL.mdp90.K',K,'.P',P,'.rds'))
+
+gene.names.rna6h = substr(row.names(data$max$beta[eQTL.index.mash$rna6h,]),1,12)
+resEZ.rna6h = readRDS(paste0('../output/ImmuneEZ.V',vhat,'.center.resEZ.reQTL.rna6h.K',K,'.P',P,'.rds'))
+
+gene.names.rna90 = substr(row.names(data$max$beta[eQTL.index.mash$rna90,]),1,12)
+resEZ.rna90 = readRDS(paste0('../output/ImmuneEZ.V',vhat,'.center.resEZ.reQTL.rna90.K',K,'.P',P,'.rds'))
+
+reQTL.index = list(lps6h=which(gene.names.pro %in% gene.names.lps6h[get_significant_results(resEZ.lps6h)]),
+                   lps90=which(gene.names.pro %in% gene.names.lps90[get_significant_results(resEZ.lps90)]),
+                   mdp6h=which(gene.names.pro %in% gene.names.mdp6h[get_significant_results(resEZ.mdp6h)]),
+                   mdp90=which(gene.names.pro %in% gene.names.mdp90[get_significant_results(resEZ.mdp90)]),
+                   rna6h=which(gene.names.pro %in% gene.names.rna6h[get_significant_results(resEZ.rna6h)]),
+                   rna90=which(gene.names.pro %in% gene.names.rna90[get_significant_results(resEZ.rna90)]))
+```
+-->
+
+```{r}
+logFC.compare = function(groupname, thresh){
+  result = c()
+  group = c()
+  sti.data = processed.data[[groupname]]
+  
+  # eQTL base only
+  base.only = setdiff(eQTL.index.mash$base, eQTL.index.mash[[groupname]])
+  sig = which(resEZ$result$lfsr[base.only, 1] < thresh)
+  base.index = base.only[sig]
+  base=which(gene.names.pro %in% gene.names.data[base.index])
+  
+  n = length(base)
+  group = c(group, rep('eQTLBase', n))
+  
+  # base
+  base.mean = apply(processed.data$ctrl[base, 5:138],1 ,mean, na.rm=TRUE)
+  # sti
+  sti.mean = apply(sti.data[base, 5:138],1 ,mean, na.rm=TRUE)
+  
+  result = c(result, log2(sti.mean/base.mean))
+
+  # sti only
+  sti.only = setdiff(eQTL.index.mash[[groupname]], eQTL.index.mash$base)
+  sig = which(resEZ$result$lfsr[sti.only,groupname] < thresh)
+  sti.index = sti.only[sig]
+  sti = which(gene.names.pro %in% gene.names.data[sti.index])
+  
+  n = length(sti)
+  group = c(group, rep('eQTLSti', n))
+  # base
+  base.mean = apply(processed.data$ctrl[sti, 5:138],1 ,mean, na.rm=TRUE)
+  # sti
+  sti.mean = apply(sti.data[sti, 5:138],1 ,mean, na.rm=TRUE)
+  
+  result = c(result, log2(sti.mean/base.mean))
+  
+  return(data.frame(logFC=result, group=factor(group, c('eQTLBase', 'eQTLSti'))))
+}
+
+give.n <- function(x){
+  return(c(y = max(x)*1.1, label = length(x))) 
+  # experiment with the multiplier to find the perfect position
+}
+```
+
+# LPS 90
+```{r}
+lps90.logFC = logFC.compare('lps90', thre)
+
+g = ggplot(lps90.logFC, aes(x = group, y = logFC)) + geom_violin(trim = FALSE)
+g = g + geom_boxplot(width=0.1) + stat_summary(fun.data = give.n, geom = "text", color='red')
+g
+```
+
+# LPS 6h
+```{r}
+lps6h.logFC = logFC.compare('lps6h', thre)
+
+g = ggplot(lps6h.logFC, aes(x = group, y = logFC)) + geom_violin(trim = FALSE)
+g = g + geom_boxplot(width=0.1) + stat_summary(fun.data = give.n, geom = "text", color='red')
+g
+```
+
+# MDP 90
+```{r}
+mdp90.logFC = logFC.compare('mdp90',thre)
+
+g = ggplot(mdp90.logFC, aes(x = group, y = logFC)) + geom_violin(trim = FALSE)
+g = g + geom_boxplot(width=0.1) + stat_summary(fun.data = give.n, geom = "text", color='red')
+g
+```
+
+# MDP 6h
+```{r}
+mdp6h.logFC = logFC.compare('mdp6h',thre)
+
+g = ggplot(mdp6h.logFC, aes(x = group, y = logFC)) + geom_violin(trim = FALSE)
+g = g + geom_boxplot(width=0.1) + stat_summary(fun.data = give.n, geom = "text", color='red')
+g
+```
+
+# RNA 90
+```{r}
+rna90.logFC = logFC.compare('rna90',thre)
+
+g = ggplot(rna90.logFC, aes(x = group, y = logFC)) + geom_violin(trim = FALSE)
+g = g + geom_boxplot(width=0.1) + stat_summary(fun.data = give.n, geom = "text", color='red')
+g
+```
+
+# RNA 6h
+```{r}
+rna6h.logFC = logFC.compare('rna6h',thre)
+
+g = ggplot(rna6h.logFC, aes(x = group, y = logFC)) + geom_violin(trim = FALSE)
+g = g + geom_boxplot(width=0.1) + stat_summary(fun.data = give.n, geom = "text", color='red')
+g
+```
+
+
+# Session information
+
+<!-- Insert the session information into the document -->
+```{r session-info}
+```
