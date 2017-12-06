@@ -1,0 +1,65 @@
+---
+title: "Compare R vs Rcpp"
+author: "Yuxin Zou"
+date: "12/4/2017"
+output: html_document
+---
+
+```{r read-chunk, include=FALSE, cache=FALSE}
+knitr::read_chunk("chunks.R")
+knitr::read_chunk('../code/subset.data.R')
+```
+
+<!-- Update knitr chunk options -->
+```{r knitr-opts-chunk, include=FALSE}
+```
+
+<!-- Insert the date the file was last updated -->
+```{r last-updated, echo=FALSE, results='asis'}
+```
+
+<!-- Insert the code version (Git commit SHA1) if Git repository exists and R
+ package git2r is installed -->
+```{r code-version, echo=FALSE, results='asis'}
+```
+
+# Set up
+```{r}
+library(microbenchmark)
+library(mashr)
+```
+
+## Equal S data
+```{r}
+set.seed(1)
+simdata.equal = simple_sims(5000,20,0.5)
+# data contains 4000 rows
+data.equal = set_mash_data(simdata.equal$Bhat, simdata.equal$Shat, alpha=0)
+U.equal = cov_canonical(data.equal)
+```
+
+## Non-Equal S data
+```{r}
+set.seed(1)
+simdata.samp.diff = simple_sims(5000, 20, rep(c(0.5,0.4,0.1,1,0.2), 4000))
+
+data.diff = set_mash_data(simdata.samp.diff$Bhat, simdata.samp.diff$Shat, alpha=0)
+U.diff = cov_canonical(data.diff)
+```
+
+# Compare likelihood
+```{r warning=FALSE}
+res.equal = microbenchmark(mash(data.equal, U.equal, outputlevel = 1, verbose = FALSE, algorithm.version = 'R'), mash(data.equal, U.equal, outputlevel = 1, verbose = FALSE, algorithm.version = 'Rcpp'))
+res.equal
+```
+
+```{r warning=FALSE}
+res.diff = microbenchmark(mash(data.diff, U.diff, outputlevel = 1, verbose = FALSE, algorithm.version = 'R'), mash(data.diff, U.diff, outputlevel = 1, verbose = FALSE, algorithm.version = 'Rcpp'))
+res.diff
+```
+
+# Session information
+
+<!-- Insert the session information into the document -->
+```{r session-info}
+```
