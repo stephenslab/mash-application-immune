@@ -6,6 +6,7 @@ output: html_document
 ---
 ```{r read-chunk, include=FALSE, cache=FALSE}
 knitr::read_chunk("chunks.R")
+knitr::read_chunk('../code/logFC.R')
 ```
 
 <!-- Update knitr chunk options -->
@@ -28,6 +29,7 @@ library(lattice)
 library(ggplot2)
 library(mashr)
 load('../data/processed.RData')
+source("../code/multiplot.R")
 gene.names.pro = processed.data$ctrl$V4
 data = readRDS('../data/ImmuneQTLSummary.4MASH.rds')
 data$max$se = data$max$beta/data$max$z
@@ -101,107 +103,56 @@ reQTL.index = list(lps6h=which(gene.names.pro %in% gene.names.lps6h[get_signific
                    rna90=which(gene.names.pro %in% gene.names.rna90[get_significant_results(resEZ.rna90)]))
 ```
 -->
-
-```{r}
-logFC.compare = function(groupname, thresh){
-  result = c()
-  group = c()
-  sti.data = processed.data[[groupname]]
-  
-  # eQTL base only
-  base.only = setdiff(eQTL.index.mash$base, eQTL.index.mash[[groupname]])
-  sig = which(resEZ$result$lfsr[base.only, 1] < thresh)
-  base.index = base.only[sig]
-  base=which(gene.names.pro %in% gene.names.data[base.index])
-  
-  n = length(base)
-  group = c(group, rep('eQTLBase', n))
-  
-  # base
-  base.mean = apply(processed.data$ctrl[base, 5:138],1 ,mean, na.rm=TRUE)
-  # sti
-  sti.mean = apply(sti.data[base, 5:138],1 ,mean, na.rm=TRUE)
-  
-  result = c(result, log2(sti.mean/base.mean))
-
-  # sti only
-  sti.only = setdiff(eQTL.index.mash[[groupname]], eQTL.index.mash$base)
-  sig = which(resEZ$result$lfsr[sti.only,groupname] < thresh)
-  sti.index = sti.only[sig]
-  sti = which(gene.names.pro %in% gene.names.data[sti.index])
-  
-  n = length(sti)
-  group = c(group, rep('eQTLSti', n))
-  # base
-  base.mean = apply(processed.data$ctrl[sti, 5:138],1 ,mean, na.rm=TRUE)
-  # sti
-  sti.mean = apply(sti.data[sti, 5:138],1 ,mean, na.rm=TRUE)
-  
-  result = c(result, log2(sti.mean/base.mean))
-  
-  return(data.frame(logFC=result, group=factor(group, c('eQTLBase', 'eQTLSti'))))
-}
-
-give.n <- function(x){
-  return(c(y = max(x)*1.1, label = length(x))) 
-  # experiment with the multiplier to find the perfect position
-}
+```{r logFC}
 ```
 
-# LPS 90
-```{r}
+```{r echo=FALSE}
+# lps90
 lps90.logFC = logFC.compare('lps90', thre)
 
-g = ggplot(lps90.logFC, aes(x = group, y = logFC)) + geom_violin(trim = FALSE)
-g = g + geom_boxplot(width=0.1) + stat_summary(fun.data = give.n, geom = "text", color='red')
-g
-```
+g1 = ggplot(lps90.logFC, aes(x = group, y = logFC)) + geom_violin(trim = FALSE)
+g1 = g1 + geom_boxplot(width=0.1) + stat_summary(fun.data = give.n, geom = "text", color='red') + ggtitle("LPS 90") +
+  theme(plot.title = element_text(hjust = 0.5))
 
-# LPS 6h
-```{r}
+# lps6h
 lps6h.logFC = logFC.compare('lps6h', thre)
 
-g = ggplot(lps6h.logFC, aes(x = group, y = logFC)) + geom_violin(trim = FALSE)
-g = g + geom_boxplot(width=0.1) + stat_summary(fun.data = give.n, geom = "text", color='red')
-g
-```
+g2 = ggplot(lps6h.logFC, aes(x = group, y = logFC)) + geom_violin(trim = FALSE)
+g2 = g2 + geom_boxplot(width=0.1) + stat_summary(fun.data = give.n, geom = "text", color='red')  + ggtitle("LPS 6h") +
+  theme(plot.title = element_text(hjust = 0.5))
 
-# MDP 90
-```{r}
+# mdp90
 mdp90.logFC = logFC.compare('mdp90',thre)
 
-g = ggplot(mdp90.logFC, aes(x = group, y = logFC)) + geom_violin(trim = FALSE)
-g = g + geom_boxplot(width=0.1) + stat_summary(fun.data = give.n, geom = "text", color='red')
-g
-```
+g3 = ggplot(mdp90.logFC, aes(x = group, y = logFC)) + geom_violin(trim = FALSE)
+g3 = g3 + geom_boxplot(width=0.1) + stat_summary(fun.data = give.n, geom = "text", color='red')  + ggtitle("MDP 90") +
+  theme(plot.title = element_text(hjust = 0.5))
 
-# MDP 6h
-```{r}
+# mdp6h
 mdp6h.logFC = logFC.compare('mdp6h',thre)
 
-g = ggplot(mdp6h.logFC, aes(x = group, y = logFC)) + geom_violin(trim = FALSE)
-g = g + geom_boxplot(width=0.1) + stat_summary(fun.data = give.n, geom = "text", color='red')
-g
-```
+g4 = ggplot(mdp6h.logFC, aes(x = group, y = logFC)) + geom_violin(trim = FALSE)
+g4 = g4 + geom_boxplot(width=0.1) + stat_summary(fun.data = give.n, geom = "text", color='red') + ggtitle("MDP 6h") +
+  theme(plot.title = element_text(hjust = 0.5))
 
-# RNA 90
-```{r}
+# rna90
 rna90.logFC = logFC.compare('rna90',thre)
 
-g = ggplot(rna90.logFC, aes(x = group, y = logFC)) + geom_violin(trim = FALSE)
-g = g + geom_boxplot(width=0.1) + stat_summary(fun.data = give.n, geom = "text", color='red')
-g
-```
+g5 = ggplot(rna90.logFC, aes(x = group, y = logFC)) + geom_violin(trim = FALSE)
+g5 = g5 + geom_boxplot(width=0.1) + stat_summary(fun.data = give.n, geom = "text", color='red') + ggtitle("RNA 90") +
+  theme(plot.title = element_text(hjust = 0.5))
 
-# RNA 6h
-```{r}
+# rna 6h
 rna6h.logFC = logFC.compare('rna6h',thre)
 
-g = ggplot(rna6h.logFC, aes(x = group, y = logFC)) + geom_violin(trim = FALSE)
-g = g + geom_boxplot(width=0.1) + stat_summary(fun.data = give.n, geom = "text", color='red')
-g
-```
+g6 = ggplot(rna6h.logFC, aes(x = group, y = logFC)) + geom_violin(trim = FALSE)
+g6 = g6 + geom_boxplot(width=0.1) + stat_summary(fun.data = give.n, geom = "text", color='red') + ggtitle("RNA 6h") +
+  theme(plot.title = element_text(hjust = 0.5))
 
+multiplot(g1, g2,cols=2)
+multiplot(g3, g4,cols=2)
+multiplot(g5, g6,cols=2)
+```
 
 # Session information
 
