@@ -1,0 +1,139 @@
+---
+title: "Flash"
+author: "Yuxin Zou"
+date: 2017-12-08
+output: html_document
+---
+
+```{r read-chunk, include=FALSE, cache=FALSE}
+knitr::read_chunk("chunks.R")
+```
+
+<!-- Update knitr chunk options -->
+```{r knitr-opts-chunk, include=FALSE}
+```
+
+<!-- Insert the date the file was last updated -->
+```{r last-updated, echo=FALSE, results='asis'}
+```
+
+<!-- Insert the code version (Git commit SHA1) if Git repository exists and R
+ package git2r is installed -->
+```{r code-version, echo=FALSE, results='asis'}
+```
+
+# Case 1: 2 dim
+
+*  Generate data
+```{r}
+library(MASS)
+library(flashr2)
+Means <- rep(0,2)
+set.seed(1)
+x1 <- mvrnorm(n = 1000, Means, diag(c(1,0)))
+x2 <- mvrnorm(n = 1000, Means, diag(c(0,1)))
+Sigma = cbind(c(1,1), c(1,1))
+x3 = mvrnorm(n = 1000, Means, Sigma)
+x = rbind(x1,x2, x3)
+# plus error
+x = x + matrix(rnorm(6000, 0, 0.05), nrow=3000, ncol=2)
+plot(x)
+```
+
+*  Flash
+
+```{r warning=FALSE}
+data = flash_set_data(x)
+fg = flash_add_greedy(data,10, var_type = 'constant')
+fb = flash_backfit(data,fg)
+```
+
+I mute the warnings here. 
+
+```{r}
+par(mfrow=c(1,2))
+barplot(flash_get_f(fb,1), main='loading 1')
+barplot(flash_get_f(fb,2), main='loading 2')
+par(mfrow=c(1,1))
+```
+
+# Case 2: 5 conditions
+
+*  Generate data
+
+There are 5 conditions with 8 factors: 10000, 01000, 00100, 00010, 00001 and also 11111 and 11000 and 00111.
+
+```{r}
+sim = function(nsamp=100, err_sd=1){
+  ncond=5
+  B.0 = matrix(0, nrow = nsamp, ncol = ncond)
+  B.1 = B.0; B.2 = B.0; B.3 = B.0; B.4 = B.0; B.5 = B.0
+  b = rnorm(nsamp)
+  B.1[,1] = b; 
+  b = rnorm(nsamp)
+  B.2[,2] = b; 
+  b = rnorm(nsamp)
+  B.3[,3] = b; 
+  b = rnorm(nsamp)
+  B.4[,4] = b; 
+  b = rnorm(nsamp)
+  B.5[,5] = b; 
+  
+  b = rnorm(nsamp)
+  B.all = matrix(rep(b, 5), nrow = nsamp, ncol = ncond)
+  
+  b1 = rnorm(nsamp)
+  B.11 = matrix(cbind(b1, b1, 0, 0, 0), nrow = nsamp, ncol = ncond)
+  
+  b2 = rnorm(nsamp)
+  B.111 = matrix(cbind(0, 0, b2, b2, b2), nrow = nsamp, ncol = ncond)
+  B = rbind(B.1, B.2, B.3, B.4, B.5, B.all, B.11, B.111)
+  
+  Shat = matrix(err_sd, nrow = nrow(B), ncol = ncol(B))
+  E = matrix(rnorm(length(Shat), mean = 0, sd = Shat), nrow = nrow(B), 
+        ncol = ncol(B))
+  Bhat = B + E
+  
+  row_ids = paste0("effect_", 1:nrow(B))
+  col_ids = paste0("condition_", 1:ncol(B))
+  rownames(B) = row_ids
+  colnames(B) = col_ids
+  rownames(Bhat) = row_ids
+  colnames(Bhat) = col_ids
+  rownames(Shat) = row_ids
+  colnames(Shat) = col_ids
+  return(list(B = B, Bhat = Bhat, Shat = Shat))
+}
+```
+
+```{r}
+set.seed(1)
+x = sim(nsamp=5000, err_sd = 0.05)
+```
+
+# Flash
+
+Only 5 factors with 'by_column' type variance.
+
+```{r warning=FALSE}
+data = flash_set_data(x$Bhat)
+fg = flash_add_greedy(data, Kmax=10, var_type='constant')
+fb = flash_backfit(data,fg)
+```
+
+```{r}
+layout(matrix(c(1,2,3,4,5,6), 3, 2, byrow = TRUE))
+barplot(flash_get_f(fb, 1), main='loading 1')
+barplot(flash_get_f(fb, 2), main='loading 2')
+barplot(flash_get_f(fb, 3), main='loading 3')
+barplot(flash_get_f(fb, 4), main='loading 4')
+barplot(flash_get_f(fb, 5), main='loading 5')
+barplot(flash_get_f(fb, 6), main='loading 6')
+
+```
+
+# Session information
+
+<!-- Insert the session information into the document -->
+```{r session-info}
+```
