@@ -11,6 +11,7 @@
 
 <meta name="author" content="Yuxin Zou" />
 
+<meta name="date" content="2017-12-04" />
 
 <title>Compare R vs Rcpp</title>
 
@@ -311,19 +312,17 @@ div.section {
 
 <h1 class="title toc-ignore">Compare R vs Rcpp</h1>
 <h4 class="author"><em>Yuxin Zou</em></h4>
-<h4 class="date"><em>12/4/2017</em></h4>
+<h4 class="date"><em>2017-12-04</em></h4>
 
 </div>
 
 
 <!-- Update knitr chunk options -->
 <!-- Insert the date the file was last updated -->
-<pre><code>Warning in as.POSIXlt.POSIXct(Sys.time()): unknown timezone &#39;zone/tz/2017c.
-1.0/zoneinfo/America/Chicago&#39;</code></pre>
-<p><strong>Last updated:</strong> 2017-12-06</p>
+<p><strong>Last updated:</strong> 2017-12-10</p>
 <!-- Insert the code version (Git commit SHA1) if Git repository exists and R
  package git2r is installed -->
-<p><strong>Code version:</strong> 82a38e1</p>
+<p><strong>Code version:</strong> 13b2929</p>
 <div id="set-up" class="section level1">
 <h1>Set up</h1>
 <pre class="r"><code>library(microbenchmark)
@@ -332,48 +331,129 @@ library(mashr)</code></pre>
 <div id="equal-s-data" class="section level2">
 <h2>Equal S data</h2>
 <pre class="r"><code>set.seed(1)
-simdata.equal = simple_sims(5000,20,0.5)
+simdata.equal1 = simple_sims(5000,5,0.5)
+simdata.equal2 = simple_sims2(5000, 0.5)
+simdata.equal = list(B = rbind(simdata.equal1$B, simdata.equal2$B), 
+                     Bhat = rbind(simdata.equal1$Bhat, simdata.equal2$Bhat), 
+                     Shat = rbind(simdata.equal1$Shat, simdata.equal2$Shat))
 # data contains 4000 rows
 data.equal = set_mash_data(simdata.equal$Bhat, simdata.equal$Shat, alpha=0)
-U.equal = cov_canonical(data.equal)</code></pre>
+U.c.equal = cov_canonical(data.equal)
+# data driven
+m.1by1 = mash_1by1(data.equal)
+strong = get_significant_results(m.1by1,0.05)
+# center Z
+data.equal.Z = simdata.equal$Bhat/simdata.equal$Shat
+data.center = set_mash_data(Bhat = apply(as.matrix(data.equal.Z), 2, function(x) x - mean(x)))
+U.pca = cov_pca(data.center,5,strong)
+U.e.equal = cov_ed(data.equal, U.pca, strong)</code></pre>
 </div>
 <div id="non-equal-s-data" class="section level2">
 <h2>Non-Equal S data</h2>
 <pre class="r"><code>set.seed(1)
-simdata.samp.diff = simple_sims(5000, 20, rep(c(0.5,0.4,0.1,1,0.2), 4000))
-
-data.diff = set_mash_data(simdata.samp.diff$Bhat, simdata.samp.diff$Shat, alpha=0)
-U.diff = cov_canonical(data.diff)</code></pre>
+simdata.diff1 = simple_sims(5000, 5, rep(c(0.5,0.4,0.1,1,0.2), 4000))
+simdata.diff2 = simple_sims2(5000, rep(c(0.5,0.4,0.1,1,0.2), 4000))
+simdata.diff = list(B = rbind(simdata.diff1$B, simdata.diff2$B), 
+                    Bhat = rbind(simdata.diff1$Bhat, simdata.diff2$Bhat), 
+                    Shat = rbind(simdata.diff1$Shat, simdata.diff2$Shat))
+data.diff = set_mash_data(simdata.diff$Bhat, simdata.diff$Shat, alpha=0)
+U.c.diff = cov_canonical(data.diff)
+# data driven
+m.1by1 = mash_1by1(data.diff)
+strong = get_significant_results(m.1by1,0.05)
+# center Z
+data.diff.Z = simdata.diff$Bhat/simdata.diff$Shat
+data.center = set_mash_data(Bhat = apply(as.matrix(data.diff.Z), 2, function(x) x - mean(x)))
+U.pca = cov_pca(data.center,5,strong)
+U.e.diff = cov_ed(data.diff, U.pca, strong)</code></pre>
 </div>
 </div>
 <div id="compare-likelihood" class="section level1">
 <h1>Compare likelihood</h1>
-<pre class="r"><code>res.equal = microbenchmark(mash(data.equal, U.equal, outputlevel = 1, verbose = FALSE, algorithm.version = &#39;R&#39;), mash(data.equal, U.equal, outputlevel = 1, verbose = FALSE, algorithm.version = &#39;Rcpp&#39;))
+<pre class="r"><code>library(assertthat)
+source(&#39;~/Documents/GitHub/mashr-stephens/R/likelihoods_scaleddata.R&#39;)
+source(&#39;~/Documents/GitHub/mashr-stephens/R/likelihoods_origdata.R&#39;)
+source(&#39;~/Documents/GitHub/mashr-stephens/R/mash.R&#39;)
+source(&#39;~/Documents/GitHub/mashr-stephens/R/compute_covs.R&#39;)
+source(&#39;~/Documents/GitHub/mashr-stephens/R/RcppExports.R&#39;)
+source(&#39;~/Documents/GitHub/mashr-stephens/R/set_data.R&#39;)
+source(&#39;~/Documents/GitHub/mashr-stephens/R/opt.R&#39;)
+source(&#39;~/Documents/GitHub/mashr-stephens/R/posterior.R&#39;)
+source(&#39;~/Documents/GitHub/mashr-stephens/R/posterior_common_cov.R&#39;)
+source(&#39;~/Documents/GitHub/mashr-stephens/R/posterior_lowmem.R&#39;)</code></pre>
+<pre class="r"><code>compute_likelihood = function(data, Ulist, algorithm.version=c(&#39;Rcpp&#39;,&#39;R&#39;)){
+  algorithm.version = match.arg(algorithm.version)
+  grid = autoselect_grid(data, sqrt(2))
+  Ulist = normalize_Ulist(Ulist)
+  xUlist = expand_cov(Ulist, grid, TRUE)
+  J &lt;- nrow(data$Bhat)
+  P &lt;- length(xUlist)
+  lm &lt;- calc_relative_lik_matrix(data, xUlist, algorithm.version)
+  return(lm)
+}</code></pre>
+<pre class="r"><code>res.equal = microbenchmark(compute_likelihood(data.equal, c(U.c.equal, U.e.equal), algorithm.version=&#39;Rcpp&#39;), compute_likelihood(data.equal, c(U.c.equal, U.e.equal), algorithm.version=&#39;R&#39;), times=100)
 res.equal</code></pre>
-<pre><code>Unit: seconds
-                                                                                    expr
-    mash(data.equal, U.equal, outputlevel = 1, verbose = FALSE, algorithm.version = &quot;R&quot;)
- mash(data.equal, U.equal, outputlevel = 1, verbose = FALSE, algorithm.version = &quot;Rcpp&quot;)
-      min      lq     mean   median       uq      max neval
- 18.45045 19.1383 19.85251 19.50529 20.08578 26.22470   100
- 18.34724 18.9549 19.73662 19.60205 20.23680 24.25642   100</code></pre>
-<pre class="r"><code>res.diff = microbenchmark(mash(data.diff, U.diff, outputlevel = 1, verbose = FALSE, algorithm.version = &#39;R&#39;), mash(data.diff, U.diff, outputlevel = 1, verbose = FALSE, algorithm.version = &#39;Rcpp&#39;))
+<pre><code>Unit: milliseconds
+                                                                                expr
+ compute_likelihood(data.equal, c(U.c.equal, U.e.equal), algorithm.version = &quot;Rcpp&quot;)
+    compute_likelihood(data.equal, c(U.c.equal, U.e.equal), algorithm.version = &quot;R&quot;)
+      min       lq     mean   median       uq      max neval
+ 868.7636 968.5504 979.2553 977.3587 989.5848 1244.575   100
+ 882.1932 968.7762 978.5632 979.0113 991.4174 1095.322   100</code></pre>
+<pre class="r"><code>res.diff = microbenchmark(compute_likelihood(data.diff, c(U.c.diff, U.e.diff), algorithm.version=&#39;Rcpp&#39;), compute_likelihood(data.diff, c(U.c.diff, U.e.diff), algorithm.version=&#39;R&#39;), times=100)
 res.diff</code></pre>
 <pre><code>Unit: seconds
-                                                                                  expr
-    mash(data.diff, U.diff, outputlevel = 1, verbose = FALSE, algorithm.version = &quot;R&quot;)
- mash(data.diff, U.diff, outputlevel = 1, verbose = FALSE, algorithm.version = &quot;Rcpp&quot;)
+                                                                             expr
+ compute_likelihood(data.diff, c(U.c.diff, U.e.diff), algorithm.version = &quot;Rcpp&quot;)
+    compute_likelihood(data.diff, c(U.c.diff, U.e.diff), algorithm.version = &quot;R&quot;)
+      min       lq     mean   median       uq       max neval
+ 9.463375 9.611921 9.704742 9.677289 9.803729 10.060326   100
+ 9.424892 9.615214 9.703193 9.697875 9.765737  9.945546   100</code></pre>
+</div>
+<div id="compare-posterior" class="section level1">
+<h1>Compare posterior</h1>
+<pre class="r"><code>m.equal = mash(data.equal, c(U.c.equal, U.e.equal), outputlevel = 1)</code></pre>
+<pre><code> - Computing 30000 x 273 likelihood matrix.
+ - Likelihood calculations took 0.73 seconds.
+ - Fitting model with 273 mixture components.
+ - Model fitting took 11.81 seconds.</code></pre>
+<pre class="r"><code>m.diff = mash(data.diff, c(U.c.diff, U.e.diff), outputlevel = 1)</code></pre>
+<pre><code> - Computing 30000 x 353 likelihood matrix.
+ - Likelihood calculations took 9.55 seconds.
+ - Fitting model with 353 mixture components.</code></pre>
+<pre><code>Warning in REBayes::KWDual(A, rep(1, k), normalize(w), control = control): estimated mixing distribution has some negative values:
+               consider reducing rtol</code></pre>
+<pre><code>Warning in mixIP(matrix_lik = structure(c(0.469590642446271,
+0.833226442011469, : Optimization step yields mixture weights that are
+either too small, or negative; weights have been corrected and renormalized
+after the optimization.</code></pre>
+<pre><code> - Model fitting took 14.31 seconds.</code></pre>
+<pre class="r"><code>res.post.equal = microbenchmark(mash_compute_posterior_matrices(m.equal, data.equal, algorithm.version = &#39;Rcpp&#39;), mash_compute_posterior_matrices(m.equal, data.equal, algorithm.version = &#39;R&#39;), times = 100)
+res.post.equal</code></pre>
+<pre><code>Unit: seconds
+                                                                             expr
+ mash_compute_posterior_matrices(m.equal, data.equal, algorithm.version = &quot;Rcpp&quot;)
+    mash_compute_posterior_matrices(m.equal, data.equal, algorithm.version = &quot;R&quot;)
       min       lq     mean   median       uq      max neval
- 68.32783 68.73428 68.96686 68.93767 69.10717 70.47056   100
- 67.74804 68.71302 68.92867 68.92307 69.10871 70.04977   100</code></pre>
+ 1.041774 1.144506 1.177747 1.176704 1.200113 1.362199   100
+ 1.180146 1.286993 1.323291 1.317171 1.357957 1.504915   100</code></pre>
+<pre class="r"><code>res.post.diff = microbenchmark(mash_compute_posterior_matrices(m.diff, data.diff, algorithm.version = &#39;Rcpp&#39;), mash_compute_posterior_matrices(m.diff, data.diff, algorithm.version = &#39;R&#39;), times = 100)
+res.post.diff</code></pre>
+<pre><code>Unit: seconds
+                                                                           expr
+ mash_compute_posterior_matrices(m.diff, data.diff, algorithm.version = &quot;Rcpp&quot;)
+    mash_compute_posterior_matrices(m.diff, data.diff, algorithm.version = &quot;R&quot;)
+      min       lq     mean   median       uq      max neval
+ 10.73218 10.93846 11.13481 11.05389 11.25414 12.35093   100
+ 56.74023 57.49615 58.34373 57.78377 58.25889 63.67735   100</code></pre>
 </div>
 <div id="session-information" class="section level1">
 <h1>Session information</h1>
 <!-- Insert the session information into the document -->
 <pre class="r"><code>sessionInfo()</code></pre>
-<pre><code>R version 3.4.2 (2017-09-28)
+<pre><code>R version 3.4.3 (2017-11-30)
 Platform: x86_64-apple-darwin15.6.0 (64-bit)
-Running under: macOS High Sierra 10.13.1
+Running under: macOS High Sierra 10.13.2
 
 Matrix products: default
 BLAS: /Library/Frameworks/R.framework/Versions/3.4/Resources/lib/libRblas.0.dylib
@@ -386,23 +466,31 @@ attached base packages:
 [1] stats     graphics  grDevices utils     datasets  methods   base     
 
 other attached packages:
-[1] mashr_0.2-4            ashr_2.1-27            microbenchmark_1.4-2.1
+[1] assertthat_0.2.0       mashr_0.2-4            ashr_2.1-27           
+[4] microbenchmark_1.4-2.1
 
 loaded via a namespace (and not attached):
- [1] Rcpp_0.12.14      compiler_3.4.2    git2r_0.19.0     
- [4] plyr_1.8.4        iterators_1.0.8   tools_3.4.2      
- [7] digest_0.6.12     evaluate_0.10.1   tibble_1.3.4     
-[10] gtable_0.2.0      lattice_0.20-35   rlang_0.1.2      
-[13] Matrix_1.2-11     foreach_1.4.3     yaml_2.1.14      
-[16] parallel_3.4.2    mvtnorm_1.0-6     stringr_1.2.0    
-[19] knitr_1.17        REBayes_0.85      rprojroot_1.2    
-[22] grid_3.4.2        rmarkdown_1.7     rmeta_2.16       
-[25] ggplot2_2.2.1     magrittr_1.5      backports_1.1.1  
-[28] scales_0.5.0      codetools_0.2-15  htmltools_0.3.6  
-[31] MASS_7.3-47       assertthat_0.2.0  colorspace_1.3-2 
-[34] stringi_1.1.5     Rmosek_8.0.69     lazyeval_0.2.1   
-[37] munsell_0.4.3     doParallel_1.0.11 pscl_1.5.2       
-[40] truncnorm_1.0-7   SQUAREM_2017.10-1</code></pre>
+ [1] Rcpp_0.12.14             compiler_3.4.3          
+ [3] git2r_0.19.0             plyr_1.8.4              
+ [5] iterators_1.0.8          tools_3.4.3             
+ [7] digest_0.6.12            evaluate_0.10.1         
+ [9] tibble_1.3.4             gtable_0.2.0            
+[11] lattice_0.20-35          rlang_0.1.2             
+[13] Matrix_1.2-12            foreach_1.4.3           
+[15] yaml_2.1.14              parallel_3.4.3          
+[17] mvtnorm_1.0-6            stringr_1.2.0           
+[19] knitr_1.17               REBayes_0.85            
+[21] rprojroot_1.2            grid_3.4.3              
+[23] rmarkdown_1.7            rmeta_2.16              
+[25] ggplot2_2.2.1            magrittr_1.5            
+[27] backports_1.1.1          scales_0.5.0            
+[29] codetools_0.2-15         htmltools_0.3.6         
+[31] MASS_7.3-47              colorspace_1.3-2        
+[33] stringi_1.1.5            Rmosek_8.0.69           
+[35] lazyeval_0.2.1           munsell_0.4.3           
+[37] doParallel_1.0.11        pscl_1.5.2              
+[39] truncnorm_1.0-7          SQUAREM_2017.10-1       
+[41] ExtremeDeconvolution_1.3</code></pre>
 </div>
 
 <!-- Adjust MathJax settings so that all math formulae are shown using
