@@ -1,7 +1,7 @@
 ---
 title: "Compare R vs Rcpp"
 author: "Yuxin Zou"
-date: "12/4/2017"
+date: 2017-12-04
 output: html_document
 ---
 
@@ -32,30 +32,99 @@ library(mashr)
 ## Equal S data
 ```{r}
 set.seed(1)
-simdata.equal = simple_sims(5000,20,0.5)
+simdata.equal1 = simple_sims(5000,5,0.5)
+simdata.equal2 = simple_sims2(5000, 0.5)
+simdata.equal = list(B = rbind(simdata.equal1$B, simdata.equal2$B), 
+                     Bhat = rbind(simdata.equal1$Bhat, simdata.equal2$Bhat), 
+                     Shat = rbind(simdata.equal1$Shat, simdata.equal2$Shat))
 # data contains 4000 rows
 data.equal = set_mash_data(simdata.equal$Bhat, simdata.equal$Shat, alpha=0)
-U.equal = cov_canonical(data.equal)
+U.c.equal = cov_canonical(data.equal)
+# data driven
+m.1by1 = mash_1by1(data.equal)
+strong = get_significant_results(m.1by1,0.05)
+# center Z
+data.equal.Z = simdata.equal$Bhat/simdata.equal$Shat
+data.center = set_mash_data(Bhat = apply(as.matrix(data.equal.Z), 2, function(x) x - mean(x)))
+U.pca = cov_pca(data.center,5,strong)
+U.e.equal = cov_ed(data.equal, U.pca, strong)
 ```
 
 ## Non-Equal S data
 ```{r}
 set.seed(1)
-simdata.samp.diff = simple_sims(5000, 20, rep(c(0.5,0.4,0.1,1,0.2), 4000))
-
-data.diff = set_mash_data(simdata.samp.diff$Bhat, simdata.samp.diff$Shat, alpha=0)
-U.diff = cov_canonical(data.diff)
+simdata.diff1 = simple_sims(5000, 5, rep(c(0.5,0.4,0.1,1,0.2), 4000))
+simdata.diff2 = simple_sims2(5000, rep(c(0.5,0.4,0.1,1,0.2), 4000))
+simdata.diff = list(B = rbind(simdata.diff1$B, simdata.diff2$B), 
+                    Bhat = rbind(simdata.diff1$Bhat, simdata.diff2$Bhat), 
+                    Shat = rbind(simdata.diff1$Shat, simdata.diff2$Shat))
+data.diff = set_mash_data(simdata.diff$Bhat, simdata.diff$Shat, alpha=0)
+U.c.diff = cov_canonical(data.diff)
+# data driven
+m.1by1 = mash_1by1(data.diff)
+strong = get_significant_results(m.1by1,0.05)
+# center Z
+data.diff.Z = simdata.diff$Bhat/simdata.diff$Shat
+data.center = set_mash_data(Bhat = apply(as.matrix(data.diff.Z), 2, function(x) x - mean(x)))
+U.pca = cov_pca(data.center,5,strong)
+U.e.diff = cov_ed(data.diff, U.pca, strong)
 ```
 
 # Compare likelihood
+
+```{r}
+library(assertthat)
+source('~/Documents/GitHub/mashr-stephens/R/likelihoods_scaleddata.R')
+source('~/Documents/GitHub/mashr-stephens/R/likelihoods_origdata.R')
+source('~/Documents/GitHub/mashr-stephens/R/mash.R')
+source('~/Documents/GitHub/mashr-stephens/R/compute_covs.R')
+source('~/Documents/GitHub/mashr-stephens/R/RcppExports.R')
+source('~/Documents/GitHub/mashr-stephens/R/set_data.R')
+source('~/Documents/GitHub/mashr-stephens/R/opt.R')
+source('~/Documents/GitHub/mashr-stephens/R/posterior.R')
+source('~/Documents/GitHub/mashr-stephens/R/posterior_common_cov.R')
+source('~/Documents/GitHub/mashr-stephens/R/posterior_lowmem.R')
+```
+
+```{r}
+compute_likelihood = function(data, Ulist, algorithm.version=c('Rcpp','R')){
+  algorithm.version = match.arg(algorithm.version)
+  grid = autoselect_grid(data, sqrt(2))
+  Ulist = normalize_Ulist(Ulist)
+  xUlist = expand_cov(Ulist, grid, TRUE)
+  J <- nrow(data$Bhat)
+  P <- length(xUlist)
+  lm <- calc_relative_lik_matrix(data, xUlist, algorithm.version)
+  return(lm)
+}
+
+```
+
 ```{r warning=FALSE}
-res.equal = microbenchmark(mash(data.equal, U.equal, outputlevel = 1, verbose = FALSE, algorithm.version = 'R'), mash(data.equal, U.equal, outputlevel = 1, verbose = FALSE, algorithm.version = 'Rcpp'))
+res.equal = microbenchmark(compute_likelihood(data.equal, c(U.c.equal, U.e.equal), algorithm.version='Rcpp'), compute_likelihood(data.equal, c(U.c.equal, U.e.equal), algorithm.version='R'), times=100)
 res.equal
 ```
 
 ```{r warning=FALSE}
-res.diff = microbenchmark(mash(data.diff, U.diff, outputlevel = 1, verbose = FALSE, algorithm.version = 'R'), mash(data.diff, U.diff, outputlevel = 1, verbose = FALSE, algorithm.version = 'Rcpp'))
+res.diff = microbenchmark(compute_likelihood(data.diff, c(U.c.diff, U.e.diff), algorithm.version='Rcpp'), compute_likelihood(data.diff, c(U.c.diff, U.e.diff), algorithm.version='R'), times=100)
 res.diff
+```
+
+# Compare posterior
+
+```{r}
+m.equal = mash(data.equal, c(U.c.equal, U.e.equal), outputlevel = 1)
+m.diff = mash(data.diff, c(U.c.diff, U.e.diff), outputlevel = 1)
+```
+
+```{r}
+res.post.equal = microbenchmark(mash_compute_posterior_matrices(m.equal, data.equal, algorithm.version = 'Rcpp'), mash_compute_posterior_matrices(m.equal, data.equal, algorithm.version = 'R'), times = 100)
+res.post.equal
+```
+
+```{r}
+res.post.diff = microbenchmark(mash_compute_posterior_matrices(m.diff, data.diff, algorithm.version = 'Rcpp'), mash_compute_posterior_matrices(m.diff, data.diff, algorithm.version = 'R'), times = 100)
+res.post.diff
 ```
 
 # Session information
