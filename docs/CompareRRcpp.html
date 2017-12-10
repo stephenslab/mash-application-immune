@@ -322,7 +322,7 @@ div.section {
 <p><strong>Last updated:</strong> 2017-12-10</p>
 <!-- Insert the code version (Git commit SHA1) if Git repository exists and R
  package git2r is installed -->
-<p><strong>Code version:</strong> 13b2929</p>
+<p><strong>Code version:</strong> b832746</p>
 <div id="set-up" class="section level1">
 <h1>Set up</h1>
 <pre class="r"><code>library(microbenchmark)
@@ -398,28 +398,28 @@ res.equal</code></pre>
  compute_likelihood(data.equal, c(U.c.equal, U.e.equal), algorithm.version = &quot;Rcpp&quot;)
     compute_likelihood(data.equal, c(U.c.equal, U.e.equal), algorithm.version = &quot;R&quot;)
       min       lq     mean   median       uq      max neval
- 868.7636 968.5504 979.2553 977.3587 989.5848 1244.575   100
- 882.1932 968.7762 978.5632 979.0113 991.4174 1095.322   100</code></pre>
+ 866.8975 943.1800 959.2484 957.6582 972.0100 1227.550   100
+ 857.2996 945.0444 956.5874 958.6668 971.8977 1033.055   100</code></pre>
 <pre class="r"><code>res.diff = microbenchmark(compute_likelihood(data.diff, c(U.c.diff, U.e.diff), algorithm.version=&#39;Rcpp&#39;), compute_likelihood(data.diff, c(U.c.diff, U.e.diff), algorithm.version=&#39;R&#39;), times=100)
 res.diff</code></pre>
 <pre><code>Unit: seconds
                                                                              expr
  compute_likelihood(data.diff, c(U.c.diff, U.e.diff), algorithm.version = &quot;Rcpp&quot;)
     compute_likelihood(data.diff, c(U.c.diff, U.e.diff), algorithm.version = &quot;R&quot;)
-      min       lq     mean   median       uq       max neval
- 9.463375 9.611921 9.704742 9.677289 9.803729 10.060326   100
- 9.424892 9.615214 9.703193 9.697875 9.765737  9.945546   100</code></pre>
+      min       lq     mean   median       uq      max neval
+ 9.843775 10.07093 10.19134 10.18336 10.28145 10.78164   100
+ 9.795318 10.05749 10.18000 10.13756 10.28895 10.84154   100</code></pre>
 </div>
 <div id="compare-posterior" class="section level1">
 <h1>Compare posterior</h1>
 <pre class="r"><code>m.equal = mash(data.equal, c(U.c.equal, U.e.equal), outputlevel = 1)</code></pre>
 <pre><code> - Computing 30000 x 273 likelihood matrix.
- - Likelihood calculations took 0.73 seconds.
+ - Likelihood calculations took 0.77 seconds.
  - Fitting model with 273 mixture components.
- - Model fitting took 11.81 seconds.</code></pre>
+ - Model fitting took 12.08 seconds.</code></pre>
 <pre class="r"><code>m.diff = mash(data.diff, c(U.c.diff, U.e.diff), outputlevel = 1)</code></pre>
 <pre><code> - Computing 30000 x 353 likelihood matrix.
- - Likelihood calculations took 9.55 seconds.
+ - Likelihood calculations took 10.29 seconds.
  - Fitting model with 353 mixture components.</code></pre>
 <pre><code>Warning in REBayes::KWDual(A, rep(1, k), normalize(w), control = control): estimated mixing distribution has some negative values:
                consider reducing rtol</code></pre>
@@ -427,7 +427,7 @@ res.diff</code></pre>
 0.833226442011469, : Optimization step yields mixture weights that are
 either too small, or negative; weights have been corrected and renormalized
 after the optimization.</code></pre>
-<pre><code> - Model fitting took 14.31 seconds.</code></pre>
+<pre><code> - Model fitting took 14.30 seconds.</code></pre>
 <pre class="r"><code>res.post.equal = microbenchmark(mash_compute_posterior_matrices(m.equal, data.equal, algorithm.version = &#39;Rcpp&#39;), mash_compute_posterior_matrices(m.equal, data.equal, algorithm.version = &#39;R&#39;), times = 100)
 res.post.equal</code></pre>
 <pre><code>Unit: seconds
@@ -435,17 +435,17 @@ res.post.equal</code></pre>
  mash_compute_posterior_matrices(m.equal, data.equal, algorithm.version = &quot;Rcpp&quot;)
     mash_compute_posterior_matrices(m.equal, data.equal, algorithm.version = &quot;R&quot;)
       min       lq     mean   median       uq      max neval
- 1.041774 1.144506 1.177747 1.176704 1.200113 1.362199   100
- 1.180146 1.286993 1.323291 1.317171 1.357957 1.504915   100</code></pre>
+ 1.024335 1.135033 1.175294 1.171930 1.204978 1.450982   100
+ 1.163553 1.278453 1.325020 1.314301 1.370670 1.674098   100</code></pre>
 <pre class="r"><code>res.post.diff = microbenchmark(mash_compute_posterior_matrices(m.diff, data.diff, algorithm.version = &#39;Rcpp&#39;), mash_compute_posterior_matrices(m.diff, data.diff, algorithm.version = &#39;R&#39;), times = 100)
 res.post.diff</code></pre>
 <pre><code>Unit: seconds
                                                                            expr
  mash_compute_posterior_matrices(m.diff, data.diff, algorithm.version = &quot;Rcpp&quot;)
     mash_compute_posterior_matrices(m.diff, data.diff, algorithm.version = &quot;R&quot;)
-      min       lq     mean   median       uq      max neval
- 10.73218 10.93846 11.13481 11.05389 11.25414 12.35093   100
- 56.74023 57.49615 58.34373 57.78377 58.25889 63.67735   100</code></pre>
+      min       lq    mean   median       uq      max neval
+ 11.26136 11.52095 11.6741 11.63118 11.77313 12.25469   100
+ 58.12360 58.69190 59.3430 59.02923 59.93624 61.27292   100</code></pre>
 </div>
 <div id="session-information" class="section level1">
 <h1>Session information</h1>
