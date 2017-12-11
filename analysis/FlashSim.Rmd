@@ -111,7 +111,7 @@ set.seed(1)
 x = sim(nsamp=5000, err_sd = 0.05)
 ```
 
-# Flash
+## Flash
 
 Only 5 factors with 'by_column' type variance.
 

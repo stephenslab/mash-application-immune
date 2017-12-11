@@ -16,7 +16,15 @@ output:
     [Compare R vs Rcpp](CompareRRcpp.html)
     
     In the simulation, Rcpp is faster then R in posterior calculation. Rcpp and R have similar computational time for likelihood calculation. However, from my experience, Rcpp tends to use shorter time in likelihood computation.
+
+* Simulations to find more latent factors than the number of covariates (p)
+
+    [Flash Simulation](FlashSim.html)
     
+    When the `var_type='constant'`, the `flash` results in 6 factors, whereas the data has 5 conditions.
+    
+    Some factors contain +ve in some conditions and -ve in others. These are not separate into 2 factors.
+
 **Here is the `MASH` analyses**:
 
 * Generate the covariance matrices:
