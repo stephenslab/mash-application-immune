@@ -319,10 +319,10 @@ div.section {
 
 <!-- Update knitr chunk options -->
 <!-- Insert the date the file was last updated -->
-<p><strong>Last updated:</strong> 2017-12-09</p>
+<p><strong>Last updated:</strong> 2017-12-10</p>
 <!-- Insert the code version (Git commit SHA1) if Git repository exists and R
  package git2r is installed -->
-<p><strong>Code version:</strong> 8135ced</p>
+<p><strong>Code version:</strong> bc47a58</p>
 <div id="case-1-2-dim" class="section level1">
 <h1>Case 1: 2 dim</h1>
 <ul>
@@ -405,9 +405,8 @@ barplot(flash_get_f(fb,2), main=&#39;loading 2&#39;)</code></pre>
 }</code></pre>
 <pre class="r"><code>set.seed(1)
 x = sim(nsamp=5000, err_sd = 0.05)</code></pre>
-</div>
-<div id="flash" class="section level1">
-<h1>Flash</h1>
+<div id="flash" class="section level2">
+<h2>Flash</h2>
 <p>Only 5 factors with ‘by_column’ type variance.</p>
 <pre class="r"><code>data = flash_set_data(x$Bhat)
 fg = flash_add_greedy(data, Kmax=10, var_type=&#39;constant&#39;)</code></pre>
@@ -427,6 +426,7 @@ barplot(flash_get_f(fb, 4), main=&#39;loading 4&#39;)
 barplot(flash_get_f(fb, 5), main=&#39;loading 5&#39;)
 barplot(flash_get_f(fb, 6), main=&#39;loading 6&#39;)</code></pre>
 <p><img src="figure/FlashSim.Rmd/unnamed-chunk-7-1.png" width="672" style="display: block; margin: auto;" /></p>
+</div>
 </div>
 <div id="session-information" class="section level1">
 <h1>Session information</h1>
