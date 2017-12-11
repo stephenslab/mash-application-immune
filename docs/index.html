@@ -219,10 +219,16 @@ div.section {
 <li><p>Simulations to compare the results of Exchangeable Effects and Exchangeable Z-scores model</p>
 <p><a href="CompareZBeta.html">Compare EE and EZ</a></p>
 <p>The correct model has higher likelihood in simulations.</p></li>
+<li><p>Simulations to compare R vs Rcpp:</p>
+<p><a href="CompareRRcpp.html">Compare R vs Rcpp</a></p>
+<p>In the simulation, Rcpp is faster then R in posterior calculation. Rcpp and R have similar computational time for likelihood calculation. However, from my experience, Rcpp tends to use shorter time in likelihood computation.</p></li>
 </ul>
-<p>Here is the <code>MASH</code> analyses:</p>
+<p><strong>Here is the <code>MASH</code> analyses</strong>:</p>
 <ul>
-<li><p>Generate the covariance matrices</p>
+<li><p>Generate the covariance matrices:</p>
+<p>Firstly, we do the factor analysis on the data using <code>flash</code>.</p>
+<p><a href="Immune_Flash.html">Flash</a></p>
+<p>The potential covariance structures:</p>
 <ul>
 <li><a href="Immune_Cov_EZ.html">EZ covariance matrices</a></li>
 <li><a href="Immune_Cov_EE.html">EE covariance matrices</a></li>
@@ -248,14 +254,24 @@ Changing the parameter <code>vhat</code> could obtain different V matrices.
 <li><a href="Immune_Data_Mash_V0_EZ_Result.html">EZ V0 model</a></li>
 <li><a href="Immune_Data_Mash_V0_EE_Result.html">EE V0 model</a></li>
 </ul>
-<p>The estimated weights for covariance matrices are different for EE and EZ model when V is the estimated correlation. When V is Identity, the estimated weights are similar. But the measurements are correlated due to sample overlap (all based on same 134 individuals), I think it is reasonable to use the estimated correlation from the data (V1).</p>
-<p>Among these models, EZ V1 has the highest log likelihood value.</p>
+<p>The estimated weights for covariance matrices are different for EE and EZ model when V is the estimated correlation. When V is Identity, the estimated weights are similar. But the measurements are correlated due to sample overlap (all based on same 134 individuals), I think it is more reasonable to use the estimated correlation from the data (V1).</p>
+<p>Among these models, <strong>EZ V1 has the highest log likelihood value</strong>.</p>
 <p>Using Mash with V be the estimated correlation, we found more eQTLs, the number of eQTLs are similar using EE and EZ model. Based on the EZ V1 model, the majority weights for the covariance matrix is on the null matrix (0, no effects, 84.6%). The remaining weights are on the covariance matrix capturing the pattern that the standardized effects are strong positively correlated among all treatments (14.5%). The covariance component <span class="math inline">\(11&#39;\)</span> (5.4%) shows that the standardized effects are similar. The other covariance component has the formate <span class="math inline">\(D11&#39;D\)</span> (9.1%), D is a diagnoal matrix, which means the standardized effects are different in size, but they are strongly correlated (<span class="math inline">\(\beta_{lpa6h} = d * \beta_{ctrl}\)</span> etc.).</p>
 <p>The mash fit favors component where <strong>standardized</strong> effects are very similar, which does not mean the raw effects are similar. The similarity of standardized effects could imply the similarity of raw effects if and only if the standard errors of the estimated effects are all similar. The derivation is in <a href="PostNONsd.html">Mash Posterior under non-equal <span class="math inline">\(s_{jr}\)</span></a>. In this dataset, the <span class="math inline">\(s_{jr}\)</span> are not similar aross treatments. The <code>equal effect</code> covariance structure (correlation) is for the <strong>standardized</strong> effects. The raw effects have the same correlation structure, but with different covariance, different mean.</p>
 <p>We found a lot reQTLs (raw effect), treatment specific reQTLs and time point specific reQTLs using the linear transformation. We found more reQTLs, treatment specific reQTLs and time point specific reQTLs than the paper’s result.</p>
 <p>However, the number of reQTLs from EE model are much less than EZ model. I don’t know the reason for this.</p></li>
 <li><p>If we define the reQTL as <strong>different standardized effects</strong>, the result is <a href="Immune_Data_Mash_V1_EZ_reQTLs.html">EZ V1 model reQTL</a>.</p>
 <p>The number of reQTLs are fewer than the original reQTLs.</p></li>
+<li><p>Qualitative Interaction:</p>
+<p>Among the eQTLs that significant among all treatments (4792), there are 4 of them have effects in different directions in different conditions. <a href="Immune_Interaction.html">Interaction</a></p>
+<p>In the null data, there is no qualitative interaction cases. Therefore, the estimated weights for the <code>mash</code> model can not capture the qualitative interaction covariance structure. <a href="Immune_Post_Weight.html">Posterior Check</a></p></li>
+<li><p>Using <code>flash</code> results to construct mashr covariance matrices</p>
+<ul>
+<li><p>Method 1: <span class="math display">\[z_{i} = \sum_{k=1}^{K}l_{ik} f_{k}\]</span> <span class="math display">\[U_{i} = z_{i}z_{i}&#39;\]</span> <a href="Immune_Flash_ind.html">Flash individual</a></p></li>
+<li><p>Method 2: Suppose the rows of L come from a mixture of multivariate normals with covariances <span class="math inline">\(U_{1}, \cdots, U_{n}\)</span>. <span class="math display">\[l_{i} \sim \sum_{m=1}^{n} \pi_{m} N_{K}(0, U_{m})\]</span></p></li>
+</ul>
+<p>The two methods above have a common issue: The number of matrices is too large. The current algorithm cannot handle it.</p>
+<p>One potential solution is trying to reduce the number of covariance matrices. There is one covariance matrix for each gene. Some of them could have similar pattern. Using methods like kmeans to cluster the similar covariance matrices.</p></li>
 <li><p>The plot of logFC:</p>
 <p>The y axis is logFC = <span class="math inline">\(log_{2} \frac{mean \ sti}{mean \ base}\)</span>. The x axis is the group of genes: ‘eQTL in both baseline and the stimulate’, ‘eQTL in baseline’, ‘eQTL in stimulate’.</p>
 <p><a href="Immune_Data_Mash_V1_EZ_Compare.html">EZ V1 eQTL logFC</a></p>
