@@ -1,0 +1,496 @@
+---
+title: "Immune Posterior Check"
+author: "Yuxin Zou"
+date: 2017-12-04
+output: html_document
+---
+
+```{r read-chunk, include=FALSE, cache=FALSE}
+knitr::read_chunk("chunks.R")
+```
+
+<!-- Update knitr chunk options -->
+```{r knitr-opts-chunk, include=FALSE}
+```
+
+<!-- Insert the date the file was last updated -->
+```{r last-updated, echo=FALSE, results='asis'}
+```
+
+<!-- Insert the code version (Git commit SHA1) if Git repository exists and R
+ package git2r is installed -->
+```{r code-version, echo=FALSE, results='asis'}
+```
+
+# Setup
+
+```{r}
+library(mashr)
+library(corrplot)
+library(dplyr)
+library(stringr)
+source('~/Documents/GitHub/mashr-stephens/R/likelihoods_scaleddata.R')
+source('~/Documents/GitHub/mashr-stephens/R/RcppExports.R')
+source('~/Documents/GitHub/mashr-stephens/R/set_data.R')
+source('~/Documents/GitHub/mashr-stephens/R/posterior.R')
+source('~/Documents/GitHub/mashr-stephens/R/posterior_common_cov.R')
+source('~/Documents/GitHub/mashr-stephens/R/posterior_lowmem.R')
+```
+
+Let `mash_posterior` function returns posterior weights as well:
+
+```{r}
+mash_compute_posterior_matrices_weights = function(g, data, pi_thresh = 1e-10, algorithm.version = c("Rcpp", "R"), A=NULL ){
+  if (!is.null(A) && algorithm.version=='Rcpp'){
+    stop("FIXME: not implemented")
+  }
+
+  if(class(g)=="mash"){
+    alpha = g$alpha
+    g = g$fitted_g
+    if(alpha != data$alpha){
+      stop('The alpha in data is not the one used to compute the mash model.')
+    }
+  }
+  else{
+    message('Warning: Please make sure the alpha in data is consistent with the `alpha` used to compute the fitted_g.')
+  }
+
+  xUlist = expand_cov(g$Ulist,g$grid,g$usepointmass)
+  lm_res = calc_relative_lik_matrix(data, xUlist)
+  which.comp = (g$pi > pi_thresh)
+  posterior_weights = compute_posterior_weights(g$pi[which.comp], lm_res$lik_matrix[,which.comp])
+  posterior_matrices = compute_posterior_matrices(data, xUlist[which.comp],
+                                                  posterior_weights,
+                                                  algorithm.version, A=A)
+
+  if ((!all(data$Shat_alpha == 1)) && (algorithm.version=='Rcpp')) {
+    message("FIXME: 'compute_posterior_matrices' in Rcpp does not transfer EZ to EE")
+    ## Recover the scale of posterior(Bhat)
+    posterior_matrices$PosteriorMean = posterior_matrices$PosteriorMean * data$Shat_alpha
+    posterior_matrices$PosteriorSD = posterior_matrices$PosteriorSD * data$Shat_alpha
+  }
+  return(list(posterior_weights = posterior_weights,
+              posterior_matrices = posterior_matrices))
+}
+```
+
+# Simulated data
+
+## Shat equal data R = 5
+
+* Fit `mash` model based on `data` $\rightarrow$ estimated weights $\pi$
+* Obtain posterior mean for `data` using the `mash` model $\rightarrow$ posterior weights for the covariance structures
+* Check whether the posterior weights for the covariance structures are similar as in `mash` model.
+
+`mash` model:
+
+```{r}
+set.seed(1)
+simdata.equal = simple_sims(500,5,0.5)
+
+# set mash data
+TestdataZ.equal = set_mash_data(simdata.equal$Bhat, simdata.equal$Shat, alpha=1)
+
+# center
+TestdataZ.equal.center = set_mash_data(apply(as.matrix(TestdataZ.equal$Bhat), 2, function(x) x - mean(x)))
+
+# canonical cov
+U.c.equal = cov_canonical(TestdataZ.equal)
+
+# data_driven
+m.1by1.Z.equal = mash_1by1(TestdataZ.equal, alpha=1)
+strong.Z.equal = get_significant_results(m.1by1.Z.equal,0.05)
+U.pca.Z.equal = cov_pca(TestdataZ.equal.center,5,strong.Z.equal)
+
+U.ed.Z.equal = cov_ed(TestdataZ.equal, U.pca.Z.equal, strong.Z.equal)
+
+U.m.Z.equal = mash(TestdataZ.equal, c(U.c.equal, U.ed.Z.equal))
+barplot(get_estimated_pi(U.m.Z.equal), las = 2, cex.names = 0.7, main='EZ')
+```
+
+Posterior:
+
+```{r}
+Post = mash_compute_posterior_matrices_weights(U.m.Z.equal, TestdataZ.equal)
+U.m.Z.equal$result = Post$posterior_matrices
+posterior_weights = Post$posterior_weights
+```
+
+For every sample, the posterior weights for the covariance structures:
+
+```{r}
+Weight = matrix(0,nrow=nrow(U.m.Z.equal$result$PosteriorMean),17)
+Weight[,1] = posterior_weights[,1]
+
+ind = as.logical(str_count(colnames(posterior_weights), "ED_PCA_1"))
+Weight[,2] = apply(posterior_weights[,ind, drop=FALSE], 1, sum)
+ind = as.logical(str_count(colnames(posterior_weights), "ED_PCA_2"))
+Weight[,3] = apply(posterior_weights[,ind, drop=FALSE], 1, sum)
+ind = as.logical(str_count(colnames(posterior_weights), "ED_PCA_3"))
+Weight[,4] = apply(posterior_weights[,ind, drop=FALSE], 1, sum)
+ind = as.logical(str_count(colnames(posterior_weights), "ED_PCA_4"))
+Weight[,5] = apply(posterior_weights[,ind, drop=FALSE], 1, sum)
+ind = as.logical(str_count(colnames(posterior_weights), "ED_PCA_5"))
+Weight[,6] = apply(posterior_weights[,ind, drop=FALSE], 1, sum)
+ind = as.logical(str_count(colnames(posterior_weights), "ED_tPCA"))
+Weight[,7] = apply(posterior_weights[,ind, drop=FALSE], 1, sum)
+ind = as.logical(str_count(colnames(posterior_weights), "identity"))
+Weight[,8] = apply(posterior_weights[,ind, drop=FALSE], 1, sum)
+ind = as.logical(str_count(colnames(posterior_weights), "condition_1"))
+Weight[,9] = apply(posterior_weights[,ind, drop=FALSE], 1, sum)
+ind = as.logical(str_count(colnames(posterior_weights), "condition_2"))
+Weight[,10] = apply(posterior_weights[,ind, drop=FALSE], 1, sum)
+ind = as.logical(str_count(colnames(posterior_weights), "condition_3"))
+Weight[,11] = apply(posterior_weights[,ind, drop=FALSE], 1, sum)
+ind = as.logical(str_count(colnames(posterior_weights), "condition_4"))
+Weight[,12] = apply(posterior_weights[,ind, drop=FALSE], 1, sum)
+ind = as.logical(str_count(colnames(posterior_weights), "condition_5"))
+Weight[,13] = apply(posterior_weights[,ind, drop=FALSE], 1, sum)
+ind = as.logical(str_count(colnames(posterior_weights), "equal_effects"))
+Weight[,14] = apply(posterior_weights[,ind, drop=FALSE], 1, sum)
+ind = as.logical(str_count(colnames(posterior_weights), "simple_het_1"))
+Weight[,15] = apply(posterior_weights[,ind, drop=FALSE], 1, sum)
+ind = as.logical(str_count(colnames(posterior_weights), "simple_het_2"))
+Weight[,16] = apply(posterior_weights[,ind, drop=FALSE], 1, sum)
+ind = as.logical(str_count(colnames(posterior_weights), "simple_het_3"))
+Weight[,17] = apply(posterior_weights[,ind, drop=FALSE], 1, sum)
+
+colnames(Weight) = c('null', 'ED_PCA_1','ED_PCA_2','ED_PCA_3','ED_PCA_4','ED_PCA_5','ED_tPCA',
+                     'identity','condition_1', 'condition_2','condition_3','condition_4','condition_5',
+                     'equal_effects', 'simple_het_1', 'simple_het_2', 'simple_het_3')
+row.names(Weight) = row.names(U.m.Z.equal$result$PosteriorMean)
+```
+
+Identify the covariance structure with the max posterior weight for each sample:
+
+```{r}
+Freqe = apply(Weight,1, which.max)
+
+Da = data.frame(id = 1:length(Freqe), Freq = Freqe)
+Da_summary = Da %>% group_by(Freq) %>% summarise(Total=n())
+x = Da_summary$Total
+names(x) = colnames(Weight)[Da_summary$Freq]
+barplot(x, las = 2, cex.names = 0.7)
+```
+
+The posterior weights for the covariance structures have similar pattern to the weights in `mash` model.
+
+# Simulate Shat different among samples, same among conditions
+
+```{r}
+set.seed(1)
+simdata.diff = simple_sims(500, 5, rep(c(0.5,0.4,5,1,1), 400))
+simdata.diff$z = simdata.diff$Bhat/simdata.diff$Shat
+# set mash data
+TestdataBeta.diff = set_mash_data(Bhat=simdata.diff$Bhat,
+                               Shat=simdata.diff$Shat, 
+                               alpha = 0)
+# Create covariance matrices
+# center
+TestdataZ.diff.center = set_mash_data(Bhat = apply(as.matrix(simdata.diff$z), 2, function(x) x - mean(x)), alpha=0)
+
+# canonical cov
+U.c.diff = cov_canonical(TestdataZ.diff.center)
+
+# data_driven
+m.1by1.Z.diff = mash_1by1(TestdataBeta.diff, alpha=1)
+strong.Z.diff = get_significant_results(m.1by1.Z.diff,0.05)
+U.pca.Z.diff = cov_pca(TestdataZ.diff.center,5,strong.Z.diff)
+
+U.ed.beta.diff = cov_ed(TestdataBeta.diff, U.pca.Z.diff, strong.Z.diff)
+U.m.beta.diff = mash(TestdataBeta.diff, c(U.c.diff, U.ed.beta.diff))
+
+barplot(get_estimated_pi(U.m.beta.diff), las = 2, cex.names = 0.7, main='EE')
+```
+
+```{r}
+Post = mash_compute_posterior_matrices_weights(U.m.beta.diff, TestdataBeta.diff)
+U.m.beta.diff$result = Post$posterior_matrices
+posterior_weights = Post$posterior_weights
+```
+
+```{r echo=FALSE}
+Weight = matrix(0,nrow=nrow(U.m.beta.diff$result$PosteriorMean),17)
+Weight[,1] = posterior_weights[,1]
+
+ind = as.logical(str_count(colnames(posterior_weights), "ED_PCA_1"))
+Weight[,2] = apply(posterior_weights[,ind, drop=FALSE], 1, sum)
+ind = as.logical(str_count(colnames(posterior_weights), "ED_PCA_2"))
+Weight[,3] = apply(posterior_weights[,ind, drop=FALSE], 1, sum)
+ind = as.logical(str_count(colnames(posterior_weights), "ED_PCA_3"))
+Weight[,4] = apply(posterior_weights[,ind, drop=FALSE], 1, sum)
+ind = as.logical(str_count(colnames(posterior_weights), "ED_PCA_4"))
+Weight[,5] = apply(posterior_weights[,ind, drop=FALSE], 1, sum)
+ind = as.logical(str_count(colnames(posterior_weights), "ED_PCA_5"))
+Weight[,6] = apply(posterior_weights[,ind, drop=FALSE], 1, sum)
+ind = as.logical(str_count(colnames(posterior_weights), "ED_tPCA"))
+Weight[,7] = apply(posterior_weights[,ind, drop=FALSE], 1, sum)
+ind = as.logical(str_count(colnames(posterior_weights), "identity"))
+Weight[,8] = apply(posterior_weights[,ind, drop=FALSE], 1, sum)
+ind = as.logical(str_count(colnames(posterior_weights), "condition_1"))
+Weight[,9] = apply(posterior_weights[,ind, drop=FALSE], 1, sum)
+ind = as.logical(str_count(colnames(posterior_weights), "condition_2"))
+Weight[,10] = apply(posterior_weights[,ind, drop=FALSE], 1, sum)
+ind = as.logical(str_count(colnames(posterior_weights), "condition_3"))
+Weight[,11] = apply(posterior_weights[,ind, drop=FALSE], 1, sum)
+ind = as.logical(str_count(colnames(posterior_weights), "condition_4"))
+Weight[,12] = apply(posterior_weights[,ind, drop=FALSE], 1, sum)
+ind = as.logical(str_count(colnames(posterior_weights), "condition_5"))
+Weight[,13] = apply(posterior_weights[,ind, drop=FALSE], 1, sum)
+ind = as.logical(str_count(colnames(posterior_weights), "equal_effects"))
+Weight[,14] = apply(posterior_weights[,ind, drop=FALSE], 1, sum)
+ind = as.logical(str_count(colnames(posterior_weights), "simple_het_1"))
+Weight[,15] = apply(posterior_weights[,ind, drop=FALSE], 1, sum)
+ind = as.logical(str_count(colnames(posterior_weights), "simple_het_2"))
+Weight[,16] = apply(posterior_weights[,ind, drop=FALSE], 1, sum)
+ind = as.logical(str_count(colnames(posterior_weights), "simple_het_3"))
+Weight[,17] = apply(posterior_weights[,ind, drop=FALSE], 1, sum)
+
+colnames(Weight) = c('null', 'ED_PCA_1','ED_PCA_2','ED_PCA_3','ED_PCA_4','ED_PCA_5','ED_tPCA',
+                     'identity','condition_1', 'condition_2','condition_3','condition_4','condition_5',
+                     'equal_effects', 'simple_het_1', 'simple_het_2', 'simple_het_3')
+row.names(Weight) = row.names(U.m.beta.diff$result$PosteriorMean)
+```
+
+```{r}
+Freqe = apply(Weight,1, which.max)
+
+Da = data.frame(id = 1:length(Freqe), Freq = Freqe)
+Da_summary = Da %>% group_by(Freq) %>% summarise(Total=n())
+x = Da_summary$Total
+names(x) = colnames(Weight)[Da_summary$Freq]
+barplot(x, las = 2, cex.names = 0.7)
+```
+
+The posterior weights for the covariance structures have similar pattern to the weights in `mash` model.
+
+
+# Immune Data
+
+* Fit `mash` model based on `null data` $\rightarrow$ estimated weights $\pi$
+* Obtain posterior mean for `null data` using the `mash` model $\rightarrow$ posterior weights for the covariance structures; Obtain posterior mean for `max data` using the `mash` model $\rightarrow$ posterior weights for the covariance structures
+* Check whether the posterior weights for the covariance structures are similar as in `mash` model.
+
+```{r}
+data = readRDS('~/Documents/GitHub/mash-application-immune/data/ImmuneQTLSummary.4MASH.rds')
+data$max$se = data$max$beta/data$max$z
+data$null$se = data$null$beta / data$null$z
+
+V = cor(data$null$z[which(apply(abs(data$null$z),1, max) < 2),])
+```
+
+## Posterior on null set
+
+```{r}
+mash_data = set_mash_data(Bhat = data$null$beta,
+                          Shat = data$null$se,
+                          alpha=1,
+                          V = V)
+
+resEZ = readRDS('~/Documents/GitHub/mash-application-immune/output/ImmuneEZ.V1.center.mash_model.K10.P5.rds')
+Post = mash_compute_posterior_matrices_weights(resEZ, mash_data)
+resEZ$result = Post$posterior_matrices
+posterior_weights = Post$posterior_weights
+barplot(get_estimated_pi(resEZ), las = 2, cex.names = 0.7)
+```
+
+```{r echo=FALSE}
+Weight = matrix(0,nrow=nrow(resEZ$result$PosteriorMean),26)
+Weight[,1] = posterior_weights[,1]
+
+ind = as.logical(str_count(colnames(posterior_weights), "ED_Flash_1"))
+Weight[,2] = apply(posterior_weights[,ind], 1, sum)
+ind = as.logical(str_count(colnames(posterior_weights), "ED_Flash_2"))
+Weight[,3] = apply(posterior_weights[,ind], 1, sum)
+ind = as.logical(str_count(colnames(posterior_weights), "ED_Flash_3"))
+Weight[,4] = apply(posterior_weights[,ind], 1, sum)
+ind = as.logical(str_count(colnames(posterior_weights), "ED_Flash_4"))
+Weight[,5] = apply(posterior_weights[,ind], 1, sum)
+ind = as.logical(str_count(colnames(posterior_weights), "ED_Flash_5"))
+Weight[,6] = apply(posterior_weights[,ind], 1, sum)
+ind = as.logical(str_count(colnames(posterior_weights), "ED_tFlash"))
+Weight[,7] = apply(posterior_weights[,ind], 1, sum)
+ind = as.logical(str_count(colnames(posterior_weights), "ED_PCA_1"))
+Weight[,8] = apply(posterior_weights[,ind], 1, sum)
+ind = as.logical(str_count(colnames(posterior_weights), "ED_PCA_2"))
+Weight[,9] = apply(posterior_weights[,ind], 1, sum)
+ind = as.logical(str_count(colnames(posterior_weights), "ED_PCA_3"))
+Weight[,10] = apply(posterior_weights[,ind], 1, sum)
+ind = as.logical(str_count(colnames(posterior_weights), "ED_PCA_4"))
+Weight[,11] = apply(posterior_weights[,ind], 1, sum)
+ind = as.logical(str_count(colnames(posterior_weights), "ED_PCA_5"))
+Weight[,12] = apply(posterior_weights[,ind], 1, sum)
+ind = as.logical(str_count(colnames(posterior_weights), "ED_tPCA"))
+Weight[,13] = apply(posterior_weights[,ind], 1, sum)
+ind = as.logical(str_count(colnames(posterior_weights), "ED_XX"))
+Weight[,14] = apply(posterior_weights[,ind], 1, sum)
+ind = as.logical(str_count(colnames(posterior_weights), "identity"))
+Weight[,15] = apply(posterior_weights[,ind], 1, sum)
+ind = as.logical(str_count(colnames(posterior_weights), "ctrl"))
+Weight[,16] = apply(posterior_weights[,ind], 1, sum)
+ind = as.logical(str_count(colnames(posterior_weights), "lps6h"))
+Weight[,17] = apply(posterior_weights[,ind], 1, sum)
+ind = as.logical(str_count(colnames(posterior_weights), "lps90"))
+Weight[,18] = apply(posterior_weights[,ind], 1, sum)
+ind = as.logical(str_count(colnames(posterior_weights), "mdp6h"))
+Weight[,19] = apply(posterior_weights[,ind], 1, sum)
+ind = as.logical(str_count(colnames(posterior_weights), "mdp90"))
+Weight[,20] = apply(posterior_weights[,ind], 1, sum)
+ind = as.logical(str_count(colnames(posterior_weights), "rna6h"))
+Weight[,21] = apply(posterior_weights[,ind], 1, sum)
+ind = as.logical(str_count(colnames(posterior_weights), "rna90"))
+Weight[,22] = apply(posterior_weights[,ind], 1, sum)
+ind = as.logical(str_count(colnames(posterior_weights), "equal_effects"))
+Weight[,23] = apply(posterior_weights[,ind], 1, sum)
+ind = as.logical(str_count(colnames(posterior_weights), "simple_het_1"))
+Weight[,24] = apply(posterior_weights[,ind], 1, sum)
+ind = as.logical(str_count(colnames(posterior_weights), "simple_het_2"))
+Weight[,25] = apply(posterior_weights[,ind], 1, sum)
+ind = as.logical(str_count(colnames(posterior_weights), "simple_het_3"))
+Weight[,26] = apply(posterior_weights[,ind], 1, sum)
+
+colnames(Weight) = c('null','ED_Flash_1', 'ED_Flash_2', 'ED_Flash_3', 'ED_Flash_4', 'ED_Flash_5', 'ED_tFlash', 'ED_PCA_1','ED_PCA_2','ED_PCA_3','ED_PCA_4','ED_PCA_5','ED_tPCA',
+                     'ED_XX','identity','ctrl', 'lps6h','lps90','mdp6h','mdp90',
+                     'rna6h', 'rna90','equal_effects', 'simple_het_1', 'simple_het_2', 'simple_het_3')
+row.names(Weight) = row.names(resEZ$result$PosteriorMean)
+```
+
+```{r}
+Freqe = apply(Weight,1, which.max)
+
+Da = data.frame(id = 1:length(Freqe), Freq = Freqe)
+Da_summary = Da %>% group_by(Freq) %>% summarise(Total=n())
+Da_summary
+x = Da_summary$Total
+names(x) = colnames(Weight)[Da_summary$Freq]
+barplot(x, las = 2, cex.names = 0.7)
+```
+
+The number of genes with high posterior weights on `equal_effects` are small.
+
+```{r}
+common = Reduce(intersect, list(get_significant_results(resEZ, conditions=1),
+                       get_significant_results(resEZ, conditions=2),
+                       get_significant_results(resEZ, conditions=3),
+                       get_significant_results(resEZ, conditions=4),
+                       get_significant_results(resEZ, conditions=5),
+                       get_significant_results(resEZ, conditions=6),
+                       get_significant_results(resEZ, conditions=7)))
+PM.sign = sign(resEZ$result$PosteriorMean[common,])
+all(PM.sign - PM.sign[,1] == 0)
+```
+There is no qualitative interaction cases in the null set.
+
+
+## Posterior on max set
+
+```{r}
+mash_data = set_mash_data(Bhat = data$max$beta,
+                          Shat = data$max$se,
+                          alpha=1,
+                          V = V)
+resEZ = readRDS('~/Documents/GitHub/mash-application-immune/output/ImmuneEZ.V1.center.mash_model.K10.P5.rds')
+Post = mash_compute_posterior_matrices_weights(resEZ, mash_data)
+resEZ$result = Post$posterior_matrices
+posterior_weights = Post$posterior_weights
+```
+
+```{r echo=FALSE}
+Weight = matrix(0,nrow=nrow(resEZ$result$PosteriorMean),26)
+Weight[,1] = posterior_weights[,1]
+
+ind = as.logical(str_count(colnames(posterior_weights), "ED_Flash_1"))
+Weight[,2] = apply(posterior_weights[,ind], 1, sum)
+ind = as.logical(str_count(colnames(posterior_weights), "ED_Flash_2"))
+Weight[,3] = apply(posterior_weights[,ind], 1, sum)
+ind = as.logical(str_count(colnames(posterior_weights), "ED_Flash_3"))
+Weight[,4] = apply(posterior_weights[,ind], 1, sum)
+ind = as.logical(str_count(colnames(posterior_weights), "ED_Flash_4"))
+Weight[,5] = apply(posterior_weights[,ind], 1, sum)
+ind = as.logical(str_count(colnames(posterior_weights), "ED_Flash_5"))
+Weight[,6] = apply(posterior_weights[,ind], 1, sum)
+ind = as.logical(str_count(colnames(posterior_weights), "ED_tFlash"))
+Weight[,7] = apply(posterior_weights[,ind], 1, sum)
+ind = as.logical(str_count(colnames(posterior_weights), "ED_PCA_1"))
+Weight[,8] = apply(posterior_weights[,ind], 1, sum)
+ind = as.logical(str_count(colnames(posterior_weights), "ED_PCA_2"))
+Weight[,9] = apply(posterior_weights[,ind], 1, sum)
+ind = as.logical(str_count(colnames(posterior_weights), "ED_PCA_3"))
+Weight[,10] = apply(posterior_weights[,ind], 1, sum)
+ind = as.logical(str_count(colnames(posterior_weights), "ED_PCA_4"))
+Weight[,11] = apply(posterior_weights[,ind], 1, sum)
+ind = as.logical(str_count(colnames(posterior_weights), "ED_PCA_5"))
+Weight[,12] = apply(posterior_weights[,ind], 1, sum)
+ind = as.logical(str_count(colnames(posterior_weights), "ED_tPCA"))
+Weight[,13] = apply(posterior_weights[,ind], 1, sum)
+ind = as.logical(str_count(colnames(posterior_weights), "ED_XX"))
+Weight[,14] = apply(posterior_weights[,ind], 1, sum)
+ind = as.logical(str_count(colnames(posterior_weights), "identity"))
+Weight[,15] = apply(posterior_weights[,ind], 1, sum)
+ind = as.logical(str_count(colnames(posterior_weights), "ctrl"))
+Weight[,16] = apply(posterior_weights[,ind], 1, sum)
+ind = as.logical(str_count(colnames(posterior_weights), "lps6h"))
+Weight[,17] = apply(posterior_weights[,ind], 1, sum)
+ind = as.logical(str_count(colnames(posterior_weights), "lps90"))
+Weight[,18] = apply(posterior_weights[,ind], 1, sum)
+ind = as.logical(str_count(colnames(posterior_weights), "mdp6h"))
+Weight[,19] = apply(posterior_weights[,ind], 1, sum)
+ind = as.logical(str_count(colnames(posterior_weights), "mdp90"))
+Weight[,20] = apply(posterior_weights[,ind], 1, sum)
+ind = as.logical(str_count(colnames(posterior_weights), "rna6h"))
+Weight[,21] = apply(posterior_weights[,ind], 1, sum)
+ind = as.logical(str_count(colnames(posterior_weights), "rna90"))
+Weight[,22] = apply(posterior_weights[,ind], 1, sum)
+ind = as.logical(str_count(colnames(posterior_weights), "equal_effects"))
+Weight[,23] = apply(posterior_weights[,ind], 1, sum)
+ind = as.logical(str_count(colnames(posterior_weights), "simple_het_1"))
+Weight[,24] = apply(posterior_weights[,ind], 1, sum)
+ind = as.logical(str_count(colnames(posterior_weights), "simple_het_2"))
+Weight[,25] = apply(posterior_weights[,ind], 1, sum)
+ind = as.logical(str_count(colnames(posterior_weights), "simple_het_3"))
+Weight[,26] = apply(posterior_weights[,ind], 1, sum)
+
+colnames(Weight) = c('null','ED_Flash_1', 'ED_Flash_2', 'ED_Flash_3', 'ED_Flash_4', 'ED_Flash_5', 'ED_tFlash', 'ED_PCA_1','ED_PCA_2','ED_PCA_3','ED_PCA_4','ED_PCA_5','ED_tPCA',
+                     'ED_XX','identity','ctrl', 'lps6h','lps90','mdp6h','mdp90',
+                     'rna6h', 'rna90','equal_effects', 'simple_het_1', 'simple_het_2', 'simple_het_3')
+row.names(Weight) = row.names(resEZ$result$PosteriorMean)
+```
+
+```{r}
+Freqe = apply(Weight,1, which.max)
+
+Da = data.frame(id = 1:length(Freqe), Freq = Freqe)
+Da_summary = Da %>% group_by(Freq) %>% summarise(Total=n())
+Da_summary
+x = Da_summary$Total
+names(x) = colnames(Weight)[Da_summary$Freq]
+barplot(x, las = 2, cex.names = 0.7)
+```
+
+There are some genes with high posterior weights on `ED_tFlash` and `identity`.
+
+Posterior weights for the 4 genes have effects in different directions in different conditions, among the eQTLs that significant among all treatments:
+
+```{r}
+common = Reduce(intersect, list(get_significant_results(resEZ, conditions=1),
+                       get_significant_results(resEZ, conditions=2),
+                       get_significant_results(resEZ, conditions=3),
+                       get_significant_results(resEZ, conditions=4),
+                       get_significant_results(resEZ, conditions=5),
+                       get_significant_results(resEZ, conditions=6),
+                       get_significant_results(resEZ, conditions=7)))
+
+par(mfrow=c(2,2))
+for(i in c(3052, 4156, 4303, 4726)){
+  barplot(Weight[common,][i, ], las = 2, cex.names = 0.7, main=row.names(Weight[common])[i])
+}
+par(mfrow=c(1,1))
+```
+
+
+# Session information
+
+<!-- Insert the session information into the document -->
+```{r session-info}
+```

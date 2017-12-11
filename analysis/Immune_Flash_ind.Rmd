@@ -1,0 +1,122 @@
+---
+title: "Immune Flash Covariance individual"
+author: "Yuxin Zou"
+date: 2017-12-09
+output: html_document
+---
+```{r read-chunk, include=FALSE, cache=FALSE}
+knitr::read_chunk("chunks.R")
+```
+
+<!-- Update knitr chunk options -->
+```{r knitr-opts-chunk, include=FALSE}
+```
+
+<!-- Insert the date the file was last updated -->
+```{r last-updated, echo=FALSE, results='asis'}
+```
+
+<!-- Insert the code version (Git commit SHA1) if Git repository exists and R
+ package git2r is installed -->
+```{r code-version, echo=FALSE, results='asis'}
+```
+
+```{r, echo=FALSE}
+# TEMPORARY.
+knitr::opts_chunk$set(eval = TRUE)
+```
+
+# Set up the data
+```{r}
+# Load required packages
+library(mashr); library(ExtremeDeconvolution); library(flashr2)
+```
+```{r}
+# read data
+data = readRDS('../data/ImmuneQTLSummary.4MASH.rds')
+data$max$se = data$max$beta/data$max$z
+data$null$se = data$null$beta / data$null$z
+
+# set parameters
+K = 10
+P = 5
+vhat = 1
+```
+
+We estimate the covariance using column-centered Z scores
+```{r}
+D.center = apply(as.matrix(data$max$z), 2, function(x) x - mean(x))
+mash_data_center = mashr::set_mash_data(Bhat = as.matrix(D.center))
+```
+
+# Generate covariance matrices for each row
+
+From [Flash](Immune_Flash.html), we have $$\tilde{Z} = LF' + E$$
+where F is $7 \times K$, L is $n \times K$, E is $n\times7$.
+
+$$F = \left( \begin{array}{c c c c}
+f_{1} & f_{2} & \cdots & f_{k}
+\end{array}\right)_{p\times K}$$
+For each gene i, $$z_{i} = \sum_{k=1}^{K}l_{ik} f_{k}$$. The covariance matrix $$U_{i} = z_{i}z_{i}'$$ could capture the patterns in the ith sample.
+
+```{r}
+FlashResult = readRDS('~/Documents/GitHub/mash-application-immune/output/Immune.flash2.center.greedy.K10.rds')
+n = nrow(FlashResult$L_flash)
+U = list()
+for(i in 1:n){
+  zi = apply(t(FlashResult$L_flash[i,] * t(FlashResult$F_flash)), 1, sum)
+  U[[i]] = zi %*% t(zi) 
+}
+```
+
+```{r}
+Flash_res = flash_get_lf(FlashResult$f)
+
+U.flash = c(U, mashr::cov_from_factors(t(as.matrix(FlashResult$F_flash[,1:5])), "Flash"), 
+            list("tFlash" = t(Flash_res) %*% Flash_res / nrow(data$max$z)))
+
+# PCA matrices
+U.pca = cov_pca(mash_data_center, P)
+
+# Emperical data matrices
+# Denoised data-driven matrices
+U.dd = c(U.flash, U.pca, list("XX" = t(D.center) %*% D.center / nrow(data$max$z)))
+
+mash_data = mashr::set_mash_data(Bhat = as.matrix(data$max$z))
+
+# failed
+# U.ed = cov_ed(mash_data, U.dd)
+```
+
+The refining step failed. Then we try to use these covariance matrices in `mash`.
+
+Generate canonical covariance matrices:
+
+```{r}
+# Canonical
+U.can = cov_canonical(mash_data) 
+```
+
+```{r}
+if (vhat == 1) {
+  V = cor(data$null$z[which(apply(abs(data$null$z),1, max) < 2),])
+} else {
+  V = diag(ncol(data$null$z))
+}
+
+mash_data = mashr::set_mash_data(Bhat = as.matrix(data$null$beta), 
+                                 Shat = as.matrix(data$null$se), 
+                                 V=as.matrix(V), alpha=1)
+
+# mash_model = mash(mash_data, c(U.can, U.dd), outputlevel = 1)
+```
+
+The method fails again. The size is too large.
+
+`mashr` could not handle the optimization.
+
+# Session information
+
+<!-- Insert the session information into the document -->
+```{r session-info}
+```

@@ -10,10 +10,22 @@ output:
     [Compare EE and EZ](CompareZBeta.html)
   
     The correct model has higher likelihood in simulations.
-    
-Here is the `MASH` analyses:
 
-* Generate the covariance matrices
+* Simulations to compare R vs Rcpp:
+
+    [Compare R vs Rcpp](CompareRRcpp.html)
+    
+    In the simulation, Rcpp is faster then R in posterior calculation. Rcpp and R have similar computational time for likelihood calculation. However, from my experience, Rcpp tends to use shorter time in likelihood computation.
+    
+**Here is the `MASH` analyses**:
+
+* Generate the covariance matrices:
+
+    Firstly, we do the factor analysis on the data using `flash`.
+    
+    [Flash](Immune_Flash.html)
+    
+    The potential covariance structures:
 
     + [EZ covariance matrices](Immune_Cov_EZ.html)
     + [EE covariance matrices](Immune_Cov_EE.html)
@@ -41,9 +53,9 @@ Here is the `MASH` analyses:
     + [EZ V0 model](Immune_Data_Mash_V0_EZ_Result.html)
     + [EE V0 model](Immune_Data_Mash_V0_EE_Result.html)
     
-    The estimated weights for covariance matrices are different for EE and EZ model when V is the estimated correlation. When V is Identity, the estimated weights are similar. But the measurements are correlated due to sample overlap (all based on same 134 individuals), I think it is reasonable to use the estimated correlation from the data (V1).
+    The estimated weights for covariance matrices are different for EE and EZ model when V is the estimated correlation. When V is Identity, the estimated weights are similar. But the measurements are correlated due to sample overlap (all based on same 134 individuals), I think it is more reasonable to use the estimated correlation from the data (V1).
     
-    Among these models, EZ V1 has the highest log likelihood value.
+    Among these models, **EZ V1 has the highest log likelihood value**.
     
     Using Mash with V be the estimated correlation, we found more eQTLs, the number of eQTLs are similar using EE and EZ model. Based on the EZ V1 model, the majority weights for the covariance matrix is on the null matrix (0, no effects, 84.6%). The remaining weights are on the covariance matrix capturing the pattern that the standardized effects are strong positively correlated among all treatments (14.5%). The covariance component $11'$ (5.4%) shows that the standardized effects are similar. The other covariance component has the formate $D11'D$ (9.1%), D is a diagnoal matrix, which means the standardized effects are different in size, but they are strongly correlated ($\beta_{lpa6h} = d *  \beta_{ctrl}$ etc.).
     
@@ -53,9 +65,31 @@ Here is the `MASH` analyses:
     
     However, the number of reQTLs from EE model are much less than EZ model. I don’t know the reason for this.
     
+    
 * If we define the reQTL as **different standardized effects**, the result is [EZ V1 model reQTL](Immune_Data_Mash_V1_EZ_reQTLs.html).
     
     The number of reQTLs are fewer than the original reQTLs.
+    
+* Qualitative Interaction:
+
+    Among the eQTLs that significant among all treatments (4792), there are 4 of them have effects in different directions in different conditions. [Interaction](Immune_Interaction.html)
+    
+    In the null data, there is no qualitative interaction cases. Therefore, the estimated weights for the `mash` model can not capture the qualitative interaction covariance structure.
+    [Posterior Check](Immune_Post_Weight.html)
+
+* Using `flash` results to construct mashr covariance matrices
+
+    + Method 1: $$z_{i} = \sum_{k=1}^{K}l_{ik} f_{k}$$ 
+                $$U_{i} = z_{i}z_{i}'$$
+                [Flash individual](Immune_Flash_ind.html)
+                
+                
+    + Method 2: Suppose the rows of L come from a mixture of multivariate normals with covariances $U_{1}, \cdots, U_{n}$.
+$$l_{i} \sim \sum_{m=1}^{n} \pi_{m} N_{K}(0, U_{m})$$
+
+    The two methods above have a common issue: The number of matrices is too large. The current algorithm cannot handle it. 
+    
+    One potential solution is trying to reduce the number of covariance matrices. There is one covariance matrix for each gene. Some of them could have similar pattern. Using methods like kmeans to cluster the similar covariance matrices.
 
 * The plot of logFC:
     

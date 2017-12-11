@@ -1,0 +1,74 @@
+---
+title: "Immune Interaction"
+author: "Yuxin Zou"
+date: 2017-12-10
+output: html_document
+---
+
+```{r read-chunk, include=FALSE, cache=FALSE}
+knitr::read_chunk("chunks.R")
+```
+
+<!-- Update knitr chunk options -->
+```{r knitr-opts-chunk, include=FALSE}
+```
+
+<!-- Insert the date the file was last updated -->
+```{r last-updated, echo=FALSE, results='asis'}
+```
+
+<!-- Insert the code version (Git commit SHA1) if Git repository exists and R
+ package git2r is installed -->
+```{r code-version, echo=FALSE, results='asis'}
+```
+
+# Setup
+
+```{r}
+library(mashr)
+library(corrplot)
+library(dplyr)
+data = readRDS('../data/ImmuneQTLSummary.4MASH.rds')
+data$max$se = data$max$beta/data$max$z
+data$null$se = data$null$beta / data$null$z
+```
+
+Posterior:
+```{r}
+resEZ = readRDS('../output/ImmuneEZ.V1.center.mash_model.K10.P5.rds')
+resEZ$result = readRDS('../output/ImmuneEZ.V1.center.mash_posterior.K10.P5.rds')
+```
+
+Here is a plot of weights learned.
+
+```{r}
+barplot(get_estimated_pi(resEZ), las = 2, cex.names = 0.7)
+```
+
+# Qualitative interaction
+
+```{r}
+common = Reduce(intersect, list(get_significant_results(resEZ, conditions=1),
+                       get_significant_results(resEZ, conditions=2),
+                       get_significant_results(resEZ, conditions=3),
+                       get_significant_results(resEZ, conditions=4),
+                       get_significant_results(resEZ, conditions=5),
+                       get_significant_results(resEZ, conditions=6),
+                       get_significant_results(resEZ, conditions=7)))
+PM.sign = sign(resEZ$result$PosteriorMean[common,])
+
+inter.ind = which(PM.sign - PM.sign[,1] != 0, arr.ind = TRUE)
+inter.ind[order(inter.ind[,1]),]
+```
+
+Among the eQTLs that significant among all treatments, there are 4 of them have effects in different directions in different conditions.
+
+```{r}
+resEZ$result$PosteriorMean[common,][c(3052, 4156, 4303, 4726),]
+```
+
+# Session information
+
+<!-- Insert the session information into the document -->
+```{r session-info}
+```
