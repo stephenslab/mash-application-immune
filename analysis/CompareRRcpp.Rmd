@@ -100,32 +100,86 @@ compute_likelihood = function(data, Ulist, algorithm.version=c('Rcpp','R')){
 
 ```
 
-```{r warning=FALSE}
+```{r warning=FALSE, eval=FALSE, echo=FALSE}
 res.equal = microbenchmark(compute_likelihood(data.equal, c(U.c.equal, U.e.equal), algorithm.version='Rcpp'), compute_likelihood(data.equal, c(U.c.equal, U.e.equal), algorithm.version='R'), times=100)
-res.equal
 ```
 
-```{r warning=FALSE}
+The time for computing likelihood for data with same se is 
+
+Unit: milliseconds
+
+exper  | min | lq | mean | median | uq | max | neval
+------| -----| ---|------|--------|----|-----|------
+Rcpp |  866.8975 | 943.1800 | 959.2484 | 957.6582 | 972.0100 | 1227.550 | 100
+R | 857.2996 | 945.0444 | 956.5874 | 958.6668 | 971.8977 | 1033.055 | 100
+
+\newline
+
+```{r warning=FALSE, eval=FALSE, echo=FALSE}
 res.diff = microbenchmark(compute_likelihood(data.diff, c(U.c.diff, U.e.diff), algorithm.version='Rcpp'), compute_likelihood(data.diff, c(U.c.diff, U.e.diff), algorithm.version='R'), times=100)
-res.diff
 ```
+
+The time for computing likelihood for data with different se is 
+
+Unit: seconds
+
+exper  | min | lq | mean | median | uq | max | neval
+------| -----| ---|------|--------|----|-----|------
+Rcpp |  9.8438 | 10.0709 | 10.19134 | 10.1834 | 10.2815 | 10.7816 | 100
+R | 9.7953 | 10.0575 | 10.1800 | 10.1376 | 10.2890 | 10.8415 | 100
+
+\newline
+ 
+**Comparisons**:
+
+* Same SE vs Different SE: The computational time for different se data is longer.
+
+* Rcpp vs R: The computational time are similar.
+
+However, from my experience, Rcpp tends to use shorter time in likelihood computation.
 
 # Compare posterior
 
-```{r}
+```{r, echo=FALSE}
 m.equal = mash(data.equal, c(U.c.equal, U.e.equal), outputlevel = 1)
 m.diff = mash(data.diff, c(U.c.diff, U.e.diff), outputlevel = 1)
 ```
 
-```{r}
+```{r eval=FALSE, echo=FALSE}
 res.post.equal = microbenchmark(mash_compute_posterior_matrices(m.equal, data.equal, algorithm.version = 'Rcpp'), mash_compute_posterior_matrices(m.equal, data.equal, algorithm.version = 'R'), times = 100)
-res.post.equal
 ```
 
-```{r}
+The time for computing posterior for data with same se is 
+
+Unit: seconds
+
+exper  | min | lq | mean | median | uq | max | neval
+------| -----| ---|------|--------|----|-----|------
+Rcpp | 1.0243 | 1.1350 | 1.1753 | 1.1719 | 1.2050 | 1.4510 | 100
+R | 1.1636 | 1.2785 | 1.3250 | 1.3143 | 1.3707 | 1.6741 | 100
+
+\newline
+ 
+```{r eval=FALSE, echo=FALSE}
 res.post.diff = microbenchmark(mash_compute_posterior_matrices(m.diff, data.diff, algorithm.version = 'Rcpp'), mash_compute_posterior_matrices(m.diff, data.diff, algorithm.version = 'R'), times = 100)
-res.post.diff
 ```
+
+The time for computing posterior for data with different se is 
+
+Unit: seconds
+
+exper  | min | lq | mean | median | uq | max | neval
+------| -----| ---|------|--------|----|-----|------
+Rcpp | 11.2614 | 11.5210 | 11.6741 | 11.6312 | 11.773 | 12.2547 | 100
+R | 58.1236 | 58.6919 | 59.3430 | 59.0292 | 59.9362 | 61.2729 | 100
+
+\newline
+
+**Comparisons**:
+
+* Same SE vs Different SE: The computational time for different se data is much longer.
+
+* Rcpp vs R: Rcpp is faster.
 
 # Session information
 
