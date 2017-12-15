@@ -322,7 +322,7 @@ div.section {
 <p><strong>Last updated:</strong> 2017-12-14</p>
 <!-- Insert the code version (Git commit SHA1) if Git repository exists and R
  package git2r is installed -->
-<p><strong>Code version:</strong> 3899823</p>
+<p><strong>Code version:</strong> be04a5e</p>
 <div id="set-up" class="section level1">
 <h1>Set up</h1>
 <pre class="r"><code>library(microbenchmark)
@@ -478,20 +478,6 @@ source(&#39;~/Documents/GitHub/mashr-stephens/R/posterior_lowmem.R&#39;)</code><
 </div>
 <div id="compare-posterior" class="section level1">
 <h1>Compare posterior</h1>
-<pre><code> - Computing 30000 x 273 likelihood matrix.
- - Likelihood calculations took 1.20 seconds.
- - Fitting model with 273 mixture components.
- - Model fitting took 11.63 seconds.</code></pre>
-<pre><code> - Computing 30000 x 353 likelihood matrix.
- - Likelihood calculations took 9.64 seconds.
- - Fitting model with 353 mixture components.</code></pre>
-<pre><code>Warning in REBayes::KWDual(A, rep(1, k), normalize(w), control = control): estimated mixing distribution has some negative values:
-               consider reducing rtol</code></pre>
-<pre><code>Warning in mixIP(matrix_lik = structure(c(0.469590642446271,
-0.833226442011469, : Optimization step yields mixture weights that are
-either too small, or negative; weights have been corrected and renormalized
-after the optimization.</code></pre>
-<pre><code> - Model fitting took 13.93 seconds.</code></pre>
 <p>The time for computing posterior for data with same se is</p>
 <p>Unit: seconds</p>
 <table>
