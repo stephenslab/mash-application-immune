@@ -140,9 +140,9 @@ However, from my experience, Rcpp tends to use shorter time in likelihood comput
 
 # Compare posterior
 
-```{r, echo=FALSE}
-m.equal = mash(data.equal, c(U.c.equal, U.e.equal), outputlevel = 1)
-m.diff = mash(data.diff, c(U.c.diff, U.e.diff), outputlevel = 1)
+```{r, echo=FALSE, warning=FALSE}
+m.equal = mash(data.equal, c(U.c.equal, U.e.equal), outputlevel = 1, verbose = FALSE)
+m.diff = mash(data.diff, c(U.c.diff, U.e.diff), outputlevel = 1, verbose = FALSE)
 ```
 
 ```{r eval=FALSE, echo=FALSE}
