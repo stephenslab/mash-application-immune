@@ -40,7 +40,7 @@ if (window.hljs) {
   hljs.configure({languages: []});
   hljs.initHighlightingOnLoad();
   if (document.readyState && document.readyState === "complete") {
-    window.setTimeout(function() { hljs.initHighlightingOnLoad(); }, 0);
+    window.setTimeout(function() { hljs.initHighlighting(); }, 0);
   }
 }
 </script>
@@ -319,10 +319,10 @@ div.section {
 
 <!-- Update knitr chunk options -->
 <!-- Insert the date the file was last updated -->
-<p><strong>Last updated:</strong> 2017-12-10</p>
+<p><strong>Last updated:</strong> 2017-12-14</p>
 <!-- Insert the code version (Git commit SHA1) if Git repository exists and R
  package git2r is installed -->
-<p><strong>Code version:</strong> b832746</p>
+<p><strong>Code version:</strong> 3899823</p>
 <div id="set-up" class="section level1">
 <h1>Set up</h1>
 <pre class="r"><code>library(microbenchmark)
@@ -391,35 +391,99 @@ source(&#39;~/Documents/GitHub/mashr-stephens/R/posterior_lowmem.R&#39;)</code><
   lm &lt;- calc_relative_lik_matrix(data, xUlist, algorithm.version)
   return(lm)
 }</code></pre>
-<pre class="r"><code>res.equal = microbenchmark(compute_likelihood(data.equal, c(U.c.equal, U.e.equal), algorithm.version=&#39;Rcpp&#39;), compute_likelihood(data.equal, c(U.c.equal, U.e.equal), algorithm.version=&#39;R&#39;), times=100)
-res.equal</code></pre>
-<pre><code>Unit: milliseconds
-                                                                                expr
- compute_likelihood(data.equal, c(U.c.equal, U.e.equal), algorithm.version = &quot;Rcpp&quot;)
-    compute_likelihood(data.equal, c(U.c.equal, U.e.equal), algorithm.version = &quot;R&quot;)
-      min       lq     mean   median       uq      max neval
- 866.8975 943.1800 959.2484 957.6582 972.0100 1227.550   100
- 857.2996 945.0444 956.5874 958.6668 971.8977 1033.055   100</code></pre>
-<pre class="r"><code>res.diff = microbenchmark(compute_likelihood(data.diff, c(U.c.diff, U.e.diff), algorithm.version=&#39;Rcpp&#39;), compute_likelihood(data.diff, c(U.c.diff, U.e.diff), algorithm.version=&#39;R&#39;), times=100)
-res.diff</code></pre>
-<pre><code>Unit: seconds
-                                                                             expr
- compute_likelihood(data.diff, c(U.c.diff, U.e.diff), algorithm.version = &quot;Rcpp&quot;)
-    compute_likelihood(data.diff, c(U.c.diff, U.e.diff), algorithm.version = &quot;R&quot;)
-      min       lq     mean   median       uq      max neval
- 9.843775 10.07093 10.19134 10.18336 10.28145 10.78164   100
- 9.795318 10.05749 10.18000 10.13756 10.28895 10.84154   100</code></pre>
+<p>The time for computing likelihood for data with same se is</p>
+<p>Unit: milliseconds</p>
+<table>
+<thead>
+<tr class="header">
+<th>exper</th>
+<th>min</th>
+<th>lq</th>
+<th>mean</th>
+<th>median</th>
+<th>uq</th>
+<th>max</th>
+<th>neval</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>Rcpp</td>
+<td>866.8975</td>
+<td>943.1800</td>
+<td>959.2484</td>
+<td>957.6582</td>
+<td>972.0100</td>
+<td>1227.550</td>
+<td>100</td>
+</tr>
+<tr class="even">
+<td>R</td>
+<td>857.2996</td>
+<td>945.0444</td>
+<td>956.5874</td>
+<td>958.6668</td>
+<td>971.8977</td>
+<td>1033.055</td>
+<td>100</td>
+</tr>
+</tbody>
+</table>
+
+<p>The time for computing likelihood for data with different se is</p>
+<p>Unit: seconds</p>
+<table>
+<thead>
+<tr class="header">
+<th>exper</th>
+<th>min</th>
+<th>lq</th>
+<th>mean</th>
+<th>median</th>
+<th>uq</th>
+<th>max</th>
+<th>neval</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>Rcpp</td>
+<td>9.8438</td>
+<td>10.0709</td>
+<td>10.19134</td>
+<td>10.1834</td>
+<td>10.2815</td>
+<td>10.7816</td>
+<td>100</td>
+</tr>
+<tr class="even">
+<td>R</td>
+<td>9.7953</td>
+<td>10.0575</td>
+<td>10.1800</td>
+<td>10.1376</td>
+<td>10.2890</td>
+<td>10.8415</td>
+<td>100</td>
+</tr>
+</tbody>
+</table>
+
+<p><strong>Comparisons</strong>:</p>
+<ul>
+<li><p>Same SE vs Different SE: The computational time for different se data is longer.</p></li>
+<li><p>Rcpp vs R: The computational time are similar.</p></li>
+</ul>
+<p>However, from my experience, Rcpp tends to use shorter time in likelihood computation.</p>
 </div>
 <div id="compare-posterior" class="section level1">
 <h1>Compare posterior</h1>
-<pre class="r"><code>m.equal = mash(data.equal, c(U.c.equal, U.e.equal), outputlevel = 1)</code></pre>
 <pre><code> - Computing 30000 x 273 likelihood matrix.
- - Likelihood calculations took 0.77 seconds.
+ - Likelihood calculations took 1.20 seconds.
  - Fitting model with 273 mixture components.
- - Model fitting took 12.08 seconds.</code></pre>
-<pre class="r"><code>m.diff = mash(data.diff, c(U.c.diff, U.e.diff), outputlevel = 1)</code></pre>
+ - Model fitting took 11.63 seconds.</code></pre>
 <pre><code> - Computing 30000 x 353 likelihood matrix.
- - Likelihood calculations took 10.29 seconds.
+ - Likelihood calculations took 9.64 seconds.
  - Fitting model with 353 mixture components.</code></pre>
 <pre><code>Warning in REBayes::KWDual(A, rep(1, k), normalize(w), control = control): estimated mixing distribution has some negative values:
                consider reducing rtol</code></pre>
@@ -427,25 +491,90 @@ res.diff</code></pre>
 0.833226442011469, : Optimization step yields mixture weights that are
 either too small, or negative; weights have been corrected and renormalized
 after the optimization.</code></pre>
-<pre><code> - Model fitting took 14.30 seconds.</code></pre>
-<pre class="r"><code>res.post.equal = microbenchmark(mash_compute_posterior_matrices(m.equal, data.equal, algorithm.version = &#39;Rcpp&#39;), mash_compute_posterior_matrices(m.equal, data.equal, algorithm.version = &#39;R&#39;), times = 100)
-res.post.equal</code></pre>
-<pre><code>Unit: seconds
-                                                                             expr
- mash_compute_posterior_matrices(m.equal, data.equal, algorithm.version = &quot;Rcpp&quot;)
-    mash_compute_posterior_matrices(m.equal, data.equal, algorithm.version = &quot;R&quot;)
-      min       lq     mean   median       uq      max neval
- 1.024335 1.135033 1.175294 1.171930 1.204978 1.450982   100
- 1.163553 1.278453 1.325020 1.314301 1.370670 1.674098   100</code></pre>
-<pre class="r"><code>res.post.diff = microbenchmark(mash_compute_posterior_matrices(m.diff, data.diff, algorithm.version = &#39;Rcpp&#39;), mash_compute_posterior_matrices(m.diff, data.diff, algorithm.version = &#39;R&#39;), times = 100)
-res.post.diff</code></pre>
-<pre><code>Unit: seconds
-                                                                           expr
- mash_compute_posterior_matrices(m.diff, data.diff, algorithm.version = &quot;Rcpp&quot;)
-    mash_compute_posterior_matrices(m.diff, data.diff, algorithm.version = &quot;R&quot;)
-      min       lq    mean   median       uq      max neval
- 11.26136 11.52095 11.6741 11.63118 11.77313 12.25469   100
- 58.12360 58.69190 59.3430 59.02923 59.93624 61.27292   100</code></pre>
+<pre><code> - Model fitting took 13.93 seconds.</code></pre>
+<p>The time for computing posterior for data with same se is</p>
+<p>Unit: seconds</p>
+<table>
+<thead>
+<tr class="header">
+<th>exper</th>
+<th>min</th>
+<th>lq</th>
+<th>mean</th>
+<th>median</th>
+<th>uq</th>
+<th>max</th>
+<th>neval</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>Rcpp</td>
+<td>1.0243</td>
+<td>1.1350</td>
+<td>1.1753</td>
+<td>1.1719</td>
+<td>1.2050</td>
+<td>1.4510</td>
+<td>100</td>
+</tr>
+<tr class="even">
+<td>R</td>
+<td>1.1636</td>
+<td>1.2785</td>
+<td>1.3250</td>
+<td>1.3143</td>
+<td>1.3707</td>
+<td>1.6741</td>
+<td>100</td>
+</tr>
+</tbody>
+</table>
+
+<p>The time for computing posterior for data with different se is</p>
+<p>Unit: seconds</p>
+<table>
+<thead>
+<tr class="header">
+<th>exper</th>
+<th>min</th>
+<th>lq</th>
+<th>mean</th>
+<th>median</th>
+<th>uq</th>
+<th>max</th>
+<th>neval</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>Rcpp</td>
+<td>11.2614</td>
+<td>11.5210</td>
+<td>11.6741</td>
+<td>11.6312</td>
+<td>11.773</td>
+<td>12.2547</td>
+<td>100</td>
+</tr>
+<tr class="even">
+<td>R</td>
+<td>58.1236</td>
+<td>58.6919</td>
+<td>59.3430</td>
+<td>59.0292</td>
+<td>59.9362</td>
+<td>61.2729</td>
+<td>100</td>
+</tr>
+</tbody>
+</table>
+
+<p><strong>Comparisons</strong>:</p>
+<ul>
+<li><p>Same SE vs Different SE: The computational time for different se data is much longer.</p></li>
+<li><p>Rcpp vs R: Rcpp is faster.</p></li>
+</ul>
 </div>
 <div id="session-information" class="section level1">
 <h1>Session information</h1>
@@ -472,21 +601,21 @@ other attached packages:
 loaded via a namespace (and not attached):
  [1] Rcpp_0.12.14             compiler_3.4.3          
  [3] git2r_0.19.0             plyr_1.8.4              
- [5] iterators_1.0.8          tools_3.4.3             
+ [5] iterators_1.0.9          tools_3.4.3             
  [7] digest_0.6.12            evaluate_0.10.1         
  [9] tibble_1.3.4             gtable_0.2.0            
-[11] lattice_0.20-35          rlang_0.1.2             
-[13] Matrix_1.2-12            foreach_1.4.3           
-[15] yaml_2.1.14              parallel_3.4.3          
+[11] lattice_0.20-35          rlang_0.1.4             
+[13] Matrix_1.2-12            foreach_1.4.4           
+[15] yaml_2.1.16              parallel_3.4.3          
 [17] mvtnorm_1.0-6            stringr_1.2.0           
-[19] knitr_1.17               REBayes_0.85            
+[19] knitr_1.17               REBayes_1.1             
 [21] rprojroot_1.2            grid_3.4.3              
-[23] rmarkdown_1.7            rmeta_2.16              
+[23] rmarkdown_1.8            rmeta_2.16              
 [25] ggplot2_2.2.1            magrittr_1.5            
-[27] backports_1.1.1          scales_0.5.0            
+[27] backports_1.1.2          scales_0.5.0            
 [29] codetools_0.2-15         htmltools_0.3.6         
 [31] MASS_7.3-47              colorspace_1.3-2        
-[33] stringi_1.1.5            Rmosek_8.0.69           
+[33] stringi_1.1.6            Rmosek_8.0.69           
 [35] lazyeval_0.2.1           munsell_0.4.3           
 [37] doParallel_1.0.11        pscl_1.5.2              
 [39] truncnorm_1.0-7          SQUAREM_2017.10-1       
