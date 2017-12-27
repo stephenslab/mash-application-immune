@@ -40,7 +40,7 @@ if (window.hljs) {
   hljs.configure({languages: []});
   hljs.initHighlightingOnLoad();
   if (document.readyState && document.readyState === "complete") {
-    window.setTimeout(function() { hljs.initHighlightingOnLoad(); }, 0);
+    window.setTimeout(function() { hljs.initHighlighting(); }, 0);
   }
 }
 </script>
@@ -319,10 +319,10 @@ div.section {
 
 <!-- Update knitr chunk options -->
 <!-- Insert the date the file was last updated -->
-<p><strong>Last updated:</strong> 2017-12-10</p>
+<p><strong>Last updated:</strong> 2017-12-26</p>
 <!-- Insert the code version (Git commit SHA1) if Git repository exists and R
  package git2r is installed -->
-<p><strong>Code version:</strong> bc47a58</p>
+<p><strong>Code version:</strong> 1e53e98</p>
 <div id="case-1-2-dim" class="section level1">
 <h1>Case 1: 2 dim</h1>
 <ul>
@@ -349,13 +349,26 @@ fg = flash_add_greedy(data,10, var_type = &#39;constant&#39;)</code></pre>
 <pre><code>fitting factor/loading 1</code></pre>
 <pre><code>fitting factor/loading 2</code></pre>
 <pre><code>fitting factor/loading 3</code></pre>
-<pre class="r"><code>fb = flash_backfit(data,fg)</code></pre>
-<p>I mute the warnings here.</p>
+<pre class="r"><code>fb = flash_backfit(data,fg)
+flash_get_F(data,fb)</code></pre>
+<pre><code>[1] -6172.173</code></pre>
+<p>The warnings are muted here.</p>
 <pre class="r"><code>par(mfrow=c(1,2))
 barplot(flash_get_f(fb,1), main=&#39;loading 1&#39;)
 barplot(flash_get_f(fb,2), main=&#39;loading 2&#39;)</code></pre>
 <p><img src="figure/FlashSim.Rmd/unnamed-chunk-3-1.png" width="672" style="display: block; margin: auto;" /></p>
 <pre class="r"><code>par(mfrow=c(1,1))</code></pre>
+<p>The algorithm converges to a local optimum.</p>
+<p>If we initialize the flash with 3 fixed factors</p>
+<pre class="r"><code>lfixf = flash_add_fixed_f(data,FF=cbind(c(1,1),c(1,0),c(0,1)))</code></pre>
+<p>The loadings found here are all 0.</p>
+<p>Fit the flash model to data</p>
+<pre class="r"><code>fixfb = flash_backfit(data,lfixf)</code></pre>
+<pre><code>Warning in flash_backfit(data, lfixf): fit got worse this iteration by
+5.6260053561582</code></pre>
+<pre class="r"><code>flash_get_F(data,fixfb)</code></pre>
+<pre><code>[1] -6933.503</code></pre>
+<p>The value of objective function becomes worse.</p>
 </div>
 <div id="case-2-5-conditions" class="section level1">
 <h1>Case 2: 5 conditions</h1>
@@ -417,7 +430,9 @@ fg = flash_add_greedy(data, Kmax=10, var_type=&#39;constant&#39;)</code></pre>
 <pre><code>fitting factor/loading 5</code></pre>
 <pre><code>fitting factor/loading 6</code></pre>
 <pre><code>fitting factor/loading 7</code></pre>
-<pre class="r"><code>fb = flash_backfit(data,fg)</code></pre>
+<pre class="r"><code>fb = flash_backfit(data,fg)
+flash_get_F(data,fb)</code></pre>
+<pre><code>[1] 50154.63</code></pre>
 <pre class="r"><code>layout(matrix(c(1,2,3,4,5,6), 3, 2, byrow = TRUE))
 barplot(flash_get_f(fb, 1), main=&#39;loading 1&#39;)
 barplot(flash_get_f(fb, 2), main=&#39;loading 2&#39;)
@@ -425,7 +440,17 @@ barplot(flash_get_f(fb, 3), main=&#39;loading 3&#39;)
 barplot(flash_get_f(fb, 4), main=&#39;loading 4&#39;)
 barplot(flash_get_f(fb, 5), main=&#39;loading 5&#39;)
 barplot(flash_get_f(fb, 6), main=&#39;loading 6&#39;)</code></pre>
-<p><img src="figure/FlashSim.Rmd/unnamed-chunk-7-1.png" width="672" style="display: block; margin: auto;" /></p>
+<p><img src="figure/FlashSim.Rmd/unnamed-chunk-9-1.png" width="672" style="display: block; margin: auto;" /></p>
+<p>If we initialize the flash with 8 fixed factors</p>
+<pre class="r"><code>lfixf = flash_add_fixed_f(data,FF=cbind(c(1,1,0,0,0),c(0,0,1,1,1),c(1,1,1,1,1),
+                                        c(1,0,0,0,0),c(0,1,0,0,0),c(0,0,1,0,0),
+                                        c(0,0,0,1,0),c(0,0,0,0,1)))
+fixfb = flash_backfit(data,lfixf)</code></pre>
+<pre><code>Warning in flash_backfit(data, lfixf): fit got worse this iteration by
+57.5252646545414</code></pre>
+<pre class="r"><code>flash_get_F(data,fixfb)</code></pre>
+<pre><code>[1] 71139.54</code></pre>
+<p>The value of objective function becomes higher.</p>
 </div>
 </div>
 <div id="session-information" class="section level1">
@@ -447,20 +472,20 @@ attached base packages:
 [1] stats     graphics  grDevices utils     datasets  methods   base     
 
 other attached packages:
-[1] flashr2_0.2-3 MASS_7.3-47  
+[1] flashr2_0.3-3 MASS_7.3-47  
 
 loaded via a namespace (and not attached):
- [1] Rcpp_0.12.14      compiler_3.4.3    git2r_0.19.0     
- [4] plyr_1.8.4        iterators_1.0.8   tools_3.4.3      
- [7] digest_0.6.12     evaluate_0.10.1   tibble_1.3.4     
-[10] gtable_0.2.0      lattice_0.20-35   rlang_0.1.2      
-[13] Matrix_1.2-12     foreach_1.4.3     yaml_2.1.14      
+ [1] Rcpp_0.12.14      compiler_3.4.3    git2r_0.20.0     
+ [4] plyr_1.8.4        iterators_1.0.9   tools_3.4.3      
+ [7] digest_0.6.13     evaluate_0.10.1   tibble_1.3.4     
+[10] gtable_0.2.0      lattice_0.20-35   rlang_0.1.6      
+[13] Matrix_1.2-12     foreach_1.4.4     yaml_2.1.16      
 [16] parallel_3.4.3    stringr_1.2.0     knitr_1.17       
-[19] REBayes_0.85      rprojroot_1.2     grid_3.4.3       
-[22] rmarkdown_1.7     ggplot2_2.2.1     ashr_2.1-27      
-[25] magrittr_1.5      backports_1.1.1   scales_0.5.0     
+[19] REBayes_1.2       rprojroot_1.2     grid_3.4.3       
+[22] rmarkdown_1.8     ggplot2_2.2.1     ashr_2.1-27      
+[25] magrittr_1.5      backports_1.1.2   scales_0.5.0     
 [28] codetools_0.2-15  htmltools_0.3.6   assertthat_0.2.0 
-[31] softImpute_1.4    colorspace_1.3-2  stringi_1.1.5    
+[31] softImpute_1.4    colorspace_1.3-2  stringi_1.1.6    
 [34] Rmosek_8.0.69     lazyeval_0.2.1    munsell_0.4.3    
 [37] doParallel_1.0.11 pscl_1.5.2        truncnorm_1.0-7  
 [40] SQUAREM_2017.10-1</code></pre>
