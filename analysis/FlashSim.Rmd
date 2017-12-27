@@ -63,11 +63,18 @@ The algorithm converges to a local optimum.
 If we initialize the flash with 3 fixed factors
 ```{r}
 lfixf = flash_add_fixed_f(data,FF=cbind(c(1,1),c(1,0),c(0,1)))
+```
+
+The loadings found here are all 0.
+
+Fit the flash model to data
+
+```{r}
 fixfb = flash_backfit(data,lfixf)
 flash_get_F(data,fixfb)
 ```
 
-After fit the flash model to the data, the value of objective function becomes worse. 
+The value of objective function becomes worse. 
 
 # Case 2: 5 conditions
 
@@ -144,12 +151,16 @@ barplot(flash_get_f(fb, 5), main='loading 5')
 barplot(flash_get_f(fb, 6), main='loading 6')
 ```
 
-If we initialize the flash with 3 fixed factors
+If we initialize the flash with 8 fixed factors
 ```{r}
-ffixf = flash_add_fixed_f(data,FF=cbind(c(1,1,0,0,0),c(1,-1,0,0,0),
-                                        c(0,0,-1,0,0),c(0,0,0,1,0),c(1,1,1,1,1), c(0,0,0,0,-1)))
-flash_get_F(data,ffixf)
+lfixf = flash_add_fixed_f(data,FF=cbind(c(1,1,0,0,0),c(0,0,1,1,1),c(1,1,1,1,1),
+                                        c(1,0,0,0,0),c(0,1,0,0,0),c(0,0,1,0,0),
+                                        c(0,0,0,1,0),c(0,0,0,0,1)))
+fixfb = flash_backfit(data,lfixf)
+flash_get_F(data,fixfb)
 ```
+
+The value of objective function becomes higher.
 
 # Session information
 

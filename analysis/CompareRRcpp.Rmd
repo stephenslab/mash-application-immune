@@ -37,7 +37,7 @@ simdata.equal2 = simple_sims2(5000, 0.5)
 simdata.equal = list(B = rbind(simdata.equal1$B, simdata.equal2$B), 
                      Bhat = rbind(simdata.equal1$Bhat, simdata.equal2$Bhat), 
                      Shat = rbind(simdata.equal1$Shat, simdata.equal2$Shat))
-# data contains 4000 rows
+# data contains 20000 rows
 data.equal = set_mash_data(simdata.equal$Bhat, simdata.equal$Shat, alpha=0)
 U.c.equal = cov_canonical(data.equal)
 # data driven
@@ -45,7 +45,7 @@ m.1by1 = mash_1by1(data.equal)
 strong = get_significant_results(m.1by1,0.05)
 # center Z
 data.equal.Z = simdata.equal$Bhat/simdata.equal$Shat
-data.center = set_mash_data(Bhat = apply(as.matrix(data.equal.Z), 2, function(x) x - mean(x)))
+data.center = set_mash_data(Bhat = apply(as.matrix(data.equal.Z), 2, function(x) x - mean(x)), alpha = 0)
 U.pca = cov_pca(data.center,5,strong)
 U.e.equal = cov_ed(data.equal, U.pca, strong)
 ```
@@ -65,7 +65,7 @@ m.1by1 = mash_1by1(data.diff)
 strong = get_significant_results(m.1by1,0.05)
 # center Z
 data.diff.Z = simdata.diff$Bhat/simdata.diff$Shat
-data.center = set_mash_data(Bhat = apply(as.matrix(data.diff.Z), 2, function(x) x - mean(x)))
+data.center = set_mash_data(Bhat = apply(as.matrix(data.diff.Z), 2, function(x) x - mean(x)), alpha = 0)
 U.pca = cov_pca(data.center,5,strong)
 U.e.diff = cov_ed(data.diff, U.pca, strong)
 ```
