@@ -1,0 +1,102 @@
+---
+title: "Immune_Data_Mash_V1_EZ_loading"
+author: "Yuxin Zou"
+date: 2018-01-04
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+```{r read-chunk, include=FALSE, cache=FALSE}
+knitr::read_chunk("chunks.R")
+```
+
+<!-- Update knitr chunk options -->
+```{r knitr-opts-chunk, include=FALSE}
+```
+
+<!-- Insert the date the file was last updated -->
+```{r last-updated, echo=FALSE, results='asis'}
+```
+
+<!-- Insert the code version (Git commit SHA1) if Git repository exists and R
+ package git2r is installed -->
+```{r code-version, echo=FALSE, results='asis'}
+```
+
+```{r, echo=FALSE}
+# TEMPORARY.
+knitr::opts_chunk$set(eval = TRUE)
+```
+
+# Set up the data
+
+```{r}
+# Load required packages
+library(mashr); library(ExtremeDeconvolution); library(flashr2)
+```
+```{r}
+# read data
+data = readRDS('../data/ImmuneQTLSummary.4MASH.rds')
+data$max$se = data$max$beta/data$max$z
+data$null$se = data$null$beta / data$null$z
+
+# set parameters
+K = 10
+P = 5
+vhat = 1
+```
+
+# Fit `mash` model
+
+Using a random null set, the cell below computes the weights for input covariance matrices ([Covariance matrices plus loading](Immune_Cov_EZ_Load.html)) in MASH mixture. The output contains matrix of log-likelihoods as well as weights learned from the hierarchical model.
+
+```{r}
+if (vhat == 1) {
+  V = cor(data$null$z[which(apply(abs(data$null$z),1, max) < 2),])
+} else {
+  V = diag(ncol(data$null$z))
+}
+
+mash_data = mashr::set_mash_data(Bhat = as.matrix(data$null$beta), 
+                                 Shat = as.matrix(data$null$se), 
+                                 V=as.matrix(V), alpha=1)
+
+Ulist = readRDS('../output/ImmuneEZ.U.center.xtx.Load.K10.P5.rds')$Ulist
+
+saveRDS(mashr::mash(mash_data, Ulist, outputlevel = 1), 
+        paste0('../output/ImmuneEZ.V',vhat,'.center.mash_model.Load.K',K,'.P',P,'.rds'))
+
+```
+
+# Posterior inference
+Applying hyperparameters learned from the training (the null) set to the test (the top eQTL) set, the cell below computes posterior quantities.
+
+```{r}
+U.m = readRDS('../output/ImmuneEZ.V1.center.mash_model.Load.K10.P5.rds')
+
+if (vhat == 1) {
+  V = cor(data$null$z[which(apply(abs(data$null$z),1, max) < 2),])
+} else {
+  V = diag(ncol(data$null$z))
+}
+
+mash_data = mashr::set_mash_data(Bhat = as.matrix(data$max$beta), 
+                                 Shat = as.matrix(data$max$se), 
+                                 V = as.matrix(V), 
+                                 alpha = 1)
+```
+
+```{r}
+saveRDS(mash_compute_posterior_matrices(U.m, mash_data), 
+        paste0('../output/ImmuneEZ.V',vhat,'.center.mash_posterior.Load.K',K,'.P',P,'.rds'))
+
+```
+
+# Session information
+
+<!-- Insert the session information into the document -->
+```{r session-info}
+```

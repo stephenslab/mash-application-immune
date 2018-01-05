@@ -23,17 +23,15 @@ output:
     
     When the `var_type='constant'`, the `flash` results in 6 factors, whereas the data has 5 conditions.
     
-    Some factors contain +ve in some conditions and -ve in others. These are not separate into 2 factors.
+    Some factors contain +ve in some conditions and -ve in others. These are not separated into 2 factors.
 
 **Here is the `MASH` analyses**:
 
 * Generate the covariance matrices:
 
-    Firstly, we do the factor analysis on the data using `flash`.
+    Firstly, we do the factor analysis on the data using `flash`. [Flash](Immune_Flash.html)
     
-    [Flash](Immune_Flash.html)
-    
-    The potential covariance structures:
+    Then, we generate the potential covariance structures:
 
     + [EZ covariance matrices](Immune_Cov_EZ.html)
     + [EE covariance matrices](Immune_Cov_EE.html)
@@ -65,14 +63,13 @@ output:
     
     Among these models, **EZ V1 has the highest log likelihood value**.
     
-    Using Mash with V be the estimated correlation, we found more eQTLs, the number of eQTLs are similar using EE and EZ model. Based on the EZ V1 model, the majority weights for the covariance matrix is on the null matrix (0, no effects, 84.6%). The remaining weights are on the covariance matrix capturing the pattern that the standardized effects are strong positively correlated among all treatments (14.5%). The covariance component $11'$ (5.4%) shows that the standardized effects are similar. The other covariance component has the formate $D11'D$ (9.1%), D is a diagnoal matrix, which means the standardized effects are different in size, but they are strongly correlated ($\beta_{lpa6h} = d *  \beta_{ctrl}$ etc.).
+    Using Mash with V be the estimated correlation, we found more eQTLs, the number of eQTLs are similar using EE and EZ model. Based on the EZ V1 model, the majority weights for the covariance matrix is on the null matrix (0, no effects, 84.6%). The remaining weights are on the covariance matrix capturing the pattern that the standardized effects are strong positively correlated among all treatments (14.5%). The covariance component $11'$ (5.4%) shows that the standardized effects are similar. The other covariance component has the format $D11'D$ (9.1%), D is a diagnoal matrix, which means the standardized effects are different in size, but they are strongly correlated ($\beta_{lpa6h} = d *  \beta_{ctrl}$ etc.).
     
-    The mash fit favors component where **standardized** effects are very similar, which does not mean the raw effects are similar. The similarity of standardized effects could imply the similarity of raw effects if and only if the standard errors of the estimated effects are all similar. The derivation is in [Mash Posterior under non-equal $s_{jr}$](PostNONsd.html). In this dataset, the $s_{jr}$ are not similar aross treatments. The `equal effect` covariance structure (correlation) is for the **standardized** effects. The raw effects have the same correlation structure, but with different covariance, different mean.
+    The mash fit favors component where **standardized** effects are very similar, which does not mean the raw effects are similar. The similarity of standardized effects could imply the similarity of raw effects if and only if the standard errors of the estimated effects are all similar. The derivation is in [Mash Posterior under non-equal $s_{jr}$](PostNONsd.html). In this dataset, the $s_{jr}$ are not similar across treatments. The `equal effect` covariance structure (correlation) is for the **standardized** effects. The raw effects have the same correlation structure, but with different covariance, different mean.
     
     We found a lot reQTLs (raw effect), treatment specific reQTLs and time point specific reQTLs using the linear transformation. We found more reQTLs, treatment specific reQTLs and time point specific reQTLs than the paper’s result.
     
     However, the number of reQTLs from EE model are much less than EZ model. I don’t know the reason for this.
-    
     
 * If we define the reQTL as **different standardized effects**, the result is [EZ V1 model reQTL](Immune_Data_Mash_V1_EZ_reQTLs.html).
     
@@ -91,13 +88,21 @@ output:
                 $$U_{i} = z_{i}z_{i}'$$
                 [Flash individual](Immune_Flash_ind.html)
                 
+        The number of matrices is too large. The current algorithm cannot handle it. The matrices $U_{i}$ for two genes will be similar if they have similar $z_{i}$ vectors. So we try to cluster $z_{i}$ vectors. [Flash individual reduce](Immune_Flash_ind_red.html)
+                
+        There is only one cluster identified here. 
                 
     + Method 2: Suppose the rows of L come from a mixture of multivariate normals with covariances $U_{1}, \cdots, U_{n}$.
 $$l_{i} \sim \sum_{m=1}^{n} \pi_{m} N_{K}(0, U_{m})$$
-
-    The two methods above have a common issue: The number of matrices is too large. The current algorithm cannot handle it. 
+        The detail of this method is in [Flash L MMVN](Immune_Flash_MVN_red.html).
+                
+        The `mash` model including these covariance matrices:
     
-    One potential solution is trying to reduce the number of covariance matrices. There is one covariance matrix for each gene. Some of them could have similar pattern. Using methods like kmeans to cluster the similar covariance matrices.
+        [EZ covariance matrices + loading](Immune_Cov_EZ_Load.html)
+    
+        [EZ V1 Load model](Immune_Data_Mash_V1_EZ_loading.html)
+    
+        [EZ V1 Load model result](Immune_Data_Mash_V1_EZ_Load_Result.html)
 
 * The plot of logFC:
     

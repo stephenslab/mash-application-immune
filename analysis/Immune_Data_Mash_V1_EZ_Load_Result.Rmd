@@ -1,0 +1,188 @@
+---
+title: "Immune Data Mash Analysis EZ V1 Loading Results"
+author: "Yuxin Zou"
+date: 2018-01-04
+output: html_document
+---
+
+```{r read-chunk, include=FALSE, cache=FALSE}
+knitr::read_chunk("chunks.R")
+knitr::read_chunk('../code/subset.data.R')
+```
+
+<!-- Update knitr chunk options -->
+```{r knitr-opts-chunk, include=FALSE}
+```
+
+<!-- Insert the date the file was last updated -->
+```{r last-updated, echo=FALSE, results='asis'}
+```
+
+<!-- Insert the code version (Git commit SHA1) if Git repository exists and R
+ package git2r is installed -->
+```{r code-version, echo=FALSE, results='asis'}
+```
+
+# Set up data
+```{r}
+library(lattice)
+library(ggplot2)
+library(colorRamps)
+library(mashr)
+library(corrplot)
+data = readRDS('../data/ImmuneQTLSummary.4MASH.rds')
+data$max$se = data$max$beta/data$max$z
+data$null$se = data$null$beta / data$null$z
+
+K = 10
+P = 5
+vhat = 1
+```
+
+```{r}
+if (vhat == 1) {
+  V = cor(data$null$z[which(apply(abs(data$null$z),1, max) < 2),])
+} else {
+  V = diag(ncol(data$null$z))
+}
+mash_data = mashr::set_mash_data(Bhat = as.matrix(data$max$beta), 
+                                 Shat = as.matrix(data$max$se), 
+                                 V = as.matrix(V), 
+                                 alpha = 1)
+```
+
+# MASH results
+
+```{r}
+# EZ
+resEZ = readRDS('../output/ImmuneEZ.V1.center.mash_model.Load.K10.P5.rds')
+resEZ$result = readRDS('../output/ImmuneEZ.V1.center.mash_posterior.Load.K10.P5.rds')
+```
+
+# MASH model fit
+
+The log-likelihood of fit is
+```{r} 
+get_loglik(resEZ)
+```
+
+The log likelihood is slightly higher than the original one [EZ_V1_model](Immune_Data_Mash_V1_EZ_Result.html), which is as we expected. There are more potential covariance structures added in the model.
+
+Here is a plot of weights learned. **The results are similar as before.**
+
+```{r}
+options(repr.plot.width=12, repr.plot.height=4)
+barplot(get_estimated_pi(resEZ), las = 2, cex.names = 0.7)
+```
+
+Most of the mass is on the null, PCA1 and equal effects. `mash` placed `r round(sum(get_estimated_pi(resEZ)[2:14])*100, 4)`% of the mixture components weight on data-driven matrices, `r round(get_estimated_pi(resEZ)['equal_effects']*100,4)`% weight on equal effects matrix.
+
+<!--
+* Original estimates
+```{r echo=FALSE}
+# raw effect
+stronggene = data.frame(data$max$beta[2,])
+colnames(stronggene) = 'EffectSize'
+stronggene$Group = row.names(stronggene)
+stronggene$se = data$max$se[2,]
+ggplot(stronggene, aes(y = EffectSize, x = Group, color=Group)) + 
+  geom_point() + geom_hline(yintercept = 0) + 
+  geom_errorbar(aes(ymin=EffectSize-1.96*se, ymax=EffectSize+1.96*se), width=0.4) + 
+  theme_bw(base_size=12) + coord_flip() + ggtitle('ILMN_1343295_rs80259531')
+```
+
+* `MASH` estimates
+
+```{r echo=FALSE}
+# Improved
+stronggenePost = data.frame(resEZ$result$PosteriorMean[2,])
+colnames(stronggenePost) = 'EffectSize'
+stronggenePost$Group = row.names(stronggenePost)
+stronggenePost$se = resEZ$result$PosteriorSD[2,]
+ggplot(stronggenePost, aes(y = EffectSize, x = Group, color=Group)) + 
+  geom_point() + geom_hline(yintercept = 0) + 
+  geom_errorbar(aes(ymin=EffectSize-1.96*se, ymax=EffectSize+1.96*se), width=0.4) + 
+  theme_bw(base_size=12) + coord_flip() + ggtitle('ILMN_1343295_rs80259531')
+```
+
+All estimated effects become similar.
+-->
+
+Pairwise sharing
+
+```{r}
+x           <- get_pairwise_sharing(resEZ)
+colnames(x) <- colnames(get_lfsr(resEZ))
+rownames(x) <- colnames(x)
+x <- x[rev(rownames(x)),rev(colnames(x))]
+x[lower.tri(x)] <- NA
+clrs <- colorRampPalette(rev(c("#D73027","#FC8D59","#FEE090","#FFFFBF",
+                               "#E0F3F8","#91BFDB","#4575B4")))(64)
+n <- nrow(x)
+options(repr.plot.width=9, repr.plot.height=9)
+print(levelplot(x[n:1,],col.regions = clrs,xlab = "",ylab = "",
+                colorkey = TRUE, at = seq(0.7,1,length.out = 64),
+                scales = list(cex = 0.5,x = list(rot = 45))))
+
+```
+
+# Compare with original paper
+
+## eQTLs
+Among the 21485 top SNPs, `MASH` found `r length(get_significant_results(resEZ))` to be significant in at least one treatment. We refer to these as the 'top eQTLs'.
+
+Using `MASH`, we found `r length(get_significant_results(resEZ, conditions = 1))` genes with an eQTL in control, `r length(get_significant_results(resEZ, conditions = 2))` genes with an eQTL in lps6h, `r length(get_significant_results(resEZ, conditions = 3))` genes with an eQTL in lps90, `r length(get_significant_results(resEZ, conditions = 4))` genes with an eQTL in mdp6h, `r length(get_significant_results(resEZ, conditions = 5))` genes with an eQTL in mdp90, `r length(get_significant_results(resEZ, conditions = 6))` genes with an eQTL in rna6h, `r length(get_significant_results(resEZ, conditions = 7))` genes with an eQTL in rna90.
+
+In the original paper, they identified 717-1653 genes with an eQTL in each condition. So, we found more genes with an eQTL using `MASH`.
+
+```{r echo=FALSE}
+comm = Reduce(intersect, list(get_significant_results(resEZ, conditions=1),
+                       get_significant_results(resEZ, conditions=2),
+                       get_significant_results(resEZ, conditions=3),
+                       get_significant_results(resEZ, conditions=4),
+                       get_significant_results(resEZ, conditions=5),
+                       get_significant_results(resEZ, conditions=6),
+                       get_significant_results(resEZ, conditions=7)))
+```
+
+There are `r length(comm)` top eQTLs with significant effects among all treatments.
+
+<!---
+## Find genes specific to one treatment
+
+```{r}
+# function to find gene specific to condition i
+Geneto1Cond = function(resEZ, cond){
+  conditiontotal = seq(1,ncol(resEZ$result$PosteriorMean))
+  OtherCond = conditiontotal[-cond]
+  for(i in 1:6){
+    if(i == 1){
+      setd = setdiff(get_significant_results(resEZ, conditions=cond), 
+                     get_significant_results(resEZ, conditions=OtherCond[i]))
+    }
+    else{
+      setd = setdiff(setd,
+                     get_significant_results(resEZ, conditions=OtherCond[i]))
+    }
+    
+  }
+  return(setd)
+}
+```
+
+```{r}
+GeneNames = row.names(data$max$beta)
+for(i in 1:7){
+  cat('Gene has significant effect only in condition ', i, ': Total = ', length(GeneNames[Geneto1Cond(resEZ,i)]), '\n', GeneNames[Geneto1Cond(resEZ,i)], '\n')
+  cat('\n')
+}
+```
+-->
+
+
+
+# Session information
+
+<!-- Insert the session information into the document -->
+```{r session-info}
+```

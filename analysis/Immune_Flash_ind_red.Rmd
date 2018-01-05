@@ -1,7 +1,7 @@
 ---
-title: "Immune Flash Covariance individual"
+title: "Immune Flash Covariance individual reduce"
 author: "Yuxin Zou"
-date: 2017-12-09
+date: 2017-12-29
 output: html_document
 ---
 ```{r read-chunk, include=FALSE, cache=FALSE}
@@ -29,20 +29,16 @@ knitr::opts_chunk$set(eval = TRUE)
 # Set up the data
 ```{r}
 # Load required packages
-library(mashr); library(ExtremeDeconvolution); library(flashr2)
+library(mashr); library(ExtremeDeconvolution); library(flashr2); library(mclust)
 ```
 ```{r}
 # read data
 data = readRDS('../data/ImmuneQTLSummary.4MASH.rds')
 data$max$se = data$max$beta/data$max$z
 data$null$se = data$null$beta / data$null$z
-
 # set parameters
-K = 10
-P = 5
 vhat = 1
 ```
-
 We estimate the covariance using column-centered Z scores
 ```{r}
 D.center = apply(as.matrix(data$max$z), 2, function(x) x - mean(x))
@@ -52,12 +48,12 @@ mash_data_center = mashr::set_mash_data(Bhat = as.matrix(D.center))
 # Generate covariance matrices for each row
 
 From [Flash](Immune_Flash.html), we have $$\tilde{Z} = LF' + E$$
-where F is $7 \times K$, L is $n \times K$, E is $n\times7$.
+where F is $7 \times 5$, L is $n \times 5$, E is $n\times7$.
 
 $$F = \left( \begin{array}{c c c c}
-f_{1} & f_{2} & \cdots & f_{k}
-\end{array}\right)_{p\times K}$$
-For each gene i, $$z_{i} = \sum_{k=1}^{K}l_{ik} f_{k}$$. The covariance matrix $$U_{i} = z_{i}z_{i}'$$ could capture the patterns in the ith sample.
+f_{1} & f_{2} & \cdots & f_{5}
+\end{array}\right)_{p\times 5}$$
+For each gene i, $$z_{i} = \sum_{k=1}^{5}l_{ik} f_{k}$$. The covariance matrix for gene i is $$U_{i} = z_{i}z_{i}'$$ which could capture the patterns in the ith sample.
 
 ```{r}
 FlashResult = readRDS('~/Documents/GitHub/mash-application-immune/output/Immune.flash2.center.greedy.K10.rds')
@@ -71,51 +67,21 @@ for(i in 1:n){
 }
 ```
 
+The covariance matrices for two genes will be similar if they have similar $z_{i}$ vectors.
+
+So we try to cluster $z_{i}$ vectors.
 ```{r}
-Flash_res = flash_get_lf(FlashResult$f)
-
-U.flash = c(U, mashr::cov_from_factors(t(as.matrix(FlashResult$F_flash[,1:5])), "Flash"), 
-            list("tFlash" = t(Flash_res) %*% Flash_res / nrow(data$max$z)))
-
-# PCA matrices
-U.pca = cov_pca(mash_data_center, P)
-
-# Emperical data matrices
-# Denoised data-driven matrices
-U.dd = c(U.flash, U.pca, list("XX" = t(D.center) %*% D.center / nrow(data$max$z)))
-
-mash_data = mashr::set_mash_data(Bhat = as.matrix(data$max$z))
-
-# failed
-# U.ed = cov_ed(mash_data, U.dd)
+mod <- Mclust(Z)
+summary(mod$BIC)
+summary(mod, parameters = TRUE)
 ```
-
-The refining step failed. Then we try to use these covariance matrices in `mash`.
-
-Generate canonical covariance matrices:
+There is only one cluster identified here. The estimated model is $$z_{i} \sim N_{7}(\hat{\mu}, \hat{\Sigma})$$
 
 ```{r}
-# Canonical
-U.can = cov_canonical(mash_data) 
+saveRDS(list(mod$parameters$variance$Sigma), '../output/Immune.flash.ind.reduce.cov.rds')
 ```
 
-```{r}
-if (vhat == 1) {
-  V = cor(data$null$z[which(apply(abs(data$null$z),1, max) < 2),])
-} else {
-  V = diag(ncol(data$null$z))
-}
-
-mash_data = mashr::set_mash_data(Bhat = as.matrix(data$null$beta), 
-                                 Shat = as.matrix(data$null$se), 
-                                 V=as.matrix(V), alpha=1)
-
-# mash_model = mash(mash_data, c(U.can, U.dd), outputlevel = 1)
-```
-
-The method fails again. The size is too large.
-
-`mashr` could not handle the optimization.
+We can use this estiamted $\hat{\Sigma}$ to estiamte the covariance matrix for all genes.
 
 # Session information
 
