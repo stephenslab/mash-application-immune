@@ -11,9 +11,9 @@
 
 <meta name="author" content="Yuxin Zou" />
 
-<meta name="date" content="2017-12-09" />
+<meta name="date" content="2017-12-29" />
 
-<title>Immune Flash Covariance individual</title>
+<title>Immune_Flash_MVN_Reduce</title>
 
 <script src="site_libs/jquery-1.11.3/jquery.min.js"></script>
 <meta name="viewport" content="width=device-width, initial-scale=1" />
@@ -310,9 +310,9 @@ div.section {
 
 
 
-<h1 class="title toc-ignore">Immune Flash Covariance individual</h1>
+<h1 class="title toc-ignore">Immune_Flash_MVN_Reduce</h1>
 <h4 class="author"><em>Yuxin Zou</em></h4>
-<h4 class="date"><em>2017-12-09</em></h4>
+<h4 class="date"><em>2017-12-29</em></h4>
 
 </div>
 
@@ -323,72 +323,39 @@ div.section {
 <!-- Insert the code version (Git commit SHA1) if Git repository exists and R
  package git2r is installed -->
 <p><strong>Code version:</strong> d801d06</p>
-<div id="set-up-the-data" class="section level1">
-<h1>Set up the data</h1>
+<div id="set-up" class="section level1">
+<h1>Set up</h1>
 <pre class="r"><code># Load required packages
-library(mashr); library(ExtremeDeconvolution); library(flashr2)</code></pre>
+library(mashr); library(ExtremeDeconvolution); library(flashr2); library(mclust)</code></pre>
 <pre><code>Loading required package: ashr</code></pre>
-<pre class="r"><code># read data
-data = readRDS(&#39;../data/ImmuneQTLSummary.4MASH.rds&#39;)
-data$max$se = data$max$beta/data$max$z
-data$null$se = data$null$beta / data$null$z
+<pre><code>Package &#39;mclust&#39; version 5.4
+Type &#39;citation(&quot;mclust&quot;)&#39; for citing this R package in publications.</code></pre>
+<pre><code>
+Attaching package: &#39;mclust&#39;</code></pre>
+<pre><code>The following object is masked from &#39;package:ashr&#39;:
 
-# set parameters
-K = 10
-P = 5
-vhat = 1</code></pre>
-<p>We estimate the covariance using column-centered Z scores</p>
-<pre class="r"><code>D.center = apply(as.matrix(data$max$z), 2, function(x) x - mean(x))
-mash_data_center = mashr::set_mash_data(Bhat = as.matrix(D.center))</code></pre>
+    dens</code></pre>
+<pre class="r"><code>FlashResult = readRDS(&#39;../output/Immune.flash2.center.greedy.K10.rds&#39;)</code></pre>
 </div>
-<div id="generate-covariance-matrices-for-each-row" class="section level1">
-<h1>Generate covariance matrices for each row</h1>
-<p>From <a href="Immune_Flash.html">Flash</a>, we have <span class="math display">\[\tilde{Z} = LF&#39; + E\]</span> where F is <span class="math inline">\(7 \times K\)</span>, L is <span class="math inline">\(n \times K\)</span>, E is <span class="math inline">\(n\times7\)</span>.</p>
-<p><span class="math display">\[F = \left( \begin{array}{c c c c}
-f_{1} &amp; f_{2} &amp; \cdots &amp; f_{k}
-\end{array}\right)_{p\times K}\]</span> For each gene i, <span class="math display">\[z_{i} = \sum_{k=1}^{K}l_{ik} f_{k}\]</span>. The covariance matrix <span class="math display">\[U_{i} = z_{i}z_{i}&#39;\]</span> could capture the patterns in the ith sample.</p>
-<pre class="r"><code>FlashResult = readRDS(&#39;~/Documents/GitHub/mash-application-immune/output/Immune.flash2.center.greedy.K10.rds&#39;)
-n = nrow(FlashResult$L_flash)
-U = list()
-Z = matrix(0, nrow=n, ncol=7)
-for(i in 1:n){
-  zi = apply(t(FlashResult$L_flash[i,] * t(FlashResult$F_flash)), 1, sum)
-  Z[i,] = zi
-  U[[i]] = zi %*% t(zi) 
-}</code></pre>
-<pre class="r"><code>Flash_res = flash_get_lf(FlashResult$f)
-
-U.flash = c(U, mashr::cov_from_factors(t(as.matrix(FlashResult$F_flash[,1:5])), &quot;Flash&quot;), 
-            list(&quot;tFlash&quot; = t(Flash_res) %*% Flash_res / nrow(data$max$z)))
-
-# PCA matrices
-U.pca = cov_pca(mash_data_center, P)
-
-# Emperical data matrices
-# Denoised data-driven matrices
-U.dd = c(U.flash, U.pca, list(&quot;XX&quot; = t(D.center) %*% D.center / nrow(data$max$z)))
-
-mash_data = mashr::set_mash_data(Bhat = as.matrix(data$max$z))
-
-# failed
-# U.ed = cov_ed(mash_data, U.dd)</code></pre>
-<p>The refining step failed. Then we try to use these covariance matrices in <code>mash</code>.</p>
-<p>Generate canonical covariance matrices:</p>
-<pre class="r"><code># Canonical
-U.can = cov_canonical(mash_data) </code></pre>
-<pre class="r"><code>if (vhat == 1) {
-  V = cor(data$null$z[which(apply(abs(data$null$z),1, max) &lt; 2),])
-} else {
-  V = diag(ncol(data$null$z))
-}
-
-mash_data = mashr::set_mash_data(Bhat = as.matrix(data$null$beta), 
-                                 Shat = as.matrix(data$null$se), 
-                                 V=as.matrix(V), alpha=1)
-
-# mash_model = mash(mash_data, c(U.can, U.dd), outputlevel = 1)</code></pre>
-<p>The method fails again. The size is too large.</p>
-<p><code>mashr</code> could not handle the optimization.</p>
+<div id="flash-loadings" class="section level1">
+<h1>Flash Loadings</h1>
+<p>From <a href="Immune_Flash.html">Flash</a>, we have <span class="math display">\[\tilde{Z} = LF&#39; + E\]</span> where F is <span class="math inline">\(7 \times 5\)</span>, L is <span class="math inline">\(n \times 5\)</span>, E is <span class="math inline">\(n\times7\)</span>.</p>
+<p>Suppose the rows of L come from a mixture of multivariate normals with covariances <span class="math inline">\(U_{1}, \cdots, U_{n}\)</span>. <span class="math display">\[l_{i} \sim \sum_{m=1}^{n} \pi_{m} N_{5}(\mu_{m}, U_{m})\]</span> <span class="math display">\[F l_{i} \sim \sum_{m=1}^{n} \pi_{m} N_{7}(F \mu_{m}, F U_{m}F&#39;)\]</span></p>
+<pre class="r"><code>loading = FlashResult$L_flash[,1:5]
+mod = Mclust(loading, G=1:50)
+summary(mod$BIC)
+plot(mod, what = &quot;BIC&quot;,legendArgs = list(x = &quot;bottomleft&quot;))</code></pre>
+<pre class="r"><code>saveRDS(mod, &#39;../output/Immune.flash.loading.reduce.rds&#39;)</code></pre>
+<p>Using the model fitted above, we have 28 components.</p>
+<pre class="r"><code>mod = readRDS(&#39;../output/Immune.flash.loading.reduce.rds&#39;)</code></pre>
+<p><span class="math display">\[l_{i} \sim \sum_{m=1}^{28} \hat{\pi}_{m} N_{5}(\hat{\mu}_{m}, \hat{U}_{m})\]</span></p>
+<p>The estimated covariance structures for LF’ are <span class="math inline">\(F\hat{U}_{1}F&#39;, \cdots, F\hat{U}_{28}F&#39;\)</span>.</p>
+<pre class="r"><code>library(plyr)
+U_list = alply(mod$parameters$variance$sigma,3)
+Factors = FlashResult$F_flash[,1:5]
+U_loading = lapply(U_list, function(U){Factors %*% (U %*% t(Factors))})
+names(U_loading) = paste0(&#39;Load&#39;, &quot;_&quot;, (1:length(U_loading)))
+saveRDS(U_loading, &#39;../output/Immune.flash.loading.reduce.cov.rds&#39;)</code></pre>
 </div>
 <div id="session-information" class="section level1">
 <h1>Session information</h1>
@@ -409,23 +376,24 @@ attached base packages:
 [1] stats     graphics  grDevices utils     datasets  methods   base     
 
 other attached packages:
-[1] flashr2_0.3-3            ExtremeDeconvolution_1.3
-[3] mashr_0.2-4              ashr_2.1-27             
+[1] plyr_1.8.4               mclust_5.4              
+[3] flashr2_0.3-3            ExtremeDeconvolution_1.3
+[5] mashr_0.2-4              ashr_2.1-27             
 
 loaded via a namespace (and not attached):
  [1] Rcpp_0.12.14      compiler_3.4.3    git2r_0.20.0     
- [4] plyr_1.8.4        iterators_1.0.9   tools_3.4.3      
- [7] digest_0.6.13     evaluate_0.10.1   tibble_1.3.4     
-[10] gtable_0.2.0      lattice_0.20-35   rlang_0.1.6      
-[13] Matrix_1.2-12     foreach_1.4.4     yaml_2.1.16      
-[16] parallel_3.4.3    mvtnorm_1.0-6     stringr_1.2.0    
-[19] knitr_1.17        rprojroot_1.2     grid_3.4.3       
-[22] rmarkdown_1.8     rmeta_2.16        ggplot2_2.2.1    
-[25] magrittr_1.5      backports_1.1.2   scales_0.5.0     
-[28] codetools_0.2-15  htmltools_0.3.6   MASS_7.3-47      
-[31] assertthat_0.2.0  colorspace_1.3-2  stringi_1.1.6    
-[34] lazyeval_0.2.1    pscl_1.5.2        doParallel_1.0.11
-[37] munsell_0.4.3     truncnorm_1.0-7   SQUAREM_2017.10-1</code></pre>
+ [4] iterators_1.0.9   tools_3.4.3       digest_0.6.13    
+ [7] evaluate_0.10.1   tibble_1.3.4      gtable_0.2.0     
+[10] lattice_0.20-35   rlang_0.1.6       Matrix_1.2-12    
+[13] foreach_1.4.4     yaml_2.1.16       parallel_3.4.3   
+[16] mvtnorm_1.0-6     stringr_1.2.0     knitr_1.17       
+[19] rprojroot_1.2     grid_3.4.3        rmarkdown_1.8    
+[22] rmeta_2.16        ggplot2_2.2.1     magrittr_1.5     
+[25] backports_1.1.2   scales_0.5.0      codetools_0.2-15 
+[28] htmltools_0.3.6   MASS_7.3-47       assertthat_0.2.0 
+[31] colorspace_1.3-2  stringi_1.1.6     lazyeval_0.2.1   
+[34] pscl_1.5.2        doParallel_1.0.11 munsell_0.4.3    
+[37] truncnorm_1.0-7   SQUAREM_2017.10-1</code></pre>
 </div>
 
 <!-- Adjust MathJax settings so that all math formulae are shown using

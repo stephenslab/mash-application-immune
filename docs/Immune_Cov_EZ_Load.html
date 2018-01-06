@@ -11,9 +11,9 @@
 
 <meta name="author" content="Yuxin Zou" />
 
-<meta name="date" content="2017-12-09" />
+<meta name="date" content="2018-01-04" />
 
-<title>Immune Flash Covariance individual</title>
+<title>Immune Data MASH Model Covariance + loading (EZ)</title>
 
 <script src="site_libs/jquery-1.11.3/jquery.min.js"></script>
 <meta name="viewport" content="width=device-width, initial-scale=1" />
@@ -310,9 +310,9 @@ div.section {
 
 
 
-<h1 class="title toc-ignore">Immune Flash Covariance individual</h1>
+<h1 class="title toc-ignore">Immune Data MASH Model Covariance + loading (EZ)</h1>
 <h4 class="author"><em>Yuxin Zou</em></h4>
-<h4 class="date"><em>2017-12-09</em></h4>
+<h4 class="date"><em>2018-01-04</em></h4>
 
 </div>
 
@@ -335,60 +335,66 @@ data$null$se = data$null$beta / data$null$z
 
 # set parameters
 K = 10
-P = 5
-vhat = 1</code></pre>
+P = 5</code></pre>
 <p>We estimate the covariance using column-centered Z scores</p>
 <pre class="r"><code>D.center = apply(as.matrix(data$max$z), 2, function(x) x - mean(x))
 mash_data_center = mashr::set_mash_data(Bhat = as.matrix(D.center))</code></pre>
 </div>
-<div id="generate-covariance-matrices-for-each-row" class="section level1">
-<h1>Generate covariance matrices for each row</h1>
-<p>From <a href="Immune_Flash.html">Flash</a>, we have <span class="math display">\[\tilde{Z} = LF&#39; + E\]</span> where F is <span class="math inline">\(7 \times K\)</span>, L is <span class="math inline">\(n \times K\)</span>, E is <span class="math inline">\(n\times7\)</span>.</p>
-<p><span class="math display">\[F = \left( \begin{array}{c c c c}
-f_{1} &amp; f_{2} &amp; \cdots &amp; f_{k}
-\end{array}\right)_{p\times K}\]</span> For each gene i, <span class="math display">\[z_{i} = \sum_{k=1}^{K}l_{ik} f_{k}\]</span>. The covariance matrix <span class="math display">\[U_{i} = z_{i}z_{i}&#39;\]</span> could capture the patterns in the ith sample.</p>
-<pre class="r"><code>FlashResult = readRDS(&#39;~/Documents/GitHub/mash-application-immune/output/Immune.flash2.center.greedy.K10.rds&#39;)
-n = nrow(FlashResult$L_flash)
-U = list()
-Z = matrix(0, nrow=n, ncol=7)
-for(i in 1:n){
-  zi = apply(t(FlashResult$L_flash[i,] * t(FlashResult$F_flash)), 1, sum)
-  Z[i,] = zi
-  U[[i]] = zi %*% t(zi) 
-}</code></pre>
-<pre class="r"><code>Flash_res = flash_get_lf(FlashResult$f)
+<div id="generate-covariance-matrices" class="section level1">
+<h1>Generate covariance matrices</h1>
+<p>Besides the 3 types of data-driven covariance matrices created in <a href="Immune_Cov_EZ.html">Immune_Cov_EZ</a>, we have 1 more type of covariance: <span class="math display">\[ \tilde{Z}_{n\times 7} = LF&#39; + E \]</span> <span class="math display">\[l_{i} \sim \sum_{m=1}^{28} \hat{\pi}_{m} N_{5}(\hat{\mu}_{m}, \hat{U}_{m})\]</span> The estimated covariance structures for LF’ are <span class="math inline">\(F\hat{U}_{1}F&#39;, \cdots, F\hat{U}_{28}F&#39;\)</span>.</p>
+<p>The results are in <a href="Immune_Flash_MVN_red.html">Immune_Flash_MVN</a>.</p>
+<pre class="r"><code>U_loading = readRDS(&#39;../output/Immune.flash.loading.reduce.cov.rds&#39;)</code></pre>
+<!--
+Here we create 3 types of data-driven covariance matrices:
 
-U.flash = c(U, mashr::cov_from_factors(t(as.matrix(FlashResult$F_flash[,1:5])), &quot;Flash&quot;), 
+* Flash (rank 5, previously computed): [Flash](Immune_Flash.html)
+  $$ \tilde{Z}_{n\times 7} = LF' + E $$
+  $$ U = \frac{1}{n} (LF')'(LF') $$
+    + plus single rank Flashs for each factor
+    The 5 matrices $F_{q}L_{q}' L_{q} F_{q}'$
+    
+* PCA (rank 5, to be computed)
+    + plus single rank PCAs
+    
+* Optionally
+    + Empirical covariance
+-->
+<p>We apply <code>Extreme Deconvolution</code> to refine these 4 types of matrices.</p>
+<p>Additionally we include 2 other types of covariance matrices:</p>
+<ul>
+<li><p>canonical configurations (aka <code>bmalite</code>)</p></li>
+<li><p>simple heterogeneity models</p></li>
+</ul>
+<div id="generate-and-refine-multi-rank-data-driven-covariance-matrices" class="section level2">
+<h2>Generate and refine multi-rank data-driven covariance matrices</h2>
+<pre class="r"><code>FlashResult = readRDS(&#39;../output/Immune.flash2.center.greedy.K10.rds&#39;)
+Flash_res = flash_get_lf(FlashResult$f)
+
+U.flash = c(mashr::cov_from_factors(t(as.matrix(FlashResult$F_flash[,1:5])), &quot;Flash&quot;), 
             list(&quot;tFlash&quot; = t(Flash_res) %*% Flash_res / nrow(data$max$z)))
 
 # PCA matrices
 U.pca = cov_pca(mash_data_center, P)
 
+
 # Emperical data matrices
 # Denoised data-driven matrices
-U.dd = c(U.flash, U.pca, list(&quot;XX&quot; = t(D.center) %*% D.center / nrow(data$max$z)))
+U.dd = c(U.flash, U.pca, list(&quot;XX&quot; = t(D.center) %*% D.center / nrow(data$max$z)), U_loading)
 
 mash_data = mashr::set_mash_data(Bhat = as.matrix(data$max$z))
 
-# failed
-# U.ed = cov_ed(mash_data, U.dd)</code></pre>
-<p>The refining step failed. Then we try to use these covariance matrices in <code>mash</code>.</p>
-<p>Generate canonical covariance matrices:</p>
+U.ed = cov_ed(mash_data, U.dd)</code></pre>
+</div>
+<div id="generate-canonical-covariance-matrices" class="section level2">
+<h2>Generate canonical covariance matrices</h2>
 <pre class="r"><code># Canonical
-U.can = cov_canonical(mash_data) </code></pre>
-<pre class="r"><code>if (vhat == 1) {
-  V = cor(data$null$z[which(apply(abs(data$null$z),1, max) &lt; 2),])
-} else {
-  V = diag(ncol(data$null$z))
-}
+U.can = cov_canonical(mash_data) 
 
-mash_data = mashr::set_mash_data(Bhat = as.matrix(data$null$beta), 
-                                 Shat = as.matrix(data$null$se), 
-                                 V=as.matrix(V), alpha=1)
-
-# mash_model = mash(mash_data, c(U.can, U.dd), outputlevel = 1)</code></pre>
-<p>The method fails again. The size is too large.</p>
-<p><code>mashr</code> could not handle the optimization.</p>
+# save Covariance matrix
+saveRDS(list(Ulist = c(U.ed, U.can), DD_raw = U.dd), 
+        paste0(&#39;../output/ImmuneEZ.U.center.xtx.Load.K&#39;,K,&#39;.P&#39;,P,&#39;.rds&#39;))</code></pre>
+</div>
 </div>
 <div id="session-information" class="section level1">
 <h1>Session information</h1>

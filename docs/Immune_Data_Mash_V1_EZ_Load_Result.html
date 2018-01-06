@@ -11,9 +11,9 @@
 
 <meta name="author" content="Yuxin Zou" />
 
-<meta name="date" content="2017-12-09" />
+<meta name="date" content="2018-01-04" />
 
-<title>Immune Flash Covariance individual</title>
+<title>Immune Data Mash Analysis EZ V1 Loading Results</title>
 
 <script src="site_libs/jquery-1.11.3/jquery.min.js"></script>
 <meta name="viewport" content="width=device-width, initial-scale=1" />
@@ -310,9 +310,9 @@ div.section {
 
 
 
-<h1 class="title toc-ignore">Immune Flash Covariance individual</h1>
+<h1 class="title toc-ignore">Immune Data Mash Analysis EZ V1 Loading Results</h1>
 <h4 class="author"><em>Yuxin Zou</em></h4>
-<h4 class="date"><em>2017-12-09</em></h4>
+<h4 class="date"><em>2018-01-04</em></h4>
 
 </div>
 
@@ -323,72 +323,139 @@ div.section {
 <!-- Insert the code version (Git commit SHA1) if Git repository exists and R
  package git2r is installed -->
 <p><strong>Code version:</strong> d801d06</p>
-<div id="set-up-the-data" class="section level1">
-<h1>Set up the data</h1>
-<pre class="r"><code># Load required packages
-library(mashr); library(ExtremeDeconvolution); library(flashr2)</code></pre>
+<div id="set-up-data" class="section level1">
+<h1>Set up data</h1>
+<pre class="r"><code>library(lattice)
+library(ggplot2)
+library(colorRamps)
+library(mashr)</code></pre>
 <pre><code>Loading required package: ashr</code></pre>
-<pre class="r"><code># read data
-data = readRDS(&#39;../data/ImmuneQTLSummary.4MASH.rds&#39;)
+<pre class="r"><code>library(corrplot)</code></pre>
+<pre><code>corrplot 0.84 loaded</code></pre>
+<pre class="r"><code>data = readRDS(&#39;../data/ImmuneQTLSummary.4MASH.rds&#39;)
 data$max$se = data$max$beta/data$max$z
 data$null$se = data$null$beta / data$null$z
 
-# set parameters
 K = 10
 P = 5
 vhat = 1</code></pre>
-<p>We estimate the covariance using column-centered Z scores</p>
-<pre class="r"><code>D.center = apply(as.matrix(data$max$z), 2, function(x) x - mean(x))
-mash_data_center = mashr::set_mash_data(Bhat = as.matrix(D.center))</code></pre>
-</div>
-<div id="generate-covariance-matrices-for-each-row" class="section level1">
-<h1>Generate covariance matrices for each row</h1>
-<p>From <a href="Immune_Flash.html">Flash</a>, we have <span class="math display">\[\tilde{Z} = LF&#39; + E\]</span> where F is <span class="math inline">\(7 \times K\)</span>, L is <span class="math inline">\(n \times K\)</span>, E is <span class="math inline">\(n\times7\)</span>.</p>
-<p><span class="math display">\[F = \left( \begin{array}{c c c c}
-f_{1} &amp; f_{2} &amp; \cdots &amp; f_{k}
-\end{array}\right)_{p\times K}\]</span> For each gene i, <span class="math display">\[z_{i} = \sum_{k=1}^{K}l_{ik} f_{k}\]</span>. The covariance matrix <span class="math display">\[U_{i} = z_{i}z_{i}&#39;\]</span> could capture the patterns in the ith sample.</p>
-<pre class="r"><code>FlashResult = readRDS(&#39;~/Documents/GitHub/mash-application-immune/output/Immune.flash2.center.greedy.K10.rds&#39;)
-n = nrow(FlashResult$L_flash)
-U = list()
-Z = matrix(0, nrow=n, ncol=7)
-for(i in 1:n){
-  zi = apply(t(FlashResult$L_flash[i,] * t(FlashResult$F_flash)), 1, sum)
-  Z[i,] = zi
-  U[[i]] = zi %*% t(zi) 
-}</code></pre>
-<pre class="r"><code>Flash_res = flash_get_lf(FlashResult$f)
-
-U.flash = c(U, mashr::cov_from_factors(t(as.matrix(FlashResult$F_flash[,1:5])), &quot;Flash&quot;), 
-            list(&quot;tFlash&quot; = t(Flash_res) %*% Flash_res / nrow(data$max$z)))
-
-# PCA matrices
-U.pca = cov_pca(mash_data_center, P)
-
-# Emperical data matrices
-# Denoised data-driven matrices
-U.dd = c(U.flash, U.pca, list(&quot;XX&quot; = t(D.center) %*% D.center / nrow(data$max$z)))
-
-mash_data = mashr::set_mash_data(Bhat = as.matrix(data$max$z))
-
-# failed
-# U.ed = cov_ed(mash_data, U.dd)</code></pre>
-<p>The refining step failed. Then we try to use these covariance matrices in <code>mash</code>.</p>
-<p>Generate canonical covariance matrices:</p>
-<pre class="r"><code># Canonical
-U.can = cov_canonical(mash_data) </code></pre>
 <pre class="r"><code>if (vhat == 1) {
   V = cor(data$null$z[which(apply(abs(data$null$z),1, max) &lt; 2),])
 } else {
   V = diag(ncol(data$null$z))
 }
+mash_data = mashr::set_mash_data(Bhat = as.matrix(data$max$beta), 
+                                 Shat = as.matrix(data$max$se), 
+                                 V = as.matrix(V), 
+                                 alpha = 1)</code></pre>
+</div>
+<div id="mash-results" class="section level1">
+<h1>MASH results</h1>
+<pre class="r"><code># EZ
+resEZ = readRDS(&#39;../output/ImmuneEZ.V1.center.mash_model.Load.K10.P5.rds&#39;)
+resEZ$result = readRDS(&#39;../output/ImmuneEZ.V1.center.mash_posterior.Load.K10.P5.rds&#39;)</code></pre>
+</div>
+<div id="mash-model-fit" class="section level1">
+<h1>MASH model fit</h1>
+<p>The log-likelihood of fit is</p>
+<pre class="r"><code>get_loglik(resEZ)</code></pre>
+<pre><code>[1] 3201420</code></pre>
+<p>The log likelihood is slightly higher than the original one <a href="Immune_Data_Mash_V1_EZ_Result.html">EZ_V1_model</a>, which is as we expected. There are more potential covariance structures added in the model.</p>
+<p>Here is a plot of weights learned. <strong>The results are similar as before.</strong></p>
+<pre class="r"><code>options(repr.plot.width=12, repr.plot.height=4)
+barplot(get_estimated_pi(resEZ), las = 2, cex.names = 0.7)</code></pre>
+<p><img src="figure/Immune_Data_Mash_V1_EZ_Load_Result.Rmd/unnamed-chunk-5-1.png" width="672" style="display: block; margin: auto;" /></p>
+<p>Most of the mass is on the null, PCA1 and equal effects. <code>mash</code> placed 9.4814% of the mixture components weight on data-driven matrices, 5.4593% weight on equal effects matrix.</p>
+<!--
+* Original estimates
+<img src="figure/Immune_Data_Mash_V1_EZ_Load_Result.Rmd/unnamed-chunk-6-1.png" width="672" style="display: block; margin: auto;" />
 
-mash_data = mashr::set_mash_data(Bhat = as.matrix(data$null$beta), 
-                                 Shat = as.matrix(data$null$se), 
-                                 V=as.matrix(V), alpha=1)
+* `MASH` estimates
 
-# mash_model = mash(mash_data, c(U.can, U.dd), outputlevel = 1)</code></pre>
-<p>The method fails again. The size is too large.</p>
-<p><code>mashr</code> could not handle the optimization.</p>
+<img src="figure/Immune_Data_Mash_V1_EZ_Load_Result.Rmd/unnamed-chunk-7-1.png" width="672" style="display: block; margin: auto;" />
+
+All estimated effects become similar.
+-->
+<p>Pairwise sharing</p>
+<pre class="r"><code>x           &lt;- get_pairwise_sharing(resEZ)
+colnames(x) &lt;- colnames(get_lfsr(resEZ))
+rownames(x) &lt;- colnames(x)
+x &lt;- x[rev(rownames(x)),rev(colnames(x))]
+x[lower.tri(x)] &lt;- NA
+clrs &lt;- colorRampPalette(rev(c(&quot;#D73027&quot;,&quot;#FC8D59&quot;,&quot;#FEE090&quot;,&quot;#FFFFBF&quot;,
+                               &quot;#E0F3F8&quot;,&quot;#91BFDB&quot;,&quot;#4575B4&quot;)))(64)
+n &lt;- nrow(x)
+options(repr.plot.width=9, repr.plot.height=9)
+print(levelplot(x[n:1,],col.regions = clrs,xlab = &quot;&quot;,ylab = &quot;&quot;,
+                colorkey = TRUE, at = seq(0.7,1,length.out = 64),
+                scales = list(cex = 0.5,x = list(rot = 45))))</code></pre>
+<p><img src="figure/Immune_Data_Mash_V1_EZ_Load_Result.Rmd/unnamed-chunk-8-1.png" width="672" style="display: block; margin: auto;" /></p>
+</div>
+<div id="compare-with-original-paper" class="section level1">
+<h1>Compare with original paper</h1>
+<div id="eqtls" class="section level2">
+<h2>eQTLs</h2>
+<p>Among the 21485 top SNPs, <code>MASH</code> found 5541 to be significant in at least one treatment. We refer to these as the ‘top eQTLs’.</p>
+<p>Using <code>MASH</code>, we found 5307 genes with an eQTL in control, 5234 genes with an eQTL in lps6h, 5313 genes with an eQTL in lps90, 5309 genes with an eQTL in mdp6h, 5340 genes with an eQTL in mdp90, 5305 genes with an eQTL in rna6h, 5381 genes with an eQTL in rna90.</p>
+<p>In the original paper, they identified 717-1653 genes with an eQTL in each condition. So, we found more genes with an eQTL using <code>MASH</code>.</p>
+<p>There are 4896 top eQTLs with significant effects among all treatments.</p>
+<!---
+## Find genes specific to one treatment
+
+
+```r
+# function to find gene specific to condition i
+Geneto1Cond = function(resEZ, cond){
+  conditiontotal = seq(1,ncol(resEZ$result$PosteriorMean))
+  OtherCond = conditiontotal[-cond]
+  for(i in 1:6){
+    if(i == 1){
+      setd = setdiff(get_significant_results(resEZ, conditions=cond), 
+                     get_significant_results(resEZ, conditions=OtherCond[i]))
+    }
+    else{
+      setd = setdiff(setd,
+                     get_significant_results(resEZ, conditions=OtherCond[i]))
+    }
+    
+  }
+  return(setd)
+}
+```
+
+
+```r
+GeneNames = row.names(data$max$beta)
+for(i in 1:7){
+  cat('Gene has significant effect only in condition ', i, ': Total = ', length(GeneNames[Geneto1Cond(resEZ,i)]), '\n', GeneNames[Geneto1Cond(resEZ,i)], '\n')
+  cat('\n')
+}
+```
+
+```
+Gene has significant effect only in condition  1 : Total =  7 
+ ILMN_1680348_rs10916988 ILMN_1838254_rs59297777 ILMN_2174045_rs4793554 ILMN_1678754_rs73012081 ILMN_2124833_rs112789148 ILMN_3241254_rs4363199 ILMN_1667374_rs77161029 
+
+Gene has significant effect only in condition  2 : Total =  5 
+ ILMN_2151818_rs9671535 ILMN_3307868_rs7515776 ILMN_2353240_rs12130871 ILMN_1711245_rs1456297 ILMN_1659343_rs142051127 
+
+Gene has significant effect only in condition  3 : Total =  5 
+ ILMN_1788968_rs11212483 ILMN_1761101_rs11741945 ILMN_3236249_rs56126097 ILMN_1792710_rs66697450 ILMN_1708105_rs3757441 
+
+Gene has significant effect only in condition  4 : Total =  1 
+ ILMN_1675709_rs111145053 
+
+Gene has significant effect only in condition  5 : Total =  3 
+ ILMN_1835451_rs934478 ILMN_1829840_rs7567943 ILMN_3238893_rs9426742 
+
+Gene has significant effect only in condition  6 : Total =  18 
+ ILMN_1745904_rs68179910 ILMN_1796537_5-39249701 ILMN_1723211_rs12433317 ILMN_1797001_rs1197246 ILMN_2307656_rs34219540 ILMN_1791759_rs17000106 ILMN_1688755_rs11126239 ILMN_3201900_rs1034934 ILMN_1772959_15-64537285 ILMN_1689380_rs2817642 ILMN_1810956_rs7395060 ILMN_1789500_rs151078490 ILMN_2259292_rs77619625 ILMN_1785272_rs3763469 ILMN_1749892_rs11807268 ILMN_2393461_rs9374176 ILMN_1722929_rs116252199 ILMN_2092933_rs59156523 
+
+Gene has significant effect only in condition  7 : Total =  1 
+ ILMN_1765872_rs10425486 
+```
+-->
+</div>
 </div>
 <div id="session-information" class="section level1">
 <h1>Session information</h1>
@@ -409,23 +476,23 @@ attached base packages:
 [1] stats     graphics  grDevices utils     datasets  methods   base     
 
 other attached packages:
-[1] flashr2_0.3-3            ExtremeDeconvolution_1.3
-[3] mashr_0.2-4              ashr_2.1-27             
+[1] corrplot_0.84   mashr_0.2-4     ashr_2.1-27     colorRamps_2.3 
+[5] ggplot2_2.2.1   lattice_0.20-35
 
 loaded via a namespace (and not attached):
  [1] Rcpp_0.12.14      compiler_3.4.3    git2r_0.20.0     
  [4] plyr_1.8.4        iterators_1.0.9   tools_3.4.3      
  [7] digest_0.6.13     evaluate_0.10.1   tibble_1.3.4     
-[10] gtable_0.2.0      lattice_0.20-35   rlang_0.1.6      
-[13] Matrix_1.2-12     foreach_1.4.4     yaml_2.1.16      
-[16] parallel_3.4.3    mvtnorm_1.0-6     stringr_1.2.0    
-[19] knitr_1.17        rprojroot_1.2     grid_3.4.3       
-[22] rmarkdown_1.8     rmeta_2.16        ggplot2_2.2.1    
-[25] magrittr_1.5      backports_1.1.2   scales_0.5.0     
-[28] codetools_0.2-15  htmltools_0.3.6   MASS_7.3-47      
-[31] assertthat_0.2.0  colorspace_1.3-2  stringi_1.1.6    
-[34] lazyeval_0.2.1    pscl_1.5.2        doParallel_1.0.11
-[37] munsell_0.4.3     truncnorm_1.0-7   SQUAREM_2017.10-1</code></pre>
+[10] gtable_0.2.0      rlang_0.1.6       Matrix_1.2-12    
+[13] foreach_1.4.4     yaml_2.1.16       parallel_3.4.3   
+[16] mvtnorm_1.0-6     stringr_1.2.0     knitr_1.17       
+[19] rprojroot_1.2     grid_3.4.3        rmarkdown_1.8    
+[22] rmeta_2.16        magrittr_1.5      backports_1.1.2  
+[25] scales_0.5.0      codetools_0.2-15  htmltools_0.3.6  
+[28] MASS_7.3-47       assertthat_0.2.0  colorspace_1.3-2 
+[31] labeling_0.3      stringi_1.1.6     lazyeval_0.2.1   
+[34] munsell_0.4.3     doParallel_1.0.11 pscl_1.5.2       
+[37] truncnorm_1.0-7   SQUAREM_2017.10-1</code></pre>
 </div>
 
 <!-- Adjust MathJax settings so that all math formulae are shown using

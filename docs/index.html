@@ -35,7 +35,7 @@ if (window.hljs) {
   hljs.configure({languages: []});
   hljs.initHighlightingOnLoad();
   if (document.readyState && document.readyState === "complete") {
-    window.setTimeout(function() { hljs.initHighlightingOnLoad(); }, 0);
+    window.setTimeout(function() { hljs.initHighlighting(); }, 0);
   }
 }
 </script>
@@ -225,14 +225,13 @@ div.section {
 <li><p>Simulations to find more latent factors than the number of covariates (p)</p>
 <p><a href="FlashSim.html">Flash Simulation</a></p>
 <p>When the <code>var_type='constant'</code>, the <code>flash</code> results in 6 factors, whereas the data has 5 conditions.</p>
-<p>Some factors contain +ve in some conditions and -ve in others. These are not separate into 2 factors.</p></li>
+<p>Some factors contain +ve in some conditions and -ve in others. These are not separated into 2 factors.</p></li>
 </ul>
 <p><strong>Here is the <code>MASH</code> analyses</strong>:</p>
 <ul>
 <li><p>Generate the covariance matrices:</p>
-<p>Firstly, we do the factor analysis on the data using <code>flash</code>.</p>
-<p><a href="Immune_Flash.html">Flash</a></p>
-<p>The potential covariance structures:</p>
+<p>Firstly, we do the factor analysis on the data using <code>flash</code>. <a href="Immune_Flash.html">Flash</a></p>
+<p>Then, we generate the potential covariance structures:</p>
 <ul>
 <li><a href="Immune_Cov_EZ.html">EZ covariance matrices</a></li>
 <li><a href="Immune_Cov_EE.html">EE covariance matrices</a></li>
@@ -260,8 +259,8 @@ Changing the parameter <code>vhat</code> could obtain different V matrices.
 </ul>
 <p>The estimated weights for covariance matrices are different for EE and EZ model when V is the estimated correlation. When V is Identity, the estimated weights are similar. But the measurements are correlated due to sample overlap (all based on same 134 individuals), I think it is more reasonable to use the estimated correlation from the data (V1).</p>
 <p>Among these models, <strong>EZ V1 has the highest log likelihood value</strong>.</p>
-<p>Using Mash with V be the estimated correlation, we found more eQTLs, the number of eQTLs are similar using EE and EZ model. Based on the EZ V1 model, the majority weights for the covariance matrix is on the null matrix (0, no effects, 84.6%). The remaining weights are on the covariance matrix capturing the pattern that the standardized effects are strong positively correlated among all treatments (14.5%). The covariance component <span class="math inline">\(11&#39;\)</span> (5.4%) shows that the standardized effects are similar. The other covariance component has the formate <span class="math inline">\(D11&#39;D\)</span> (9.1%), D is a diagnoal matrix, which means the standardized effects are different in size, but they are strongly correlated (<span class="math inline">\(\beta_{lpa6h} = d * \beta_{ctrl}\)</span> etc.).</p>
-<p>The mash fit favors component where <strong>standardized</strong> effects are very similar, which does not mean the raw effects are similar. The similarity of standardized effects could imply the similarity of raw effects if and only if the standard errors of the estimated effects are all similar. The derivation is in <a href="PostNONsd.html">Mash Posterior under non-equal <span class="math inline">\(s_{jr}\)</span></a>. In this dataset, the <span class="math inline">\(s_{jr}\)</span> are not similar aross treatments. The <code>equal effect</code> covariance structure (correlation) is for the <strong>standardized</strong> effects. The raw effects have the same correlation structure, but with different covariance, different mean.</p>
+<p>Using Mash with V be the estimated correlation, we found more eQTLs, the number of eQTLs are similar using EE and EZ model. Based on the EZ V1 model, the majority weights for the covariance matrix is on the null matrix (0, no effects, 84.6%). The remaining weights are on the covariance matrix capturing the pattern that the standardized effects are strong positively correlated among all treatments (14.5%). The covariance component <span class="math inline">\(11&#39;\)</span> (5.4%) shows that the standardized effects are similar. The other covariance component has the format <span class="math inline">\(D11&#39;D\)</span> (9.1%), D is a diagnoal matrix, which means the standardized effects are different in size, but they are strongly correlated (<span class="math inline">\(\beta_{lpa6h} = d * \beta_{ctrl}\)</span> etc.).</p>
+<p>The mash fit favors component where <strong>standardized</strong> effects are very similar, which does not mean the raw effects are similar. The similarity of standardized effects could imply the similarity of raw effects if and only if the standard errors of the estimated effects are all similar. The derivation is in <a href="PostNONsd.html">Mash Posterior under non-equal <span class="math inline">\(s_{jr}\)</span></a>. In this dataset, the <span class="math inline">\(s_{jr}\)</span> are not similar across treatments. The <code>equal effect</code> covariance structure (correlation) is for the <strong>standardized</strong> effects. The raw effects have the same correlation structure, but with different covariance, different mean.</p>
 <p>We found a lot reQTLs (raw effect), treatment specific reQTLs and time point specific reQTLs using the linear transformation. We found more reQTLs, treatment specific reQTLs and time point specific reQTLs than the paper’s result.</p>
 <p>However, the number of reQTLs from EE model are much less than EZ model. I don’t know the reason for this.</p></li>
 <li><p>If we define the reQTL as <strong>different standardized effects</strong>, the result is <a href="Immune_Data_Mash_V1_EZ_reQTLs.html">EZ V1 model reQTL</a>.</p>
@@ -271,11 +270,15 @@ Changing the parameter <code>vhat</code> could obtain different V matrices.
 <p>In the null data, there is no qualitative interaction cases. Therefore, the estimated weights for the <code>mash</code> model can not capture the qualitative interaction covariance structure. <a href="Immune_Post_Weight.html">Posterior Check</a></p></li>
 <li><p>Using <code>flash</code> results to construct mashr covariance matrices</p>
 <ul>
-<li><p>Method 1: <span class="math display">\[z_{i} = \sum_{k=1}^{K}l_{ik} f_{k}\]</span> <span class="math display">\[U_{i} = z_{i}z_{i}&#39;\]</span> <a href="Immune_Flash_ind.html">Flash individual</a></p></li>
-<li><p>Method 2: Suppose the rows of L come from a mixture of multivariate normals with covariances <span class="math inline">\(U_{1}, \cdots, U_{n}\)</span>. <span class="math display">\[l_{i} \sim \sum_{m=1}^{n} \pi_{m} N_{K}(0, U_{m})\]</span></p></li>
-</ul>
-<p>The two methods above have a common issue: The number of matrices is too large. The current algorithm cannot handle it.</p>
-<p>One potential solution is trying to reduce the number of covariance matrices. There is one covariance matrix for each gene. Some of them could have similar pattern. Using methods like kmeans to cluster the similar covariance matrices.</p></li>
+<li><p>Method 1: <span class="math display">\[z_{i} = \sum_{k=1}^{K}l_{ik} f_{k}\]</span> <span class="math display">\[U_{i} = z_{i}z_{i}&#39;\]</span> <a href="Immune_Flash_ind.html">Flash individual</a></p>
+<p>The number of matrices is too large. The current algorithm cannot handle it. The matrices <span class="math inline">\(U_{i}\)</span> for two genes will be similar if they have similar <span class="math inline">\(z_{i}\)</span> vectors. So we try to cluster <span class="math inline">\(z_{i}\)</span> vectors. <a href="Immune_Flash_ind_red.html">Flash individual reduce</a></p>
+<p>There is only one cluster identified here.</p></li>
+<li><p>Method 2: Suppose the rows of L come from a mixture of multivariate normals with covariances <span class="math inline">\(U_{1}, \cdots, U_{n}\)</span>. <span class="math display">\[l_{i} \sim \sum_{m=1}^{n} \pi_{m} N_{K}(0, U_{m})\]</span> The detail of this method is in <a href="Immune_Flash_MVN_red.html">Flash L MMVN</a>.</p>
+<p>The <code>mash</code> model including these covariance matrices:</p>
+<p><a href="Immune_Cov_EZ_Load.html">EZ covariance matrices + loading</a></p>
+<p><a href="Immune_Data_Mash_V1_EZ_loading.html">EZ V1 Load model</a></p>
+<p><a href="Immune_Data_Mash_V1_EZ_Load_Result.html">EZ V1 Load model result</a></p></li>
+</ul></li>
 <li><p>The plot of logFC:</p>
 <p>The y axis is logFC = <span class="math inline">\(log_{2} \frac{mean \ sti}{mean \ base}\)</span>. The x axis is the group of genes: ‘eQTL in both baseline and the stimulate’, ‘eQTL in baseline’, ‘eQTL in stimulate’.</p>
 <p><a href="Immune_Data_Mash_V1_EZ_Compare.html">EZ V1 eQTL logFC</a></p>
