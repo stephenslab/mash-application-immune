@@ -45,19 +45,16 @@ $$F l_{i} \sim \sum_{m=1}^{n} \pi_{m} N_{7}(F \mu_{m}, F U_{m}F')$$
 ```{r, eval=FALSE}
 loading = FlashResult$L_flash[,1:5]
 mod = Mclust(loading, G=1:50)
+saveRDS(mod, '../output/Immune.flash.loading.reduce.rds')
+```
+
+```{r}
+mod = readRDS('../output/Immune.flash.loading.reduce.rds')
 summary(mod$BIC)
 plot(mod, what = "BIC",legendArgs = list(x = "bottomleft"))
 ```
 
-```{r, eval=FALSE}
-saveRDS(mod, '../output/Immune.flash.loading.reduce.rds')
-```
-
 Using the model fitted above, we have 28 components.
-
-```{r}
-mod = readRDS('../output/Immune.flash.loading.reduce.rds')
-```
 
 $$l_{i} \sim \sum_{m=1}^{28} \hat{\pi}_{m} N_{5}(\hat{\mu}_{m}, \hat{U}_{m})$$
 
