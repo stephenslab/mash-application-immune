@@ -322,7 +322,7 @@ div.section {
 <p><strong>Last updated:</strong> 2018-01-05</p>
 <!-- Insert the code version (Git commit SHA1) if Git repository exists and R
  package git2r is installed -->
-<p><strong>Code version:</strong> d801d06</p>
+<p><strong>Code version:</strong> 53b4970</p>
 <div id="set-up" class="section level1">
 <h1>Set up</h1>
 <pre class="r"><code># Load required packages
@@ -343,11 +343,16 @@ Attaching package: &#39;mclust&#39;</code></pre>
 <p>Suppose the rows of L come from a mixture of multivariate normals with covariances <span class="math inline">\(U_{1}, \cdots, U_{n}\)</span>. <span class="math display">\[l_{i} \sim \sum_{m=1}^{n} \pi_{m} N_{5}(\mu_{m}, U_{m})\]</span> <span class="math display">\[F l_{i} \sim \sum_{m=1}^{n} \pi_{m} N_{7}(F \mu_{m}, F U_{m}F&#39;)\]</span></p>
 <pre class="r"><code>loading = FlashResult$L_flash[,1:5]
 mod = Mclust(loading, G=1:50)
-summary(mod$BIC)
-plot(mod, what = &quot;BIC&quot;,legendArgs = list(x = &quot;bottomleft&quot;))</code></pre>
-<pre class="r"><code>saveRDS(mod, &#39;../output/Immune.flash.loading.reduce.rds&#39;)</code></pre>
+saveRDS(mod, &#39;../output/Immune.flash.loading.reduce.rds&#39;)</code></pre>
+<pre class="r"><code>mod = readRDS(&#39;../output/Immune.flash.loading.reduce.rds&#39;)
+summary(mod$BIC)</code></pre>
+<pre><code>Best BIC values:
+            VVV,28      VVV,31       VVV,25
+BIC      -273340.4 -273515.681 -273550.2564
+BIC diff       0.0    -175.311    -209.8863</code></pre>
+<pre class="r"><code>plot(mod, what = &quot;BIC&quot;,legendArgs = list(x = &quot;bottomleft&quot;))</code></pre>
+<p><img src="figure/Immune_Flash_MVN_red.Rmd/unnamed-chunk-4-1.png" width="672" style="display: block; margin: auto;" /></p>
 <p>Using the model fitted above, we have 28 components.</p>
-<pre class="r"><code>mod = readRDS(&#39;../output/Immune.flash.loading.reduce.rds&#39;)</code></pre>
 <p><span class="math display">\[l_{i} \sim \sum_{m=1}^{28} \hat{\pi}_{m} N_{5}(\hat{\mu}_{m}, \hat{U}_{m})\]</span></p>
 <p>The estimated covariance structures for LF’ are <span class="math inline">\(F\hat{U}_{1}F&#39;, \cdots, F\hat{U}_{28}F&#39;\)</span>.</p>
 <pre class="r"><code>library(plyr)
