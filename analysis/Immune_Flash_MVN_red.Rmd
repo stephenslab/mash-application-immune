@@ -41,6 +41,7 @@ where F is $7 \times 5$, L is $n \times 5$, E is $n\times7$.
 
 Suppose the rows of L come from a mixture of multivariate normals with covariances $U_{1}, \cdots, U_{n}$.
 $$l_{i} \sim \sum_{m=1}^{n} \pi_{m} N_{5}(\mu_{m}, U_{m})$$
+
 $$F l_{i} \sim \sum_{m=1}^{n} \pi_{m} N_{7}(F \mu_{m}, F U_{m}F')$$
 ```{r, eval=FALSE}
 loading = FlashResult$L_flash[,1:5]
@@ -57,16 +58,18 @@ plot(mod, what = "BIC",legendArgs = list(x = "bottomleft"))
 Using the model fitted above, we have 28 components.
 
 $$l_{i} \sim \sum_{m=1}^{28} \hat{\pi}_{m} N_{5}(\hat{\mu}_{m}, \hat{U}_{m})$$
-
 The estimated covariance structures for LF' are $F\hat{U}_{1}F', \cdots, F\hat{U}_{28}F'$.
 
 ```{r}
 library(plyr)
 U_list = alply(mod$parameters$variance$sigma,3)
 Factors = FlashResult$F_flash[,1:5]
-U_loading = lapply(U_list, function(U){Factors %*% (U %*% t(Factors))})
-names(U_loading) = paste0('Load', "_", (1:length(U_loading)))
-saveRDS(U_loading, '../output/Immune.flash.loading.reduce.cov.rds')
+U.loading = lapply(U_list, function(U){Factors %*% (U %*% t(Factors))})
+names(U.loading) = paste0('Load', "_", (1:length(U.loading)))
+```
+
+```{r}
+saveRDS(U.loading, '../output/Immune.flash.load.reduce.cov.rds')
 ```
 
 # Session information

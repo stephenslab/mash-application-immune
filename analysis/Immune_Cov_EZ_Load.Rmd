@@ -50,7 +50,7 @@ mash_data_center = mashr::set_mash_data(Bhat = as.matrix(D.center))
 
 # Generate covariance matrices
 
-Besides the 3 types of data-driven covariance matrices created in [Immune_Cov_EZ](Immune_Cov_EZ.html), we have 1 more type of covariance:
+Besides the 3 types of data-driven covariance matrices created in [Immune_Cov_EZ](Immune_Cov_EZ.html), we have 2 more types of covariance:
 $$ \tilde{Z}_{n\times 7} = LF' + E $$
 $$l_{i} \sim \sum_{m=1}^{28} \hat{\pi}_{m} N_{5}(\hat{\mu}_{m}, \hat{U}_{m})$$
 The estimated covariance structures for LF' are $F\hat{U}_{1}F', \cdots, F\hat{U}_{28}F'$.
@@ -58,7 +58,7 @@ The estimated covariance structures for LF' are $F\hat{U}_{1}F', \cdots, F\hat{U
 The results are in [Immune_Flash_MVN](Immune_Flash_MVN_red.html).
 
 ```{r}
-U_loading = readRDS('../output/Immune.flash.loading.reduce.cov.rds')
+U.loading = readRDS('../output/Immune.flash.load.reduce.cov.rds')
 ```
 <!--
 Here we create 3 types of data-driven covariance matrices:
@@ -98,7 +98,7 @@ U.pca = cov_pca(mash_data_center, P)
 
 # Emperical data matrices
 # Denoised data-driven matrices
-U.dd = c(U.flash, U.pca, list("XX" = t(D.center) %*% D.center / nrow(data$max$z)), U_loading)
+U.dd = c(U.flash, U.pca, list("XX" = t(D.center) %*% D.center / nrow(data$max$z)), U.loading)
 
 mash_data = mashr::set_mash_data(Bhat = as.matrix(data$max$z))
 
