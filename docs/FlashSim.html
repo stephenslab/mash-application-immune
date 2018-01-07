@@ -319,10 +319,10 @@ div.section {
 
 <!-- Update knitr chunk options -->
 <!-- Insert the date the file was last updated -->
-<p><strong>Last updated:</strong> 2017-12-26</p>
+<p><strong>Last updated:</strong> 2018-01-07</p>
 <!-- Insert the code version (Git commit SHA1) if Git repository exists and R
  package git2r is installed -->
-<p><strong>Code version:</strong> 1e53e98</p>
+<p><strong>Code version:</strong> 698481c</p>
 <div id="case-1-2-dim" class="section level1">
 <h1>Case 1: 2 dim</h1>
 <ul>
@@ -358,7 +358,6 @@ barplot(flash_get_f(fb,1), main=&#39;loading 1&#39;)
 barplot(flash_get_f(fb,2), main=&#39;loading 2&#39;)</code></pre>
 <p><img src="figure/FlashSim.Rmd/unnamed-chunk-3-1.png" width="672" style="display: block; margin: auto;" /></p>
 <pre class="r"><code>par(mfrow=c(1,1))</code></pre>
-<p>The algorithm converges to a local optimum.</p>
 <p>If we initialize the flash with 3 fixed factors</p>
 <pre class="r"><code>lfixf = flash_add_fixed_f(data,FF=cbind(c(1,1),c(1,0),c(0,1)))</code></pre>
 <p>The loadings found here are all 0.</p>
@@ -432,7 +431,7 @@ fg = flash_add_greedy(data, Kmax=10, var_type=&#39;constant&#39;)</code></pre>
 <pre><code>fitting factor/loading 7</code></pre>
 <pre class="r"><code>fb = flash_backfit(data,fg)
 flash_get_F(data,fb)</code></pre>
-<pre><code>[1] 50154.63</code></pre>
+<pre><code>[1] 50151.63</code></pre>
 <pre class="r"><code>layout(matrix(c(1,2,3,4,5,6), 3, 2, byrow = TRUE))
 barplot(flash_get_f(fb, 1), main=&#39;loading 1&#39;)
 barplot(flash_get_f(fb, 2), main=&#39;loading 2&#39;)
@@ -451,6 +450,7 @@ fixfb = flash_backfit(data,lfixf)</code></pre>
 <pre class="r"><code>flash_get_F(data,fixfb)</code></pre>
 <pre><code>[1] 71139.54</code></pre>
 <p>The value of objective function becomes higher.</p>
+<p>The algorithm converges to a local optimum.</p>
 </div>
 </div>
 <div id="session-information" class="section level1">
@@ -472,23 +472,20 @@ attached base packages:
 [1] stats     graphics  grDevices utils     datasets  methods   base     
 
 other attached packages:
-[1] flashr2_0.3-3 MASS_7.3-47  
+[1] flashr2_0.4-0 MASS_7.3-47  
 
 loaded via a namespace (and not attached):
- [1] Rcpp_0.12.14      compiler_3.4.3    git2r_0.20.0     
- [4] plyr_1.8.4        iterators_1.0.9   tools_3.4.3      
- [7] digest_0.6.13     evaluate_0.10.1   tibble_1.3.4     
-[10] gtable_0.2.0      lattice_0.20-35   rlang_0.1.6      
-[13] Matrix_1.2-12     foreach_1.4.4     yaml_2.1.16      
-[16] parallel_3.4.3    stringr_1.2.0     knitr_1.17       
-[19] REBayes_1.2       rprojroot_1.2     grid_3.4.3       
-[22] rmarkdown_1.8     ggplot2_2.2.1     ashr_2.1-27      
-[25] magrittr_1.5      backports_1.1.2   scales_0.5.0     
-[28] codetools_0.2-15  htmltools_0.3.6   assertthat_0.2.0 
-[31] softImpute_1.4    colorspace_1.3-2  stringi_1.1.6    
-[34] Rmosek_8.0.69     lazyeval_0.2.1    munsell_0.4.3    
-[37] doParallel_1.0.11 pscl_1.5.2        truncnorm_1.0-7  
-[40] SQUAREM_2017.10-1</code></pre>
+ [1] Rcpp_0.12.14      knitr_1.17        magrittr_1.5     
+ [4] REBayes_1.2       pscl_1.5.2        doParallel_1.0.11
+ [7] SQUAREM_2017.10-1 lattice_0.20-35   foreach_1.4.4    
+[10] ashr_2.1-27       stringr_1.2.0     tools_3.4.3      
+[13] parallel_3.4.3    grid_3.4.3        git2r_0.20.0     
+[16] htmltools_0.3.6   iterators_1.0.9   yaml_2.1.16      
+[19] rprojroot_1.2     digest_0.6.13     assertthat_0.2.0 
+[22] softImpute_1.4    Matrix_1.2-12     codetools_0.2-15 
+[25] evaluate_0.10.1   rmarkdown_1.8     stringi_1.1.6    
+[28] compiler_3.4.3    Rmosek_8.0.69     backports_1.1.2  
+[31] truncnorm_1.0-7  </code></pre>
 </div>
 
 <!-- Adjust MathJax settings so that all math formulae are shown using
