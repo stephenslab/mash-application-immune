@@ -319,10 +319,10 @@ div.section {
 
 <!-- Update knitr chunk options -->
 <!-- Insert the date the file was last updated -->
-<p><strong>Last updated:</strong> 2018-01-05</p>
+<p><strong>Last updated:</strong> 2018-01-07</p>
 <!-- Insert the code version (Git commit SHA1) if Git repository exists and R
  package git2r is installed -->
-<p><strong>Code version:</strong> d801d06</p>
+<p><strong>Code version:</strong> e92eeac</p>
 <div id="set-up-the-data" class="section level1">
 <h1>Set up the data</h1>
 <pre class="r"><code># Load required packages
@@ -342,9 +342,9 @@ mash_data_center = mashr::set_mash_data(Bhat = as.matrix(D.center))</code></pre>
 </div>
 <div id="generate-covariance-matrices" class="section level1">
 <h1>Generate covariance matrices</h1>
-<p>Besides the 3 types of data-driven covariance matrices created in <a href="Immune_Cov_EZ.html">Immune_Cov_EZ</a>, we have 1 more type of covariance: <span class="math display">\[ \tilde{Z}_{n\times 7} = LF&#39; + E \]</span> <span class="math display">\[l_{i} \sim \sum_{m=1}^{28} \hat{\pi}_{m} N_{5}(\hat{\mu}_{m}, \hat{U}_{m})\]</span> The estimated covariance structures for LF’ are <span class="math inline">\(F\hat{U}_{1}F&#39;, \cdots, F\hat{U}_{28}F&#39;\)</span>.</p>
+<p>Besides the 3 types of data-driven covariance matrices created in <a href="Immune_Cov_EZ.html">Immune_Cov_EZ</a>, we have 2 more types of covariance: <span class="math display">\[ \tilde{Z}_{n\times 7} = LF&#39; + E \]</span> <span class="math display">\[l_{i} \sim \sum_{m=1}^{28} \hat{\pi}_{m} N_{5}(\hat{\mu}_{m}, \hat{U}_{m})\]</span> The estimated covariance structures for LF’ are <span class="math inline">\(F\hat{U}_{1}F&#39;, \cdots, F\hat{U}_{28}F&#39;\)</span>.</p>
 <p>The results are in <a href="Immune_Flash_MVN_red.html">Immune_Flash_MVN</a>.</p>
-<pre class="r"><code>U_loading = readRDS(&#39;../output/Immune.flash.loading.reduce.cov.rds&#39;)</code></pre>
+<pre class="r"><code>U.loading = readRDS(&#39;../output/Immune.flash.load.reduce.cov.rds&#39;)</code></pre>
 <!--
 Here we create 3 types of data-driven covariance matrices:
 
@@ -380,7 +380,7 @@ U.pca = cov_pca(mash_data_center, P)
 
 # Emperical data matrices
 # Denoised data-driven matrices
-U.dd = c(U.flash, U.pca, list(&quot;XX&quot; = t(D.center) %*% D.center / nrow(data$max$z)), U_loading)
+U.dd = c(U.flash, U.pca, list(&quot;XX&quot; = t(D.center) %*% D.center / nrow(data$max$z)), U.loading)
 
 mash_data = mashr::set_mash_data(Bhat = as.matrix(data$max$z))
 
@@ -415,23 +415,21 @@ attached base packages:
 [1] stats     graphics  grDevices utils     datasets  methods   base     
 
 other attached packages:
-[1] flashr2_0.3-3            ExtremeDeconvolution_1.3
+[1] flashr2_0.4-0            ExtremeDeconvolution_1.3
 [3] mashr_0.2-4              ashr_2.1-27             
 
 loaded via a namespace (and not attached):
- [1] Rcpp_0.12.14      compiler_3.4.3    git2r_0.20.0     
- [4] plyr_1.8.4        iterators_1.0.9   tools_3.4.3      
- [7] digest_0.6.13     evaluate_0.10.1   tibble_1.3.4     
-[10] gtable_0.2.0      lattice_0.20-35   rlang_0.1.6      
-[13] Matrix_1.2-12     foreach_1.4.4     yaml_2.1.16      
-[16] parallel_3.4.3    mvtnorm_1.0-6     stringr_1.2.0    
-[19] knitr_1.17        rprojroot_1.2     grid_3.4.3       
-[22] rmarkdown_1.8     rmeta_2.16        ggplot2_2.2.1    
-[25] magrittr_1.5      backports_1.1.2   scales_0.5.0     
-[28] codetools_0.2-15  htmltools_0.3.6   MASS_7.3-47      
-[31] assertthat_0.2.0  colorspace_1.3-2  stringi_1.1.6    
-[34] lazyeval_0.2.1    pscl_1.5.2        doParallel_1.0.11
-[37] munsell_0.4.3     truncnorm_1.0-7   SQUAREM_2017.10-1</code></pre>
+ [1] Rcpp_0.12.14      knitr_1.17        magrittr_1.5     
+ [4] MASS_7.3-47       doParallel_1.0.11 pscl_1.5.2       
+ [7] SQUAREM_2017.10-1 lattice_0.20-35   foreach_1.4.4    
+[10] plyr_1.8.4        stringr_1.2.0     tools_3.4.3      
+[13] parallel_3.4.3    grid_3.4.3        rmeta_2.16       
+[16] git2r_0.20.0      htmltools_0.3.6   iterators_1.0.9  
+[19] assertthat_0.2.0  yaml_2.1.16       rprojroot_1.2    
+[22] digest_0.6.13     Matrix_1.2-12     codetools_0.2-15 
+[25] evaluate_0.10.1   rmarkdown_1.8     stringi_1.1.6    
+[28] compiler_3.4.3    backports_1.1.2   mvtnorm_1.0-6    
+[31] truncnorm_1.0-7  </code></pre>
 </div>
 
 <!-- Adjust MathJax settings so that all math formulae are shown using
