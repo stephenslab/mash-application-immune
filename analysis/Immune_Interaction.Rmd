@@ -66,6 +66,11 @@ Among the eQTLs that significant among all treatments, there are 4 of them have 
 ```{r}
 resEZ$result$PosteriorMean[common,][c(3052, 4156, 4303, 4726),]
 ```
+Check the original data:
+```{r}
+data$max$beta[common, ][c(3052, 4156, 4303, 4726),]
+```
+According to the thesis, LD among multiple causal SNPs can cause single-SNP analyses to identify eQTL that appear to have strong effects of opposite sign in different tissues. There could be two eQTLs in LD with one another, one of which (A say) has a strong effect in one treatment, and the other of which (B say) has a strong effect in other treatments.
 
 # Session information
 
