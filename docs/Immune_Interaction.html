@@ -40,7 +40,7 @@ if (window.hljs) {
   hljs.configure({languages: []});
   hljs.initHighlightingOnLoad();
   if (document.readyState && document.readyState === "complete") {
-    window.setTimeout(function() { hljs.initHighlightingOnLoad(); }, 0);
+    window.setTimeout(function() { hljs.initHighlighting(); }, 0);
   }
 }
 </script>
@@ -319,10 +319,10 @@ div.section {
 
 <!-- Update knitr chunk options -->
 <!-- Insert the date the file was last updated -->
-<p><strong>Last updated:</strong> 2017-12-10</p>
+<p><strong>Last updated:</strong> 2018-01-07</p>
 <!-- Insert the code version (Git commit SHA1) if Git repository exists and R
  package git2r is installed -->
-<p><strong>Code version:</strong> d515b4d</p>
+<p><strong>Code version:</strong> eead173</p>
 <div id="setup" class="section level1">
 <h1>Setup</h1>
 <pre class="r"><code>library(mashr)</code></pre>
@@ -393,6 +393,19 @@ ILMN_1682336_rs11015549  0.15140315 0.17302263  0.11384766
 ILMN_3241870_rs11231805 -0.05827353 0.07789414 -0.06093627
 ILMN_2135984_rs7097009   0.15222085 0.13914109  0.08766780
 ILMN_3240222_rs2945259   0.08556055 0.15767849  0.08695253</code></pre>
+<p>Check the original data:</p>
+<pre class="r"><code>data$max$beta[common, ][c(3052, 4156, 4303, 4726),]</code></pre>
+<pre><code>                              ctrl     lps6h     lps90      mdp6h
+ILMN_1682336_rs11015549 -0.0468871 0.0552021  0.179265 -0.0616376
+ILMN_3241870_rs11231805 -0.0519624 0.0727090 -0.114207  0.1655520
+ILMN_2135984_rs7097009  -0.0265984 0.0521971  0.175999 -0.0383877
+ILMN_3240222_rs2945259  -0.0783185 0.5733190  0.253322  0.1698900
+                             mdp90    rna6h      rna90
+ILMN_1682336_rs11015549  0.1623500 0.184425  0.1192490
+ILMN_3241870_rs11231805 -0.0589191 0.175971 -0.1206210
+ILMN_2135984_rs7097009   0.1647460 0.146858  0.0922391
+ILMN_3240222_rs2945259   0.0449208 0.202274 -0.0520746</code></pre>
+<p>According to the thesis, LD among multiple causal SNPs can cause single-SNP analyses to identify eQTL that appear to have strong effects of opposite sign in different tissues. There could be two eQTLs in LD with one another, one of which (A say) has a strong effect in one treatment, and the other of which (B say) has a strong effect in other treatments.</p>
 </div>
 <div id="session-information" class="section level1">
 <h1>Session information</h1>
@@ -416,18 +429,18 @@ other attached packages:
 [1] dplyr_0.7.4   corrplot_0.84 mashr_0.2-4   ashr_2.1-27  
 
 loaded via a namespace (and not attached):
- [1] Rcpp_0.12.14      compiler_3.4.3    git2r_0.19.0     
- [4] plyr_1.8.4        bindr_0.1         iterators_1.0.8  
- [7] tools_3.4.3       digest_0.6.12     evaluate_0.10.1  
+ [1] Rcpp_0.12.14      compiler_3.4.3    git2r_0.20.0     
+ [4] plyr_1.8.4        bindr_0.1         iterators_1.0.9  
+ [7] tools_3.4.3       digest_0.6.13     evaluate_0.10.1  
 [10] tibble_1.3.4      lattice_0.20-35   pkgconfig_2.0.1  
-[13] rlang_0.1.2       Matrix_1.2-12     foreach_1.4.3    
-[16] yaml_2.1.14       parallel_3.4.3    mvtnorm_1.0-6    
+[13] rlang_0.1.6       Matrix_1.2-12     foreach_1.4.4    
+[16] yaml_2.1.16       parallel_3.4.3    mvtnorm_1.0-6    
 [19] bindrcpp_0.2      stringr_1.2.0     knitr_1.17       
-[22] rprojroot_1.2     grid_3.4.3        glue_1.1.1       
-[25] R6_2.2.2          rmarkdown_1.7     rmeta_2.16       
-[28] magrittr_1.5      backports_1.1.1   codetools_0.2-15 
+[22] rprojroot_1.2     grid_3.4.3        glue_1.2.0       
+[25] R6_2.2.2          rmarkdown_1.8     rmeta_2.16       
+[28] magrittr_1.5      backports_1.1.2   codetools_0.2-15 
 [31] htmltools_0.3.6   MASS_7.3-47       assertthat_0.2.0 
-[34] stringi_1.1.5     pscl_1.5.2        doParallel_1.0.11
+[34] stringi_1.1.6     pscl_1.5.2        doParallel_1.0.11
 [37] truncnorm_1.0-7   SQUAREM_2017.10-1</code></pre>
 </div>
 
