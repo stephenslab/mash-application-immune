@@ -1,0 +1,496 @@
+<!DOCTYPE html>
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+
+<head>
+
+<meta charset="utf-8" />
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+<meta name="generator" content="pandoc" />
+
+
+<meta name="author" content="Yuxin Zou" />
+
+<meta name="date" content="2018-01-11" />
+
+<title>Simulation with Signal Example</title>
+
+<script src="site_libs/jquery-1.11.3/jquery.min.js"></script>
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<link href="site_libs/bootstrap-3.3.5/css/cosmo.min.css" rel="stylesheet" />
+<script src="site_libs/bootstrap-3.3.5/js/bootstrap.min.js"></script>
+<script src="site_libs/bootstrap-3.3.5/shim/html5shiv.min.js"></script>
+<script src="site_libs/bootstrap-3.3.5/shim/respond.min.js"></script>
+<script src="site_libs/jqueryui-1.11.4/jquery-ui.min.js"></script>
+<link href="site_libs/tocify-1.9.1/jquery.tocify.css" rel="stylesheet" />
+<script src="site_libs/tocify-1.9.1/jquery.tocify.js"></script>
+<script src="site_libs/navigation-1.1/tabsets.js"></script>
+<link href="site_libs/highlightjs-9.12.0/textmate.css" rel="stylesheet" />
+<script src="site_libs/highlightjs-9.12.0/highlight.js"></script>
+<link href="site_libs/font-awesome-4.5.0/css/font-awesome.min.css" rel="stylesheet" />
+
+<style type="text/css">code{white-space: pre;}</style>
+<style type="text/css">
+  pre:not([class]) {
+    background-color: white;
+  }
+</style>
+<script type="text/javascript">
+if (window.hljs) {
+  hljs.configure({languages: []});
+  hljs.initHighlightingOnLoad();
+  if (document.readyState && document.readyState === "complete") {
+    window.setTimeout(function() { hljs.initHighlighting(); }, 0);
+  }
+}
+</script>
+
+
+
+<style type="text/css">
+h1 {
+  font-size: 34px;
+}
+h1.title {
+  font-size: 38px;
+}
+h2 {
+  font-size: 30px;
+}
+h3 {
+  font-size: 24px;
+}
+h4 {
+  font-size: 18px;
+}
+h5 {
+  font-size: 16px;
+}
+h6 {
+  font-size: 12px;
+}
+.table th:not([align]) {
+  text-align: left;
+}
+</style>
+
+
+</head>
+
+<body>
+
+<style type = "text/css">
+.main-container {
+  max-width: 940px;
+  margin-left: auto;
+  margin-right: auto;
+}
+code {
+  color: inherit;
+  background-color: rgba(0, 0, 0, 0.04);
+}
+img {
+  max-width:100%;
+  height: auto;
+}
+.tabbed-pane {
+  padding-top: 12px;
+}
+button.code-folding-btn:focus {
+  outline: none;
+}
+</style>
+
+
+<style type="text/css">
+/* padding for bootstrap navbar */
+body {
+  padding-top: 51px;
+  padding-bottom: 40px;
+}
+/* offset scroll position for anchor links (for fixed navbar)  */
+.section h1 {
+  padding-top: 56px;
+  margin-top: -56px;
+}
+
+.section h2 {
+  padding-top: 56px;
+  margin-top: -56px;
+}
+.section h3 {
+  padding-top: 56px;
+  margin-top: -56px;
+}
+.section h4 {
+  padding-top: 56px;
+  margin-top: -56px;
+}
+.section h5 {
+  padding-top: 56px;
+  margin-top: -56px;
+}
+.section h6 {
+  padding-top: 56px;
+  margin-top: -56px;
+}
+</style>
+
+<script>
+// manage active state of menu based on current page
+$(document).ready(function () {
+  // active menu anchor
+  href = window.location.pathname
+  href = href.substr(href.lastIndexOf('/') + 1)
+  if (href === "")
+    href = "index.html";
+  var menuAnchor = $('a[href="' + href + '"]');
+
+  // mark it active
+  menuAnchor.parent().addClass('active');
+
+  // if it's got a parent navbar menu mark it active as well
+  menuAnchor.closest('li.dropdown').addClass('active');
+});
+</script>
+
+
+<div class="container-fluid main-container">
+
+<!-- tabsets -->
+<script>
+$(document).ready(function () {
+  window.buildTabsets("TOC");
+});
+</script>
+
+<!-- code folding -->
+
+
+
+
+<script>
+$(document).ready(function ()  {
+
+    // move toc-ignore selectors from section div to header
+    $('div.section.toc-ignore')
+        .removeClass('toc-ignore')
+        .children('h1,h2,h3,h4,h5').addClass('toc-ignore');
+
+    // establish options
+    var options = {
+      selectors: "h1,h2,h3",
+      theme: "bootstrap3",
+      context: '.toc-content',
+      hashGenerator: function (text) {
+        return text.replace(/[.\\/?&!#<>]/g, '').replace(/\s/g, '_').toLowerCase();
+      },
+      ignoreSelector: ".toc-ignore",
+      scrollTo: 0
+    };
+    options.showAndHide = true;
+    options.smoothScroll = true;
+
+    // tocify
+    var toc = $("#TOC").tocify(options).data("toc-tocify");
+});
+</script>
+
+<style type="text/css">
+
+#TOC {
+  margin: 25px 0px 20px 0px;
+}
+@media (max-width: 768px) {
+#TOC {
+  position: relative;
+  width: 100%;
+}
+}
+
+
+.toc-content {
+  padding-left: 30px;
+  padding-right: 40px;
+}
+
+div.main-container {
+  max-width: 1200px;
+}
+
+div.tocify {
+  width: 20%;
+  max-width: 260px;
+  max-height: 85%;
+}
+
+@media (min-width: 768px) and (max-width: 991px) {
+  div.tocify {
+    width: 25%;
+  }
+}
+
+@media (max-width: 767px) {
+  div.tocify {
+    width: 100%;
+    max-width: none;
+  }
+}
+
+.tocify ul, .tocify li {
+  line-height: 20px;
+}
+
+.tocify-subheader .tocify-item {
+  font-size: 0.90em;
+  padding-left: 25px;
+  text-indent: 0;
+}
+
+.tocify .list-group-item {
+  border-radius: 0px;
+}
+
+
+</style>
+
+<!-- setup 3col/9col grid for toc_float and main content  -->
+<div class="row-fluid">
+<div class="col-xs-12 col-sm-4 col-md-3">
+<div id="TOC" class="tocify">
+</div>
+</div>
+
+<div class="toc-content col-xs-12 col-sm-8 col-md-9">
+
+
+
+
+<div class="navbar navbar-default  navbar-fixed-top" role="navigation">
+  <div class="container">
+    <div class="navbar-header">
+      <button type="button" class="navbar-toggle collapsed" data-toggle="collapse" data-target="#navbar">
+        <span class="icon-bar"></span>
+        <span class="icon-bar"></span>
+        <span class="icon-bar"></span>
+      </button>
+      <a class="navbar-brand" href="index.html">mash-application-immune</a>
+    </div>
+    <div id="navbar" class="navbar-collapse collapse">
+      <ul class="nav navbar-nav">
+        <li>
+  <a href="index.html">Home</a>
+</li>
+<li>
+  <a href="about.html">About</a>
+</li>
+<li>
+  <a href="license.html">License</a>
+</li>
+      </ul>
+      <ul class="nav navbar-nav navbar-right">
+        <li>
+  <a href="https://github.com/jdblischak/workflowr">
+    <span class="fa fa-github"></span>
+     
+  </a>
+</li>
+      </ul>
+    </div><!--/.nav-collapse -->
+  </div><!--/.container -->
+</div><!--/.navbar -->
+<!-- Add a small amount of space between sections. -->
+<style type="text/css">
+div.section {
+  padding-top: 12px;
+}
+</style>
+
+<div class="fluid-row" id="header">
+
+
+
+<h1 class="title toc-ignore">Simulation with Signal Example</h1>
+<h4 class="author"><em>Yuxin Zou</em></h4>
+<h4 class="date"><em>2018-01-11</em></h4>
+
+</div>
+
+
+<!-- Update knitr chunk options -->
+<!-- Insert the date the file was last updated -->
+<p><strong>Last updated:</strong> 2018-01-28</p>
+<!-- Insert the R version (Git commit SHA1) if Git repository exists and R
+ package git2r is installed -->
+<pre><code>Loading required package: ashr</code></pre>
+<div id="simulation-design" class="section level1">
+<h1>Simulation Design</h1>
+<p>In the simulation, <span class="math display">\[c_{j2...R} = c_{j1} + \delta_{j}\]</span> <span class="math display">\[\hat{c}_{j}|c_{j} \sim N_{R}(c_{j}, \frac{1}{2}I)\]</span> Let L be the contrast matrix. Therefore, <span class="math display">\[\hat{\delta}_{j}|\delta_{j} = L\hat{c}_{j}|c_{j} \sim N_{R-1}(\delta_{j}, \frac{1}{2}LL&#39;)\]</span></p>
+<p>We first generate the data:</p>
+<pre class="r"><code>set.seed(2018)
+data = sim.contrast2(nsamp = 21000, ncond = 8)</code></pre>
+<p>This simulation routine creates a dataset with 8 conditions, and four different types of deviations <span class="math inline">\(\delta_{j}\)</span>: null, independent among conditions, condition-specific in condition 2, and shared (equal effects in all conditions). The data contains 10% non-null effects <span class="math display">\[\delta_{j} \sim \frac{9}{10}N(0,0)+\frac{1}{30}N(0,I)+\frac{1}{30}N(0,11^{T})+\frac{1}{30}N(0,e_{1}e_{1}^{T})\]</span></p>
+<p>Set up the contrast matrix and the mash contrast data object</p>
+<pre class="r"><code>R = 8
+L = diag(R-1)
+L = cbind(rep(-1, R-1), L)
+row.names(L) = c(&#39;2-1&#39;,&#39;3-1&#39;,&#39;4-1&#39;,&#39;5-1&#39;,&#39;6-1&#39;,&#39;7-1&#39;,&#39;8-1&#39;)
+
+mash_data = mash_set_data(Bhat=data$Chat, Shat=data$Shat)
+mash_data_L = mash_set_data_contrast(mash_data, L)</code></pre>
+<p>Set up the covariance matrices:</p>
+<pre class="r"><code># canonical
+U.c = cov_canonical(mash_data_L)
+# data driven
+m.1by1 = mash_1by1(mash_data_L, alpha=1)
+strong = get_significant_results(m.1by1,0.05)
+# only 5 strong samples
+
+# center Z
+# mash_data_L.center = mash_data_L
+# mash_data_L.center$Bhat = mash_data_L$Bhat/mash_data_L$BShat # obtain z
+# mash_data_L.center$BShat = matrix(1, nrow(mash_data_L$Bhat),ncol(mash_data_L$Bhat))
+# mash_data_L.center$Bhat = apply(mash_data_L.center$Bhat, 2, function(x) x - mean(x))
+# U.pca = cov_pca(mash_data_L.center,5,strong)
+# U.ed = cov_ed(mash_data_L.center, U.pca, strong)</code></pre>
+<p>Fit <code>mashcontrast</code> model</p>
+<pre class="r"><code>mashcontrast.model = mash(mash_data_L, U.c, algorithm.version = &#39;R&#39;)</code></pre>
+<pre><code> - Computing 21000 x 181 likelihood matrix.
+ - Likelihood calculations took 1.51 seconds.
+ - Fitting model with 181 mixture components.
+ - Model fitting took 4.57 seconds.
+ - Computing posterior matrices.
+ - Computation allocated took 0.18 seconds.</code></pre>
+<pre class="r"><code>print(get_loglik(mashcontrast.model),digits = 10)</code></pre>
+<pre><code>[1] -184139.2001</code></pre>
+<p>Use <code>get_significant_results</code> to find the indices of effects that are “significant”:</p>
+<pre class="r"><code>length(get_significant_results(mashcontrast.model))</code></pre>
+<pre><code>[1] 111</code></pre>
+<p>The number of false positive is 0.</p>
+<pre class="r"><code>barplot(get_estimated_pi(mashcontrast.model),las = 2,cex.names = 0.7)</code></pre>
+<p><img src="figure/Simple.Contrast2.Rmd/unnamed-chunk-8-1.png" width="672" style="display: block; margin: auto;" /></p>
+</div>
+<div id="comparing-discovery-result-with-hatdelta_j-sim-n_7delta_ji" class="section level1">
+<h1>Comparing discovery result with <span class="math inline">\(\hat{\delta}_{j} \sim N_{7}(\delta_{j},I)\)</span>:</h1>
+<pre class="r"><code>Indep.data = mash_set_data(Bhat = data$Chat%*%t(L))
+Indep.model = mash(Indep.data, U.c, algorithm.version = &#39;R&#39;)</code></pre>
+<pre><code> - Computing 21000 x 181 likelihood matrix.
+ - Likelihood calculations took 1.55 seconds.
+ - Fitting model with 181 mixture components.
+ - Model fitting took 4.98 seconds.
+ - Computing posterior matrices.
+ - Computation allocated took 0.16 seconds.</code></pre>
+<pre class="r"><code>print(get_loglik(Indep.model),digits = 10)</code></pre>
+<pre><code>[1] -194668.353</code></pre>
+<pre class="r"><code>length(get_significant_results(Indep.model))</code></pre>
+<pre><code>[1] 6349</code></pre>
+<p>There are more discoveries here, but lots of them are false discoveries. The number of false positive is 5549.</p>
+<pre class="r"><code>barplot(get_estimated_pi(Indep.model),las = 2, cex.names = 0.7)</code></pre>
+<p><img src="figure/Simple.Contrast2.Rmd/unnamed-chunk-11-1.png" width="672" style="display: block; margin: auto;" /></p>
+<p>The RRMSE plot: <img src="figure/Simple.Contrast2.Rmd/unnamed-chunk-12-1.png" width="672" style="display: block; margin: auto;" /></p>
+<p>We check the False Positive Rate and True Positive Rate. <span class="math display">\[FPR = \frac{|N\cap S|}{|N|} \quad TPR = \frac{|CS\cap S|}{|T|} \]</span></p>
+<p><img src="figure/Simple.Contrast2.Rmd/unnamed-chunk-14-1.png" width="672" style="display: block; margin: auto;" /></p>
+</div>
+<div id="session-information" class="section level1">
+<h1>Session information</h1>
+<!-- Insert the session information into the document -->
+<pre class="r"><code>sessionInfo()</code></pre>
+<pre><code>R version 3.4.3 (2017-11-30)
+Platform: x86_64-apple-darwin15.6.0 (64-bit)
+Running under: macOS High Sierra 10.13.2
+
+Matrix products: default
+BLAS: /Library/Frameworks/R.framework/Versions/3.4/Resources/lib/libRblas.0.dylib
+LAPACK: /Library/Frameworks/R.framework/Versions/3.4/Resources/lib/libRlapack.dylib
+
+locale:
+[1] en_US.UTF-8/en_US.UTF-8/en_US.UTF-8/C/en_US.UTF-8/en_US.UTF-8
+
+attached base packages:
+[1] stats     graphics  grDevices utils     datasets  methods   base     
+
+other attached packages:
+[1] mashr_0.2-4 ashr_2.2-3 
+
+loaded via a namespace (and not attached):
+ [1] Rcpp_0.12.15      knitr_1.17        magrittr_1.5     
+ [4] REBayes_1.2       MASS_7.3-47       doParallel_1.0.11
+ [7] pscl_1.5.2        SQUAREM_2017.10-1 lattice_0.20-35  
+[10] foreach_1.4.4     plyr_1.8.4        stringr_1.2.0    
+[13] tools_3.4.3       parallel_3.4.3    grid_3.4.3       
+[16] rmeta_2.16        htmltools_0.3.6   iterators_1.0.9  
+[19] assertthat_0.2.0  yaml_2.1.16       rprojroot_1.2    
+[22] digest_0.6.13     Matrix_1.2-12     codetools_0.2-15 
+[25] evaluate_0.10.1   rmarkdown_1.8     stringi_1.1.6    
+[28] compiler_3.4.3    Rmosek_8.0.69     backports_1.1.2  
+[31] mvtnorm_1.0-7     truncnorm_1.0-7  </code></pre>
+</div>
+
+<!-- Adjust MathJax settings so that all math formulae are shown using
+TeX fonts only; see
+http://docs.mathjax.org/en/latest/configuration.html.  This will make
+the presentation more consistent at the cost of the webpage sometimes
+taking slightly longer to load. Note that this only works because the
+footer is added to webpages before the MathJax javascript. -->
+<script type="text/x-mathjax-config">
+  MathJax.Hub.Config({
+    "HTML-CSS": { availableFonts: ["TeX"] }
+  });
+</script>
+
+<hr>
+<p>
+    This <a href="http://rmarkdown.rstudio.com">R Markdown</a> site was created with <a href="https://github.com/jdblischak/workflowr">workflowr</a>
+</p>
+<hr>
+
+<!-- To enable disqus, uncomment the section below and provide your disqus_shortname -->
+
+<!-- disqus
+  <div id="disqus_thread"></div>
+    <script type="text/javascript">
+        /* * * CONFIGURATION VARIABLES: EDIT BEFORE PASTING INTO YOUR WEBPAGE * * */
+        var disqus_shortname = 'rmarkdown'; // required: replace example with your forum shortname
+
+        /* * * DON'T EDIT BELOW THIS LINE * * */
+        (function() {
+            var dsq = document.createElement('script'); dsq.type = 'text/javascript'; dsq.async = true;
+            dsq.src = '//' + disqus_shortname + '.disqus.com/embed.js';
+            (document.getElementsByTagName('head')[0] || document.getElementsByTagName('body')[0]).appendChild(dsq);
+        })();
+    </script>
+    <noscript>Please enable JavaScript to view the <a href="http://disqus.com/?ref_noscript">comments powered by Disqus.</a></noscript>
+    <a href="http://disqus.com" class="dsq-brlink">comments powered by <span class="logo-disqus">Disqus</span></a>
+-->
+
+
+</div>
+</div>
+
+</div>
+
+<script>
+
+// add bootstrap table styles to pandoc tables
+function bootstrapStylePandocTables() {
+  $('tr.header').parent('thead').parent('table').addClass('table table-condensed');
+}
+$(document).ready(function () {
+  bootstrapStylePandocTables();
+});
+
+
+</script>
+
+<!-- dynamically load mathjax for compatibility with self-contained -->
+<script>
+  (function () {
+    var script = document.createElement("script");
+    script.type = "text/javascript";
+    script.src  = "https://mathjax.rstudio.com/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML";
+    document.getElementsByTagName("head")[0].appendChild(script);
+  })();
+</script>
+
+</body>
+</html>
