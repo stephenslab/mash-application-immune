@@ -50,7 +50,7 @@ data = sim.flash(nsamp=1000, err_sd = 0.05)
 
 * `flashr` Factorization
 
-```{r eval=FALSE}
+```{r eval=FALSE, echo=FALSE}
 z = data$Bhat/data$Shat
 # center
 Z.center = apply(z, 2, function(x) x - mean(x))
