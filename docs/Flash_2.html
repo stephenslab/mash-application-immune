@@ -332,15 +332,6 @@ data = sim.flash(nsamp=1000, err_sd = 0.05)</code></pre>
 <ul>
 <li><code>flashr</code> Factorization</li>
 </ul>
-<pre class="r"><code>z = data$Bhat/data$Shat
-# center
-Z.center = apply(z, 2, function(x) x - mean(x))
-
-fdata = flash_set_data(Z.center)
-fg = flash_add_greedy(fdata,10, seed=2000)
-fb = flash_backfit(fdata,fg)
-
-saveRDS(fb, &#39;../output/FLash_2_fb.rds&#39;)</code></pre>
 <p>The factor structures:</p>
 <p><img src="figure/Flash_2.Rmd/unnamed-chunk-5-1.png" width="672" style="display: block; margin: auto;" /></p>
 </div>
