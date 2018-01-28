@@ -1,0 +1,160 @@
+---
+title: "Simulation with Signal Example"
+author: "Yuxin Zou"
+date: 2018-01-11
+output: html_document
+---
+
+```{r read-chunk, include=FALSE, cache=FALSE}
+knitr::read_chunk("chunks.R")
+```
+
+<!-- Update knitr chunk options -->
+```{r knitr-opts-chunk, include=FALSE}
+```
+
+<!-- Insert the date the file was last updated -->
+```{r last-updated, echo=FALSE, results='asis'}
+```
+
+<!-- Insert the R version (Git commit SHA1) if Git repository exists and R
+ package git2r is installed -->
+```{r R-version, echo=FALSE, results='asis'}
+```
+
+```{r, echo=FALSE}
+# TEMPORARY.
+knitr::opts_chunk$set(eval = TRUE)
+```
+
+```{r, echo=FALSE}
+library(mashr)
+```
+
+# Simulation Design
+
+In the simulation, $$c_{j2...R} = c_{j1} + \delta_{j}$$
+$$\hat{c}_{j}|c_{j} \sim N_{R}(c_{j}, \frac{1}{2}I)$$
+Let L be the contrast matrix. Therefore, $$\hat{\delta}_{j}|\delta_{j} = L\hat{c}_{j}|c_{j} \sim N_{R-1}(\delta_{j}, \frac{1}{2}LL')$$
+
+We first generate the data:
+```{r}
+set.seed(2018)
+data = sim.contrast2(nsamp = 21000, ncond = 8)
+```
+This simulation routine creates a dataset with 8 conditions, and four different types of deviations $\delta_{j}$: null, independent among conditions, condition-specific in condition 2, and shared (equal effects in all conditions). The data contains 10% non-null effects 
+$$\delta_{j} \sim \frac{9}{10}N(0,0)+\frac{1}{30}N(0,I)+\frac{1}{30}N(0,11^{T})+\frac{1}{30}N(0,e_{1}e_{1}^{T})$$
+
+Set up the contrast matrix and the mash contrast data object
+```{r}
+R = 8
+L = diag(R-1)
+L = cbind(rep(-1, R-1), L)
+row.names(L) = c('2-1','3-1','4-1','5-1','6-1','7-1','8-1')
+
+mash_data = mash_set_data(Bhat=data$Chat, Shat=data$Shat)
+mash_data_L = mash_set_data_contrast(mash_data, L)
+```
+
+Set up the covariance matrices:
+
+```{r}
+# canonical
+U.c = cov_canonical(mash_data_L)
+# data driven
+m.1by1 = mash_1by1(mash_data_L, alpha=1)
+strong = get_significant_results(m.1by1,0.05)
+# only 5 strong samples
+
+# center Z
+# mash_data_L.center = mash_data_L
+# mash_data_L.center$Bhat = mash_data_L$Bhat/mash_data_L$BShat # obtain z
+# mash_data_L.center$BShat = matrix(1, nrow(mash_data_L$Bhat),ncol(mash_data_L$Bhat))
+# mash_data_L.center$Bhat = apply(mash_data_L.center$Bhat, 2, function(x) x - mean(x))
+# U.pca = cov_pca(mash_data_L.center,5,strong)
+# U.ed = cov_ed(mash_data_L.center, U.pca, strong)
+```
+
+Fit `mashcontrast` model
+```{r}
+mashcontrast.model = mash(mash_data_L, U.c, algorithm.version = 'R')
+print(get_loglik(mashcontrast.model),digits = 10)
+```
+
+Use `get_significant_results` to find the indices of effects that are “significant”:
+
+```{r}
+length(get_significant_results(mashcontrast.model))
+```
+
+The number of false positive is `r sum(get_significant_results(mashcontrast.model) < 21000-2100)`.
+
+```{r}
+barplot(get_estimated_pi(mashcontrast.model),las = 2,cex.names = 0.7)
+```
+
+# Comparing discovery result with $\hat{\delta}_{j} \sim N_{7}(\delta_{j},I)$:
+
+```{r}
+Indep.data = mash_set_data(Bhat = data$Chat%*%t(L))
+Indep.model = mash(Indep.data, U.c, algorithm.version = 'R')
+print(get_loglik(Indep.model),digits = 10)
+```
+```{r}
+length(get_significant_results(Indep.model))
+```
+
+There are more discoveries here, but lots of them are false discoveries. The number of false positive is `r sum(get_significant_results(Indep.model) < 21000-2100)`.
+
+```{r}
+barplot(get_estimated_pi(Indep.model),las = 2, cex.names = 0.7)
+```
+
+The RRMSE plot:
+```{r, echo=FALSE}
+delta = data$C %*% t(L)
+barplot(c(sqrt(mean((delta - mashcontrast.model$result$PosteriorMean)^2)/mean((delta - data$Chat%*%t(L))^2)), sqrt(mean((delta - Indep.model$result$PosteriorMean)^2)/mean((delta - data$Chat%*%t(L))^2))), ylim=c(0,0.8), names.arg = c('mashcontrast', 'indep'), ylab='RRMSE')
+```
+
+We check the False Positive Rate and True Positive Rate. 
+$$FPR = \frac{|N\cap S|}{|N|} \quad TPR = \frac{|CS\cap S|}{|T|} $$
+
+```{r, echo=FALSE}
+CS_S = function(model, thresh=0.05, data){
+  sig.index = model$result$lfsr <= thresh
+  sum(sig.index * model$result$PosteriorMean * data > 0)
+}
+
+N_S = function(model, thresh=0.05, data){
+  N.index = data == 0
+  sig.index = model$result$lfsr <= thresh
+  sum(sig.index * N.index)
+}
+
+delta = data$C %*% t(L)
+N = sum(delta == 0)
+Tr = nrow(delta) * ncol(delta) - N
+
+thresh.seq = seq(0, 1, by=0.0005)[-1]
+mashcontrast = matrix(0,length(thresh.seq), 2)
+Indep = matrix(0,length(thresh.seq), 2)
+colnames(mashcontrast) = c('TPR', 'FPR')
+colnames(Indep) = c('TPR', 'FPR')
+for(t in 1:length(thresh.seq)){
+  mashcontrast[t,] = c(CS_S(mashcontrast.model, thresh.seq[t], delta)/Tr, N_S(mashcontrast.model, thresh.seq[t],delta)/N)
+  Indep[t,] = c(CS_S(Indep.model, thresh.seq[t], delta)/Tr,  N_S(Indep.model, thresh.seq[t],delta)/N)
+}
+
+```
+
+```{r, echo=FALSE}
+{plot(mashcontrast[,'FPR'], mashcontrast[,'TPR'], col='red',type='l',xlab = 'FPR', ylab='TPR')
+lines(Indep[,'FPR'], Indep[,'TPR'])
+legend('bottomright', c('mashcommon', 'mashIndep'),col=c('red','black'),lty=c(1,1))}
+```
+
+# Session information
+
+<!-- Insert the session information into the document -->
+```{r session-info}
+```

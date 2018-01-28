@@ -125,3 +125,15 @@ $$l_{i} \sim \sum_{m=1}^{n} \pi_{m} N_{K}(0, U_{m})$$
     The differences become clearer as we concentrate on more convincingly baseline/stimulate-specific eQTLs. 
     
     Method: Within the baseline/stimulate-specific group, select the more convincingly eQTLSs by decreasing the statistical significance cutoff.
+
+* `contrast` method simple simulation examples:
+    + Without signal: [simple contrast example](Simple.Contrast1.html)
+    + With signal: [simple contrast example2](Simple.Contrast2.html)
+    
+* The contrast matrix to subtract the mean:
+    + Without signal: [Compare with mean without signal](CompareMeanNonSignal.html)
+    + With signal: [Compare with mean with signal](CompareMeanSignal.html)
+
+* Including more covariance structures basd on `flash` output.
+  
+    [Flash_2](Flash_2.html)

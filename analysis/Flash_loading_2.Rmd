@@ -1,0 +1,216 @@
+---
+title: "Clustering loadings"
+author: "Yuxin Zou"
+date: 2018-01-23
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+```{r read-chunk, include=FALSE, cache=FALSE}
+knitr::read_chunk("chunks.R")
+```
+
+<!-- Update knitr chunk options -->
+```{r knitr-opts-chunk, include=FALSE}
+```
+
+<!-- Insert the date the file was last updated -->
+```{r last-updated, echo=FALSE, results='asis'}
+```
+
+<!-- Insert the R version (Git commit SHA1) if Git repository exists and R
+ package git2r is installed -->
+```{r R-version, echo=FALSE, results='asis'}
+```
+
+```{r, echo=FALSE}
+# TEMPORARY.
+knitr::opts_chunk$set(eval = TRUE)
+```
+
+
+```{r echo=FALSE}
+library(flashr)
+library(mashr)
+library(corrplot)
+library(mclust)
+library(plyr)
+source('../code/sim_flash.R')
+fb = readRDS('../output/FLash_2_fb.rds')
+```
+
+```{r echo=FALSE}
+set.seed(50)
+data = sim.flash(nsamp=1000, err_sd = 0.05)
+loading = flash_get_l(fb, 1:3)
+colnames(loading) = c('F1','F2','F3')
+mash_data = mash_set_data(Bhat = data$Bhat, Shat = data$Shat)
+U.c = cov_canonical(mash_data)
+U.flash = c(list("tFlash" = t(flash_get_lf(fb)) %*% flash_get_lf(fb) / nrow(mash_data$Bhat)))
+```
+
+# Case 1: Not force mean to 0
+
+```{r, eval=FALSE, echo=FALSE}
+mod = Mclust(loading, G=1:20)
+summary(mod$BIC)
+plot(mod, what = "BIC",legendArgs = list(x = "bottomleft"))
+saveRDS(mod, '../output/Flash_2_mclust.rds')
+```
+
+Using clustering result to fit `mash`:
+
+$$l_{i}\sim \sum_{i=1}^{m}N(\mu_{i}, \Sigma_{i})$$
+We estimate the covariance as $F(\Sigma_i + \mu_{i}\mu_{i}')F'$.
+
+```{r}
+mod = readRDS('../output/Flash_2_mclust.rds')
+U_list = alply(mod$parameters$variance$sigma,3)
+mu_list = alply(mod$parameters$mean,2)
+Factors = flash_get_f(fb,1:3)
+ll = list()
+for (i in 1:length(U_list)){
+  ll[[i]] = U_list[[i]] + mu_list[[i]] %*% t(mu_list[[i]])
+}
+
+U.loading = lapply(ll, function(U){Factors %*% (U %*% t(Factors))})
+names(U.loading) = paste0('Load', "_", (1:length(U.loading)))
+
+U.Flash = U.flash = c(list("tFlash" = t(flash_get_lf(fb)) %*% flash_get_lf(fb) / nrow(mash_data$Bhat)))
+
+U.ed.2.2 = cov_ed(mash_data, c(U.loading, U.Flash))
+mash_model.2.2 = mash(mash_data, c(U.c,U.ed.2.2), algorithm.version = 'R', verbose = FALSE)
+barplot(get_estimated_pi(mash_model.2.2), las=2, cex.names = 0.7)
+```
+
+There are `r length(get_significant_results(mash_model.2.2))` siginificant findings. The log likelihood is `r get_loglik(mash_model.2.2)`. The loglikelihood improves. The weights are on `Load 3`, `Load 9`, `Load 10`, `Load 11`, `Load 12`. Let's visualize these matrices:
+
+```{r echo=FALSE}
+layout(matrix(c(1,2,3,4,5,6), 3, 2, byrow = TRUE))
+svd.out = svd(mash_model.2.2$fitted_g$Ulist[["ED_Load_3"]])
+v = svd.out$v
+colnames(v) = colnames(get_lfsr(mash_model.2.2))
+rownames(v) = colnames(v)
+options(repr.plot.width=10, repr.plot.height=5)
+barplot(v[,1]/v[,1][which.max(abs(v[,1]))], cex.names = 0.7,
+          las = 2, main = paste0("EigenVector 1 for Load 3"))
+
+svd.out = svd(mash_model.2.2$fitted_g$Ulist[["ED_Load_9"]])
+v = svd.out$v
+colnames(v) = colnames(get_lfsr(mash_model.2.2))
+rownames(v) = colnames(v)
+options(repr.plot.width=10, repr.plot.height=5)
+barplot(v[,1]/v[,1][which.max(abs(v[,1]))], cex.names = 0.7,
+          las = 2, main = paste0("EigenVector 1 for Load 9"))
+
+svd.out = svd(mash_model.2.2$fitted_g$Ulist[["ED_Load_10"]])
+v = svd.out$v
+colnames(v) = colnames(get_lfsr(mash_model.2.2))
+rownames(v) = colnames(v)
+options(repr.plot.width=10, repr.plot.height=5)
+barplot(v[,1]/v[,1][which.max(abs(v[,1]))], cex.names = 0.7,
+          las = 2, main = paste0("EigenVector 1 for Load 10"))
+
+svd.out = svd(mash_model.2.2$fitted_g$Ulist[["ED_Load_11"]])
+v = svd.out$v
+colnames(v) = colnames(get_lfsr(mash_model.2.2))
+rownames(v) = colnames(v)
+options(repr.plot.width=10, repr.plot.height=5)
+barplot(v[,1]/v[,1][which.max(abs(v[,1]))], cex.names = 0.7,
+          las = 2, main = paste0("EigenVector 1 for Load 11"))
+
+svd.out = svd(mash_model.2.2$fitted_g$Ulist[["ED_Load_12"]])
+v = svd.out$v
+colnames(v) = colnames(get_lfsr(mash_model.2.2))
+rownames(v) = colnames(v)
+options(repr.plot.width=10, repr.plot.height=5)
+barplot(v[,1]/v[,1][which.max(abs(v[,1]))], cex.names = 0.7,
+          las = 2, main = paste0("EigenVector 1 for Load 12"))
+```
+
+The covariave structures are captured correctly.
+
+# Case 2: Force mean to 0
+
+```{r, eval=FALSE, echo=FALSE}
+set.seed(10)
+mod0 = Mclust(loading, G=1:50, prior = priorControl(mean=numeric(3), shrinkage = 10^(10)))
+summary(mod0$BIC)
+saveRDS(mod0, '../output/Flash_2_mclust_0.rds')
+```
+
+```{r}
+mod0 = readRDS('../output/Flash_2_mclust_0.rds')
+U_list = alply(mod0$parameters$variance$sigma,3)
+Factors = flash_get_f(fb,1:3)
+
+U.loading = lapply(U_list, function(U){Factors %*% (U %*% t(Factors))})
+names(U.loading) = paste0('Load', "_", (1:length(U.loading)))
+
+U.Flash = U.flash = c(list("tFlash" = t(flash_get_lf(fb)) %*% flash_get_lf(fb) / nrow(mash_data$Bhat)))
+
+U.ed.2.3 = cov_ed(mash_data, c(U.loading, U.Flash))
+mash_model.2.3 = mash(mash_data, c(U.c,U.ed.2.3), algorithm.version = 'R', verbose = FALSE)
+barplot(get_estimated_pi(mash_model.2.3), las=2, cex.names = 0.7)
+```
+There are `r length(get_significant_results(mash_model.2.3))` siginificant findings. The log likelihood is `r get_loglik(mash_model.2.3)`. The loglikelihood improves. The weights are on `Load 2`, `Load 3`, `Load 19`, `Load 21`, `Load 23`. Let's visualize these matrices:
+
+```{r echo=FALSE}
+layout(matrix(c(1,2,3,4,5,6), 3, 2, byrow = TRUE))
+svd.out = svd(mash_model.2.3$fitted_g$Ulist[["ED_Load_2"]])
+v = svd.out$v
+colnames(v) = colnames(get_lfsr(mash_model.2.3))
+rownames(v) = colnames(v)
+options(repr.plot.width=10, repr.plot.height=5)
+barplot(v[,1]/v[,1][which.max(abs(v[,1]))], cex.names = 0.7,
+          las = 2, main = paste0("EigenVector 1 for Load 2"))
+
+svd.out = svd(mash_model.2.3$fitted_g$Ulist[["ED_Load_3"]])
+v = svd.out$v
+colnames(v) = colnames(get_lfsr(mash_model.2.3))
+rownames(v) = colnames(v)
+options(repr.plot.width=10, repr.plot.height=5)
+barplot(v[,1]/v[,1][which.max(abs(v[,1]))], cex.names = 0.7,
+          las = 2, main = paste0("EigenVector 1 for Load 3"))
+
+svd.out = svd(mash_model.2.3$fitted_g$Ulist[["ED_Load_19"]])
+v = svd.out$v
+colnames(v) = colnames(get_lfsr(mash_model.2.3))
+rownames(v) = colnames(v)
+options(repr.plot.width=10, repr.plot.height=5)
+barplot(v[,1]/v[,1][which.max(abs(v[,1]))], cex.names = 0.7,
+          las = 2, main = paste0("EigenVector 1 for Load 19"))
+
+svd.out = svd(mash_model.2.3$fitted_g$Ulist[["ED_Load_21"]])
+v = svd.out$v
+colnames(v) = colnames(get_lfsr(mash_model.2.3))
+rownames(v) = colnames(v)
+options(repr.plot.width=10, repr.plot.height=5)
+barplot(v[,1]/v[,1][which.max(abs(v[,1]))], cex.names = 0.7,
+          las = 2, main = paste0("EigenVector 1 for Load 21"))
+
+svd.out = svd(mash_model.2.3$fitted_g$Ulist[["ED_Load_23"]])
+v = svd.out$v
+colnames(v) = colnames(get_lfsr(mash_model.2.3))
+rownames(v) = colnames(v)
+options(repr.plot.width=10, repr.plot.height=5)
+barplot(v[,1]/v[,1][which.max(abs(v[,1]))], cex.names = 0.7,
+          las = 2, main = paste0("EigenVector 1 for Load 23"))
+```
+
+# Conclusion
+
+If the data depends on more than one factors, we'd better add the correponding covairance structure to the model.
+
+I tried the forcing mean of loading in the clustering be 0, but I think this is not reasonable. We expect the loading matrix has column mean 0, but here, we are separating the rows of lading matrix into several groups. Each group could have non-zero column mean, but the overall column mean is zero.
+
+
+# Session information
+
+<!-- Insert the session information into the document -->
+```{r session-info}
+```
+

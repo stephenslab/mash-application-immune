@@ -1,0 +1,115 @@
+---
+title: "Comparing with mean (without signal)"
+author: "Yuxin Zou"
+date: 2018-01-10
+output: html_document
+---
+```{r read-chunk, include=FALSE, cache=FALSE}
+knitr::read_chunk("chunks.R")
+```
+
+<!-- Update knitr chunk options -->
+```{r knitr-opts-chunk, include=FALSE}
+```
+
+<!-- Insert the date the file was last updated -->
+```{r last-updated, echo=FALSE, results='asis'}
+```
+
+<!-- Insert the R version (Git commit SHA1) if Git repository exists and R
+ package git2r is installed -->
+```{r R-version, echo=FALSE, results='asis'}
+```
+
+```{r, echo=FALSE}
+# TEMPORARY.
+knitr::opts_chunk$set(eval = TRUE)
+```
+
+```{r, echo=FALSE}
+library(mashr)
+```
+
+# Simulation without signal
+
+$$c_{j} = \mu_{j} 1$$
+$$\hat{c}_{j} \sim N_{R}(c_{j}, \frac{1}{2}I)$$
+Let L be the contrast matrix, which comparing each condition with the mean. 
+$$L = \left(\begin{array}{c c c c}
+\frac{R-1}{R} & -\frac{1}{R} & \cdots & -\frac{1}{R} \\
+-\frac{1}{R} & \frac{R-1}{R} & \cdots & -\frac{1}{R} \\
+\vdots & \ddots & \ddots & \vdots \\
+-\frac{1}{R} & \cdots & \frac{R-1}{R} & -\frac{1}{R}
+\end{array} \right)_{R-1 \times R}$$
+There are only R-1 rows, intead of R. Since $c_{j,R}-\bar{c_{j}} = -\sum_{r=1}^{R-1} (c_{j,r}-\bar{c_{j}})$.
+
+Therefore, $$\hat{\delta}_{j} = L\hat{c}_{j} \sim N_{R-1}(0, \frac{1}{2}LL')$$
+
+We first generate the data:
+```{r}
+set.seed(1)
+data = sim.contrast1(nsamp = 10000, ncond = 8)
+```
+
+# Mash contrast model
+
+Set up the contrast matrix and the mash contrast data object
+```{r}
+L = rbind(c(7/8,-1/8,-1/8,-1/8,-1/8,-1/8,-1/8,-1/8),
+          c(-1/8,7/8,-1/8,-1/8,-1/8,-1/8,-1/8,-1/8),
+          c(-1/8,-1/8,7/8,-1/8,-1/8,-1/8,-1/8,-1/8),
+          c(-1/8,-1/8,-1/8,7/8,-1/8,-1/8,-1/8,-1/8),
+          c(-1/8,-1/8,-1/8,-1/8,7/8,-1/8,-1/8,-1/8),
+          c(-1/8,-1/8,-1/8,-1/8,-1/8,7/8,-1/8,-1/8),
+          c(-1/8,-1/8,-1/8,-1/8,-1/8,-1/8,7/8,-1/8))
+row.names(L) = seq(1,7)
+mash_data = mash_set_data(Bhat=data$Chat, Shat=data$Shat)
+mash_data_L = mash_set_data_contrast(mash_data, L)
+```
+
+Set up the covariance matrices:
+
+```{r}
+U.c = cov_canonical(mash_data_L)
+```
+
+Fit `mashcontrast` model
+```{r}
+mashcontrast.model = mash(mash_data_L, U.c, algorithm.version = 'R')
+```
+
+```{r}
+length(get_significant_results(mashcontrast.model))
+```
+There is no discovery, which is as we expected. The true deviations from mean are zero for all samples.
+
+```{r}
+barplot(get_estimated_pi(mashcontrast.model),las = 2, cex.names = 0.7)
+```
+
+# Subtract mean directly
+
+If we subtract the mean from the data directly, ignoring the correlation structure.
+$$Var(\hat{c}_{j,r}-\bar{\hat{c}_{j}}) = \frac{1}{2} - \frac{1}{2R}$$
+```{r}
+Indep.data = mash_set_data(Bhat = (data$Chat - apply(data$Chat,1, mean))[,1:7],
+                           Shat = matrix(sqrt(0.5-1/(8*2)), nrow(data$Chat), ncol(data$Chat)-1))
+U.c = cov_canonical(mash_data_L)
+Indep.model = mash(Indep.data, U.c, algorithm.version = 'R')
+```
+```{r}
+length(get_significant_results(Indep.model))
+```
+There are no false positives.
+
+```{r}
+barplot(get_estimated_pi(Indep.model),las = 2)
+```
+
+When there are no signal, subtracting mean directly from the data performs as good as the `mashcommonbaseline` model.
+
+# Session information
+
+<!-- Insert the session information into the document -->
+```{r session-info}
+```

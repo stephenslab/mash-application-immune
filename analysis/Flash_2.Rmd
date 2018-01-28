@@ -1,0 +1,145 @@
+---
+title: "MASH-Flash 2 factor"
+author: "Yuxin Zou"
+date: 2018-01-23
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+```{r read-chunk, include=FALSE, cache=FALSE}
+knitr::read_chunk("chunks.R")
+```
+
+<!-- Update knitr chunk options -->
+```{r knitr-opts-chunk, include=FALSE}
+```
+
+<!-- Insert the date the file was last updated -->
+```{r last-updated, echo=FALSE, results='asis'}
+```
+
+<!-- Insert the R version (Git commit SHA1) if Git repository exists and R
+ package git2r is installed -->
+```{r R-version, echo=FALSE, results='asis'}
+```
+
+```{r, echo=FALSE}
+# TEMPORARY.
+knitr::opts_chunk$set(eval = TRUE)
+```
+
+
+```{r echo=FALSE}
+library(flashr)
+library(mashr)
+library(corrplot)
+source('../code/sim_flash.R')
+```
+
+# Generate data
+
+The data is generated that some of them depend on two factors.
+
+```{r}
+set.seed(50)
+data = sim.flash(nsamp=1000, err_sd = 0.05)
+```
+
+* `flashr` Factorization
+
+```{r eval=FALSE}
+z = data$Bhat/data$Shat
+# center
+Z.center = apply(z, 2, function(x) x - mean(x))
+
+fdata = flash_set_data(Z.center)
+fg = flash_add_greedy(fdata,10, seed=2000)
+fb = flash_backfit(fdata,fg)
+
+saveRDS(fb, '../output/FLash_2_fb.rds')
+```
+
+The factor structures:
+
+```{r echo=FALSE}
+fb = readRDS('../output/FLash_2_fb.rds')
+layout(matrix(c(1,2,3), 1, 3, byrow = TRUE))
+barplot(flash_get_f(fb,1), main = 'loading 1')
+barplot(flash_get_f(fb,2), main = 'loading 2')
+barplot(flash_get_f(fb,3), main = 'loading 3')
+```
+
+# Apply `mash` without factor rank 1 covariance
+
+```{r echo=FALSE}
+mash_data = mash_set_data(Bhat = data$Bhat, Shat = data$Shat)
+U.c = cov_canonical(mash_data)
+U.flash = c(list("tFlash" = t(flash_get_lf(fb)) %*% flash_get_lf(fb) / nrow(mash_data$Bhat)))
+
+U.ed = cov_ed(mash_data, U.flash)
+mash_model = mash(mash_data, c(U.c,U.ed), algorithm.version = 'R', verbose = FALSE)
+barplot(get_estimated_pi(mash_model), las=2, cex.names = 0.7)
+```
+
+The `mash` model puts the majority weights on `tFlash`. There are `r length(get_significant_results(mash_model))` siginificant findings. The log likelihood is `r get_loglik(mash_model)`.
+
+# Apply `mash` with factor rank 1 covariance, without rank 2 matrices 
+
+```{r echo=FALSE}
+U.flash.1 = c(mashr::cov_from_factors(t(as.matrix(flash_get_f(fb,1:3))), "Flash"),
+            list("tFlash" = t(flash_get_lf(fb)) %*% flash_get_lf(fb) / nrow(mash_data$Bhat)))
+
+U.ed.1 = cov_ed(mash_data, U.flash.1)
+mash_model.1 = mash(mash_data, c(U.c,U.ed.1), algorithm.version = 'R', verbose = FALSE)
+barplot(get_estimated_pi(mash_model.1), las=2, cex.names = 0.7)
+```
+
+Again, the `mash` model put a large postion of weights on `tFlash`. There are `r length(get_significant_results(mash_model.1))` siginificant findings. The log likelihood is `r get_loglik(mash_model.1)`.
+
+The `mash` model with rank 1 factor covariances has higher likelihood value.
+
+# Apply `mash` with factor rank 2 covariance
+
+## Method 1: Naive way
+
+```{r}
+flash_get_pve(fb)
+```
+
+Add $F_{s}L_{s}'L_{s}F_{s}'$, s is $\{1,2\}, \{1,3\}, \{2,3\}$
+
+```{r}
+# every two factor combination
+Flash12 = flash_get_l(fb, 1:2) %*% t(flash_get_f(fb,1:2))
+Flash12 = t(Flash12) %*% Flash12
+Flash13 = flash_get_l(fb, c(1,3)) %*% t(flash_get_f(fb,c(1,3)))
+Flash13 = t(Flash13) %*% Flash13
+Flash23 = flash_get_l(fb, 2:3) %*% t(flash_get_f(fb,2:3))
+Flash23 = t(Flash23) %*% Flash23
+
+U.flash.2.1 = c(mashr::cov_from_factors(t(as.matrix(flash_get_f(fb,1:3))), "Flash"),
+            list("Flash12" = Flash12, "Flash13" = Flash13, "Flash23" = Flash23, "tFlash" = t(flash_get_lf(fb)) %*% flash_get_lf(fb) / nrow(mash_data$Bhat)))
+
+U.ed.2.1 = cov_ed(mash_data, U.flash.2.1)
+mash_model.2.1 = mash(mash_data, c(U.c,U.ed.2.1), algorithm.version = 'R', verbose = FALSE)
+barplot(get_estimated_pi(mash_model.2.1), las=2, cex.names = 0.7)
+```
+The `mash` model identifies the covariacne structure correctly. There are `r length(get_significant_results(mash_model.2.1))` siginificant findings. The log likelihood is `r get_loglik(mash_model.2.1)`.
+
+With the correct covariance struture, the `mash` model has a much higher likelihood value. Adding rank 2 factor covariance improves the fitting.
+
+This method is unrealistic if the number of factors is large. 
+
+## Method 2: Clustering loadings
+
+See [Flash_loading_2](Flash_loading_2.html)
+
+# Session information
+
+<!-- Insert the session information into the document -->
+```{r session-info}
+```
+
