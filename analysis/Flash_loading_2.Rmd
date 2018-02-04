@@ -79,7 +79,7 @@ for (i in 1:length(U_list)){
 U.loading = lapply(ll, function(U){Factors %*% (U %*% t(Factors))})
 names(U.loading) = paste0('Load', "_", (1:length(U.loading)))
 
-U.Flash = U.flash = c(list("tFlash" = t(flash_get_lf(fb)) %*% flash_get_lf(fb) / nrow(mash_data$Bhat)))
+U.Flash = c(list("tFlash" = t(flash_get_lf(fb)) %*% flash_get_lf(fb) / nrow(mash_data$Bhat)))
 
 U.ed.2.2 = cov_ed(mash_data, c(U.loading, U.Flash))
 mash_model.2.2 = mash(mash_data, c(U.c,U.ed.2.2), algorithm.version = 'R', verbose = FALSE)
