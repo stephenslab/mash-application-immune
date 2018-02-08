@@ -67,7 +67,7 @@ There are two types of covariance matrix you can use in mash: “canonical” an
 U.c = cov_canonical(mash_data_L)
 # data driven
 mash_data_L.z = mash_data_L
-mash_data_L.z$Bhat = mash_data_L$Bhat/mash_data_L$BShat
+mash_data_L.z$Bhat = mash_data_L$Bhat/mash_data_L$Shat
 m.1by1 = mash_1by1(mash_data_L.z)
 strong = get_significant_results(m.1by1,0.05)
 # no strong

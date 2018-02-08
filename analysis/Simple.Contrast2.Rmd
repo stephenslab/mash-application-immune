@@ -64,7 +64,7 @@ U.c = cov_canonical(mash_data_L)
 # data driven
 m.1by1 = mash_1by1(mash_data_L, alpha=1)
 strong = get_significant_results(m.1by1,0.05)
-# only 5 strong samples
+# only 6 strong samples
 
 # center Z
 # mash_data_L.center = mash_data_L

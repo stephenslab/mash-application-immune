@@ -66,8 +66,8 @@ m.1by1 = mash_1by1(mash_data_L, alpha=1)
 strong = get_significant_results(m.1by1,0.05)
 # center Z
 mash_data_L.center = mash_data_L
-mash_data_L.center$Bhat = mash_data_L$Bhat/mash_data_L$BShat # obtain z
-mash_data_L.center$BShat = matrix(1, nrow(mash_data_L$Bhat),ncol(mash_data_L$Bhat))
+mash_data_L.center$Bhat = mash_data_L$Bhat/mash_data_L$Shat # obtain z
+mash_data_L.center$Shat = matrix(1, nrow(mash_data_L$Bhat),ncol(mash_data_L$Bhat))
 mash_data_L.center$Bhat = apply(mash_data_L.center$Bhat, 2, function(x) x - mean(x))
 U.pca = cov_pca(mash_data_L.center,2,strong)
 U.ed = cov_ed(mash_data_L.center, U.pca, strong)
@@ -224,8 +224,8 @@ m.1by1 = mash_1by1(mash_data_L, alpha=1)
 strong = get_significant_results(m.1by1,0.05)
 # center Z
 mash_data_L.center = mash_data_L
-mash_data_L.center$Bhat = mash_data_L$Bhat/mash_data_L$BShat # obtain z
-mash_data_L.center$BShat = matrix(1, nrow(mash_data_L$Bhat),ncol(mash_data_L$Bhat))
+mash_data_L.center$Bhat = mash_data_L$Bhat/mash_data_L$Shat # obtain z
+mash_data_L.center$Shat = matrix(1, nrow(mash_data_L$Bhat),ncol(mash_data_L$Bhat))
 mash_data_L.center$Bhat = apply(mash_data_L.center$Bhat, 2, function(x) x - mean(x))
 U.pca = cov_pca(mash_data_L.center,2,strong)
 U.ed = cov_ed(mash_data_L.center, U.pca, strong)
