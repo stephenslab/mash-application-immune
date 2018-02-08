@@ -319,7 +319,7 @@ div.section {
 
 <!-- Update knitr chunk options -->
 <!-- Insert the date the file was last updated -->
-<p><strong>Last updated:</strong> 2018-01-28</p>
+<p><strong>Last updated:</strong> 2018-02-08</p>
 <!-- Insert the R version (Git commit SHA1) if Git repository exists and R
  package git2r is installed -->
 <pre><code>Loading required package: ashr</code></pre>
@@ -344,7 +344,7 @@ U.c = cov_canonical(mash_data_L)
 # data driven
 m.1by1 = mash_1by1(mash_data_L, alpha=1)
 strong = get_significant_results(m.1by1,0.05)
-# only 5 strong samples
+# only 6 strong samples
 
 # center Z
 # mash_data_L.center = mash_data_L
@@ -356,9 +356,9 @@ strong = get_significant_results(m.1by1,0.05)
 <p>Fit <code>mashcontrast</code> model</p>
 <pre class="r"><code>mashcontrast.model = mash(mash_data_L, U.c, algorithm.version = &#39;R&#39;)</code></pre>
 <pre><code> - Computing 21000 x 181 likelihood matrix.
- - Likelihood calculations took 1.51 seconds.
+ - Likelihood calculations took 1.66 seconds.
  - Fitting model with 181 mixture components.
- - Model fitting took 4.57 seconds.
+ - Model fitting took 4.76 seconds.
  - Computing posterior matrices.
  - Computation allocated took 0.18 seconds.</code></pre>
 <pre class="r"><code>print(get_loglik(mashcontrast.model),digits = 10)</code></pre>
@@ -375,11 +375,11 @@ strong = get_significant_results(m.1by1,0.05)
 <pre class="r"><code>Indep.data = mash_set_data(Bhat = data$Chat%*%t(L))
 Indep.model = mash(Indep.data, U.c, algorithm.version = &#39;R&#39;)</code></pre>
 <pre><code> - Computing 21000 x 181 likelihood matrix.
- - Likelihood calculations took 1.55 seconds.
+ - Likelihood calculations took 1.53 seconds.
  - Fitting model with 181 mixture components.
- - Model fitting took 4.98 seconds.
+ - Model fitting took 5.09 seconds.
  - Computing posterior matrices.
- - Computation allocated took 0.16 seconds.</code></pre>
+ - Computation allocated took 0.15 seconds.</code></pre>
 <pre class="r"><code>print(get_loglik(Indep.model),digits = 10)</code></pre>
 <pre><code>[1] -194668.353</code></pre>
 <pre class="r"><code>length(get_significant_results(Indep.model))</code></pre>
@@ -397,7 +397,7 @@ Indep.model = mash(Indep.data, U.c, algorithm.version = &#39;R&#39;)</code></pre
 <pre class="r"><code>sessionInfo()</code></pre>
 <pre><code>R version 3.4.3 (2017-11-30)
 Platform: x86_64-apple-darwin15.6.0 (64-bit)
-Running under: macOS High Sierra 10.13.2
+Running under: macOS High Sierra 10.13.3
 
 Matrix products: default
 BLAS: /Library/Frameworks/R.framework/Versions/3.4/Resources/lib/libRblas.0.dylib
@@ -410,7 +410,7 @@ attached base packages:
 [1] stats     graphics  grDevices utils     datasets  methods   base     
 
 other attached packages:
-[1] mashr_0.2-4 ashr_2.2-3 
+[1] mashr_0.2-4 ashr_2.2-4 
 
 loaded via a namespace (and not attached):
  [1] Rcpp_0.12.15      knitr_1.17        magrittr_1.5     

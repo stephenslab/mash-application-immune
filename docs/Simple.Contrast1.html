@@ -215,7 +215,7 @@ $(document).ready(function () {
 
 <!-- Update knitr chunk options -->
 <!-- Insert the date the file was last updated -->
-<p><strong>Last updated:</strong> 2018-01-28</p>
+<p><strong>Last updated:</strong> 2018-02-08</p>
 <!-- Insert the R version (Git commit SHA1) if Git repository exists and R
  package git2r is installed -->
 <pre><code>Loading required package: ashr</code></pre>
@@ -242,7 +242,7 @@ mash_data_L = mash_set_data_contrast(mash_data, L)</code></pre>
 U.c = cov_canonical(mash_data_L)
 # data driven
 mash_data_L.z = mash_data_L
-mash_data_L.z$Bhat = mash_data_L$Bhat/mash_data_L$BShat
+mash_data_L.z$Bhat = mash_data_L$Bhat/mash_data_L$Shat
 m.1by1 = mash_1by1(mash_data_L.z)
 strong = get_significant_results(m.1by1,0.05)
 # no strong
@@ -250,11 +250,11 @@ strong = get_significant_results(m.1by1,0.05)
 <p>Fit <code>mashcontrast</code> model</p>
 <pre class="r"><code>mashcontrast.model = mash(mash_data_L, U.c, algorithm.version = 'R')</code></pre>
 <pre><code> - Computing 10000 x 169 likelihood matrix.
- - Likelihood calculations took 1.04 seconds.
+ - Likelihood calculations took 1.06 seconds.
  - Fitting model with 169 mixture components.
- - Model fitting took 1.56 seconds.
+ - Model fitting took 1.55 seconds.
  - Computing posterior matrices.
- - Computation allocated took 0.44 seconds.</code></pre>
+ - Computation allocated took 0.47 seconds.</code></pre>
 <pre class="r"><code>length(get_significant_results(mashcontrast.model))</code></pre>
 <pre><code>[1] 0</code></pre>
 <p>There is no discovery, which is as we expected. The true deviations are zero for all samples.</p>
@@ -269,9 +269,9 @@ Indep.model = mash(Indep.data, U.c, algorithm.version = 'R')</code></pre>
 <pre><code> - Computing 10000 x 169 likelihood matrix.
  - Likelihood calculations took 0.70 seconds.
  - Fitting model with 169 mixture components.
- - Model fitting took 1.62 seconds.
+ - Model fitting took 1.63 seconds.
  - Computing posterior matrices.
- - Computation allocated took 0.05 seconds.</code></pre>
+ - Computation allocated took 0.06 seconds.</code></pre>
 <pre class="r"><code>length(get_significant_results(Indep.model))</code></pre>
 <pre><code>[1] 2818</code></pre>
 <p>There are more false positives.</p>
@@ -299,9 +299,9 @@ colnames(Shat) = col_ids</code></pre>
 U.c = cov_canonical(mash_delta)
 mash_delta_model = mash(mash_delta, U.c, algorithm.version = 'R')</code></pre>
 <pre><code> - Computing 10000 x 169 likelihood matrix.
- - Likelihood calculations took 0.63 seconds.
+ - Likelihood calculations took 0.67 seconds.
  - Fitting model with 169 mixture components.
- - Model fitting took 1.68 seconds.
+ - Model fitting took 1.72 seconds.
  - Computing posterior matrices.
  - Computation allocated took 0.04 seconds.</code></pre>
 <pre class="r"><code>length(get_significant_results(mash_delta_model))</code></pre>
@@ -315,7 +315,7 @@ mash_delta_model = mash(mash_delta, U.c, algorithm.version = 'R')</code></pre>
 <pre class="r"><code>sessionInfo()</code></pre>
 <pre><code>R version 3.4.3 (2017-11-30)
 Platform: x86_64-apple-darwin15.6.0 (64-bit)
-Running under: macOS High Sierra 10.13.2
+Running under: macOS High Sierra 10.13.3
 
 Matrix products: default
 BLAS: /Library/Frameworks/R.framework/Versions/3.4/Resources/lib/libRblas.0.dylib
@@ -328,7 +328,7 @@ attached base packages:
 [1] stats     graphics  grDevices utils     datasets  methods   base     
 
 other attached packages:
-[1] mashr_0.2-4 ashr_2.2-3 
+[1] mashr_0.2-4 ashr_2.2-4 
 
 loaded via a namespace (and not attached):
  [1] Rcpp_0.12.15      knitr_1.17        magrittr_1.5     
